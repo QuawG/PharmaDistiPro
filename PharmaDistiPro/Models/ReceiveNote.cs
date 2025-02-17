@@ -6,6 +6,7 @@ namespace PharmaDistiPro.Models
     public partial class ReceiveNote
     {
         public int? Id { get; set; }
+        public string? Code { get; set; }
         public int? OrderId { get; set; }
         public int? SupplierId { get; set; }
         public DateTime? Date { get; set; }

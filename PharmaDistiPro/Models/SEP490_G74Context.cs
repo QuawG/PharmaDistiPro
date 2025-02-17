@@ -41,7 +41,7 @@ namespace PharmaDistiPro.Models
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("server =(local); database = SEP490_G74;uid=sa;pwd=123;TrustServerCertificate=true");
+                optionsBuilder.UseSqlServer("server =localhost; database = SEP490_G74;uid=sa;pwd=123;TrustServerCertificate=true");
             }
         }
 
@@ -49,6 +49,8 @@ namespace PharmaDistiPro.Models
         {
             modelBuilder.Entity<Category>(entity =>
             {
+                entity.Property(e => e.Code).HasMaxLength(50);
+
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Name).HasMaxLength(50);
@@ -73,6 +75,8 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<IssueNote>(entity =>
             {
+                entity.Property(e => e.Code).HasMaxLength(50);
+
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Date).HasColumnType("datetime");
@@ -104,9 +108,9 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<Manufacture>(entity =>
             {
-                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+                entity.Property(e => e.Code).HasMaxLength(50);
 
-                entity.Property(e => e.Name).HasMaxLength(255);
+                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Manufactures)
@@ -223,6 +227,8 @@ namespace PharmaDistiPro.Models
             {
                 entity.HasNoKey();
 
+                entity.Property(e => e.Code).HasMaxLength(50);
+
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Date).HasColumnType("datetime");
@@ -287,6 +293,8 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<StorageRoom>(entity =>
             {
+                entity.Property(e => e.Code).HasMaxLength(50);
+
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Name).HasMaxLength(50);
@@ -299,6 +307,8 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<Supplier>(entity =>
             {
+                entity.Property(e => e.Code).HasMaxLength(50);
+
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Phone).HasMaxLength(50);
@@ -333,13 +343,19 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.EmployeeCode).HasMaxLength(50);
 
-                entity.Property(e => e.FirstName).HasMaxLength(50);
+                entity.Property(e => e.FirstName)
+                    .HasMaxLength(10)
+                    .IsFixedLength();
 
                 entity.Property(e => e.LastName).HasMaxLength(50);
 
                 entity.Property(e => e.Password).HasMaxLength(50);
 
                 entity.Property(e => e.Phone).HasMaxLength(50);
+
+                entity.Property(e => e.TaxCode).HasMaxLength(50);
+
+                entity.Property(e => e.UserName).HasMaxLength(50);
 
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.Users)
