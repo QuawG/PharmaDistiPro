@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "frbpVOJmJ2g=",
+  "dgSpecHash": "NTW5O6qdJIQ=",
   "success": true,
-  "projectFilePath": "D:\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+  "projectFilePath": "D:\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\minhq\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\minhq\\.nuget\\packages\\microsoft.csharp\\4.5.0\\microsoft.csharp.4.5.0.nupkg.sha512",
