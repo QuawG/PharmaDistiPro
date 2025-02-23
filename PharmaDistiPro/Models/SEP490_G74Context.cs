@@ -18,6 +18,7 @@ namespace PharmaDistiPro.Models
 
         public virtual DbSet<Category> Categorys { get; set; } = null!;
         public virtual DbSet<CheckDate> CheckDates { get; set; } = null!;
+        public virtual DbSet<Good> Goods { get; set; } = null!;
         public virtual DbSet<IssueNote> IssueNotes { get; set; } = null!;
         public virtual DbSet<IssueNoteDetail> IssueNoteDetails { get; set; } = null!;
         public virtual DbSet<Manufacture> Manufactures { get; set; } = null!;
@@ -40,8 +41,8 @@ namespace PharmaDistiPro.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("server =localhost; database = SEP490_G74;uid=sa;pwd=123;TrustServerCertificate=true");
+                var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+                optionsBuilder.UseSqlServer(config.GetConnectionString("DefaultConnection"));
             }
         }
 
@@ -49,11 +50,11 @@ namespace PharmaDistiPro.Models
         {
             modelBuilder.Entity<Category>(entity =>
             {
-                entity.Property(e => e.Code).HasMaxLength(50);
+                entity.Property(e => e.CategoryCode).HasMaxLength(50);
+
+                entity.Property(e => e.CategoryName).HasMaxLength(50);
 
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-
-                entity.Property(e => e.Name).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Categories)
@@ -73,13 +74,24 @@ namespace PharmaDistiPro.Models
                     .HasConstraintName("FK_CheckDate_Users");
             });
 
+            modelBuilder.Entity<Good>(entity =>
+            {
+                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ExpiredDate).HasColumnType("datetime");
+
+                entity.Property(e => e.GoodsCode).HasMaxLength(50);
+
+                entity.Property(e => e.ManufacturedDate).HasColumnType("datetime");
+            });
+
             modelBuilder.Entity<IssueNote>(entity =>
             {
-                entity.Property(e => e.Code).HasMaxLength(50);
-
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Date).HasColumnType("datetime");
+
+                entity.Property(e => e.IssueNotesCode).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.IssueNotes)
@@ -89,28 +101,24 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<IssueNoteDetail>(entity =>
             {
-                entity.Property(e => e.ExpiredDate).HasColumnType("date");
-
-                entity.Property(e => e.ManufacturedDate).HasColumnType("date");
-
                 entity.Property(e => e.NoteNumber).HasMaxLength(50);
+
+                entity.HasOne(d => d.Good)
+                    .WithMany(p => p.IssueNoteDetails)
+                    .HasForeignKey(d => d.GoodId)
+                    .HasConstraintName("FK_IssueNoteDetails_Goods");
 
                 entity.HasOne(d => d.IssueNote)
                     .WithMany(p => p.IssueNoteDetails)
                     .HasForeignKey(d => d.IssueNoteId)
                     .HasConstraintName("FK_IssueNoteDetails_IssueNotes");
-
-                entity.HasOne(d => d.Product)
-                    .WithMany(p => p.IssueNoteDetails)
-                    .HasForeignKey(d => d.ProductId)
-                    .HasConstraintName("FK_IssueNoteDetails_Products");
             });
 
             modelBuilder.Entity<Manufacture>(entity =>
             {
-                entity.Property(e => e.Code).HasMaxLength(50);
-
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.ManufacturesCode).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Manufactures)
@@ -120,30 +128,21 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<NoteCheck>(entity =>
             {
-                entity.HasNoKey();
-
                 entity.ToTable("NoteCheck");
 
                 entity.HasOne(d => d.CheckDate)
-                    .WithMany()
+                    .WithMany(p => p.NoteChecks)
                     .HasForeignKey(d => d.CheckDateId)
                     .HasConstraintName("FK_NoteCheck_CheckDate");
-
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany()
-                    .HasForeignKey(d => d.CreatedBy)
-                    .HasConstraintName("FK_NoteCheck_Users");
             });
 
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.Property(e => e.Date).HasColumnType("date");
 
-                entity.Property(e => e.ExportDate)
-                    .HasColumnType("date")
-                    .HasColumnName("ExportDate?");
-
                 entity.Property(e => e.OrderCode).HasMaxLength(50);
+
+                entity.Property(e => e.StockReleaseDate).HasColumnType("date");
             });
 
             modelBuilder.Entity<OrdersDetail>(entity =>
@@ -195,6 +194,11 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<ProductStorageRoom>(entity =>
             {
+                entity.HasOne(d => d.Goods)
+                    .WithMany(p => p.ProductStorageRooms)
+                    .HasForeignKey(d => d.GoodsId)
+                    .HasConstraintName("FK_ProductStorageRooms_Goods");
+
                 entity.HasOne(d => d.Room)
                     .WithMany(p => p.ProductStorageRooms)
                     .HasForeignKey(d => d.RoomId)
@@ -205,9 +209,7 @@ namespace PharmaDistiPro.Models
             {
                 entity.Property(e => e.Date).HasColumnType("date");
 
-                entity.Property(e => e.ExportDate)
-                    .HasColumnType("date")
-                    .HasColumnName("ExportDate?");
+                entity.Property(e => e.StockReleaseDate).HasColumnType("date");
 
                 entity.HasOne(d => d.Supplier)
                     .WithMany(p => p.PurchaseOrders)
@@ -227,11 +229,11 @@ namespace PharmaDistiPro.Models
             {
                 entity.HasNoKey();
 
-                entity.Property(e => e.Code).HasMaxLength(50);
-
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.Date).HasColumnType("datetime");
+
+                entity.Property(e => e.ReceiveNotesCode).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany()
@@ -256,13 +258,7 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<ReceiveNoteDetail>(entity =>
             {
-                entity.Property(e => e.CheckedDate).HasColumnType("datetime");
-
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-
-                entity.Property(e => e.ExpiredDate).HasColumnType("date");
-
-                entity.Property(e => e.ManufacturedDate).HasColumnType("date");
 
                 entity.Property(e => e.NoteNumber).HasMaxLength(50);
 
@@ -273,31 +269,24 @@ namespace PharmaDistiPro.Models
                     .HasForeignKey(d => d.CreatedBy)
                     .HasConstraintName("FK_ReceiveNoteDetails_Users");
 
-                entity.HasOne(d => d.Product)
+                entity.HasOne(d => d.Good)
                     .WithMany(p => p.ReceiveNoteDetails)
-                    .HasForeignKey(d => d.ProductId)
-                    .HasConstraintName("FK_ReceiveNoteDetails_Products");
+                    .HasForeignKey(d => d.GoodId)
+                    .HasConstraintName("FK_ReceiveNoteDetails_Goods");
             });
 
             modelBuilder.Entity<Role>(entity =>
             {
-                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-
-                entity.Property(e => e.Name).HasMaxLength(100);
-
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.Roles)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .HasConstraintName("FK_Roles_Users");
+                entity.Property(e => e.RoleName).HasMaxLength(100);
             });
 
             modelBuilder.Entity<StorageRoom>(entity =>
             {
-                entity.Property(e => e.Code).HasMaxLength(50);
-
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
-                entity.Property(e => e.Name).HasMaxLength(50);
+                entity.Property(e => e.StorageRoomCode).HasMaxLength(50);
+
+                entity.Property(e => e.StorageRoomName).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.StorageRooms)
@@ -307,11 +296,11 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<Supplier>(entity =>
             {
-                entity.Property(e => e.Code).HasMaxLength(50);
-
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
-                entity.Property(e => e.Phone).HasMaxLength(50);
+                entity.Property(e => e.SupplierCode).HasMaxLength(50);
+
+                entity.Property(e => e.SupplierPhone).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Suppliers)
@@ -323,7 +312,7 @@ namespace PharmaDistiPro.Models
             {
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
-                entity.Property(e => e.Name).HasMaxLength(50);
+                entity.Property(e => e.UnitsName).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Units)
@@ -360,7 +349,7 @@ namespace PharmaDistiPro.Models
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.Users)
                     .HasForeignKey(d => d.RoleId)
-                    .HasConstraintName("FK_Users_Roles");
+                    .HasConstraintName("FK_Users_Roles1");
             });
 
             OnModelCreatingPartial(modelBuilder);

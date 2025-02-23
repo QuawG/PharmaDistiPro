@@ -14,7 +14,7 @@ namespace PharmaDistiPro.Models
         public string? OrderCode { get; set; }
         public int? CustomerId { get; set; }
         public DateTime? Date { get; set; }
-        public DateTime? ExportDate { get; set; }
+        public DateTime? StockReleaseDate { get; set; }
         public double? TotalAmount { get; set; }
         public int? Status { get; set; }
         public double? DeliveryFee { get; set; }

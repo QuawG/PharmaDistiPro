@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Repositories.Impl;
@@ -6,6 +6,7 @@ using PharmaDistiPro.Services.Interface;
 using PharmaDistiPro.Services.Impl;
 using PharmaDistiPro.Models;
 using AutoMapper;
+using CloudinaryDotNet;
 
 namespace PharmaDistiPro
 {
@@ -22,8 +23,25 @@ namespace PharmaDistiPro
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // ket noi database
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            builder.Services.AddDbContext<SEP490_G74Context>(options => options.UseSqlServer(connectionString).EnableDetailedErrors());
+
+            builder.Services.AddDbContext<SEP490_G74Context>(options =>
+            options.UseSqlServer(connectionString)
+           .EnableDetailedErrors()
+           .EnableSensitiveDataLogging() // Thêm để ghi chi tiết lỗi
+);
+
+            #region cloudinary 
+            var cloudName = builder.Configuration.GetValue<string>("Cloudinary:CloudName");
+            var apiKey = builder.Configuration.GetValue<string>("Cloudinary:Key");
+            var apiSecret = builder.Configuration.GetValue<string>("Cloudinary:Secret");
+
+            var account = new Account(cloudName, apiKey, apiSecret);
+            var cloudinary = new Cloudinary(account);
+
+            builder.Services.AddSingleton(cloudinary);
+            #endregion
 
             #region Add DI for repositories
             builder.Services.AddScoped<IUserRepository, UserRepository>();

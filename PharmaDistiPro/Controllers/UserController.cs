@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Services.Interface;
 
 namespace PharmaDistiPro.Controllers
@@ -51,6 +52,42 @@ namespace PharmaDistiPro.Controllers
             {
                 return NotFound(new { response.Message });
             }
+            return Ok(response);
+        }
+
+        // Api create user và customer
+        [HttpPost("CreateUser")]
+        public async Task<IActionResult> CreateUser([FromForm] UserInputRequest user)
+        {
+            var response = await _userService.CreateNewUserOrCustomer(user);
+
+            if(!ModelState.IsValid) return BadRequest(ModelState);
+
+            if (!response.Success)
+                return BadRequest(new { response.Message });
+
+            return Ok(response);
+        }
+
+        //Api update user
+        [HttpPut("UpdateUser")]
+        public async Task<IActionResult> UpdateUser([FromForm] UserInputRequest user)
+        {
+            var response = await _userService.UpdateUser(user);
+
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            if (!response.Success)
+                return BadRequest(new { response.Message });
+
+            return Ok(response);
+        }
+
+        [HttpPut("ActivateDeactivateUser/{userId}/{status}")]
+        public async Task<IActionResult> ActivateDeactivateUser(int userId, bool status)
+        {
+            var response = await _userService.ActivateDeactivateUser(userId, status);
+            if (!response.Success) return BadRequest(new {response.Message});
             return Ok(response);
         }
     }

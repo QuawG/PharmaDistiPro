@@ -14,9 +14,11 @@ namespace PharmaDistiPro.Services.Interface
         Task<Response<IEnumerable<UserDTO>>> GetUserList();
         Task<Response<IEnumerable<UserDTO>>> GetCustomerList();
 
-        Task<Response<UserDTO>> CreateNewUserOrCustomer(UserDTO user, int roleId);
+        Task<Response<UserDTO>> ActivateDeactivateUser(int userId, bool update);
+
+        Task<Response<UserDTO>> CreateNewUserOrCustomer(UserInputRequest user);
         Task<Response<UserDTO>> GetUserById(int userId);
-        Task<Response<UserDTO>> UpdateUser(UserDTO user);
+        Task<Response<UserDTO>> UpdateUser(UserInputRequest user);
         #endregion
 
     }

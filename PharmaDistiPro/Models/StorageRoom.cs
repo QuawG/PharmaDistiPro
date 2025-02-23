@@ -11,8 +11,8 @@ namespace PharmaDistiPro.Models
         }
 
         public int Id { get; set; }
-        public string? Code { get; set; }
-        public string? Name { get; set; }
+        public string? StorageRoomCode { get; set; }
+        public string? StorageRoomName { get; set; }
         public double? Humidity { get; set; }
         public double? Temperature { get; set; }
         public int? Quantity { get; set; }
