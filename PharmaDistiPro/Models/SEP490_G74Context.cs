@@ -41,8 +41,8 @@ namespace PharmaDistiPro.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-                optionsBuilder.UseSqlServer(config.GetConnectionString("DefaultConnection"));
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+                optionsBuilder.UseSqlServer("server =tcp:sep490-g74-server.database.windows.net,1433; database = SEP490_G74;uid=PharmaDistiPro;pwd=Sep490g74;TrustServerCertificate=true");
             }
         }
 
@@ -332,9 +332,7 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.EmployeeCode).HasMaxLength(50);
 
-                entity.Property(e => e.FirstName)
-                    .HasMaxLength(10)
-                    .IsFixedLength();
+                entity.Property(e => e.FirstName).HasMaxLength(50);
 
                 entity.Property(e => e.LastName).HasMaxLength(50);
 

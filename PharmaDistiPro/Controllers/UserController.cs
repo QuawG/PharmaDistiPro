@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.Users;
+using PharmaDistiPro.Models;
 using PharmaDistiPro.Services.Interface;
 
 namespace PharmaDistiPro.Controllers
@@ -11,10 +12,11 @@ namespace PharmaDistiPro.Controllers
     {
 
         private readonly IUserService _userService;
-
-        public UserController(IUserService userService)
+        private readonly SEP490_G74Context _context;
+        public UserController(IUserService userService, SEP490_G74Context context)
         {
             _userService = userService;
+            _context = context;
         }   
 
         //get user list
