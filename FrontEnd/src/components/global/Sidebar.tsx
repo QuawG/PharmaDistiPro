@@ -10,6 +10,11 @@ const ProductList = [
     "Add Sub Category",
     "Import Product"
 ];
+const CustomerList = [
+    "Customer List",
+    "Add Customer",
+    "Customer Group"
+];
 
 interface SidebarProps {
     activeSidebar: string
@@ -20,16 +25,26 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     const [activeMenuSidebar, setActiveMenuSidebar] = useState<string | null>("product");
     const [isProductOpen, setIsProductOpen] = useState(false); 
     const [activeItem, setActiveItem] = useState<string | null>(activeSidebar); 
+    const [isCustomerOpen, setIsCustomerOpen] = useState(false);
+
 
     const handleProductClick = () => {
         setIsProductOpen((prev) => !prev);
     };
-
-    const handleItemClick = (item: string) => {
-        setActiveMenuSidebar("product");
-        setActiveItem(item);
-        handleChangePage(item)
+    const handleCustomerClick = () => {
+        setIsCustomerOpen((prev) => !prev);
     };
+    
+    const handleItemClick = (item: string) => {
+        if (ProductList.includes(item)) {
+            setActiveMenuSidebar("product");
+        } else if (CustomerList.includes(item)) {
+            setActiveMenuSidebar("customer");
+        }
+        setActiveItem(item);
+        handleChangePage(item);
+    };
+    
 
     const handleItemClickSidebar = (item: string) => {
         setActiveItem(item);
@@ -128,6 +143,39 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
 
                     </ul>
                 </div>
+                {/* Customer */}
+<div>
+    <div
+        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px]
+            ${activeMenuSidebar === "customer" ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
+        onClick={handleCustomerClick}
+    >
+        <span className="flex items-center">
+            <InboxStackIcon className="mr-[6px] w-4 h-4" />
+            Customer
+        </span>
+        <ChevronRightIcon
+            className={`w-4 h-4 transition-transform ${isCustomerOpen ? "rotate-90" : ""}`}
+        />
+    </div>
+
+    {/* Danh sách CustomerList */}
+    <ul
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${isCustomerOpen ? "max-h-[500px]" : "max-h-0"}`}
+    >
+        {CustomerList.map((item, index) => (
+            <li
+                key={index}
+                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400 group
+                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
+                onClick={() => handleItemClick(item)}
+            >
+                {item}
+            </li>
+        ))}
+    </ul>
+</div>
+
             </div>
         </div>
     );
