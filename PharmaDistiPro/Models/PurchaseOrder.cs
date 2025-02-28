@@ -10,7 +10,8 @@ namespace PharmaDistiPro.Models
             PurchaseOrdersDetails = new HashSet<PurchaseOrdersDetail>();
         }
 
-        public int Id { get; set; }
+        public int PurchaseOrderId { get; set; }
+        public string? PurchaseOrderCode { get; set; }
         public int? SupplierId { get; set; }
         public DateTime? Date { get; set; }
         public DateTime? StockReleaseDate { get; set; }
@@ -18,7 +19,10 @@ namespace PharmaDistiPro.Models
         public int? Status { get; set; }
         public double? DeliveryFee { get; set; }
         public string? Address { get; set; }
+        public int? CreatedBy { get; set; }
+        public string? CreateDate { get; set; }
 
+        public virtual User? CreatedByNavigation { get; set; }
         public virtual Supplier? Supplier { get; set; }
         public virtual ICollection<PurchaseOrdersDetail> PurchaseOrdersDetails { get; set; }
     }

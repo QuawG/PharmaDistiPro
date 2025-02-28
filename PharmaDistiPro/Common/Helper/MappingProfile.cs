@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Models;
 namespace PharmaDistiPro.Common.Helper
@@ -17,6 +18,11 @@ namespace PharmaDistiPro.Common.Helper
 
             CreateMap<User, UserInputRequest>();
             CreateMap<UserInputRequest, User>();
+            #endregion
+
+            #region Order
+            CreateMap<Order, OrderDto>();
+            CreateMap<OrderDto, Order>();
             #endregion
         }
     }

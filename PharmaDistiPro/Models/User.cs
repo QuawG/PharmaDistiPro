@@ -8,17 +8,19 @@ namespace PharmaDistiPro.Models
         public User()
         {
             Categories = new HashSet<Category>();
-            CheckDates = new HashSet<CheckDate>();
             IssueNotes = new HashSet<IssueNote>();
+            Logs = new HashSet<Log>();
             Manufactures = new HashSet<Manufacture>();
+            Orders = new HashSet<Order>();
             Products = new HashSet<Product>();
+            PurchaseOrders = new HashSet<PurchaseOrder>();
             ReceiveNoteDetails = new HashSet<ReceiveNoteDetail>();
             StorageRooms = new HashSet<StorageRoom>();
             Suppliers = new HashSet<Supplier>();
             Units = new HashSet<Unit>();
         }
 
-        public int Id { get; set; }
+        public int UserId { get; set; }
         public string? UserName { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
@@ -37,10 +39,12 @@ namespace PharmaDistiPro.Models
 
         public virtual Role? Role { get; set; }
         public virtual ICollection<Category> Categories { get; set; }
-        public virtual ICollection<CheckDate> CheckDates { get; set; }
         public virtual ICollection<IssueNote> IssueNotes { get; set; }
+        public virtual ICollection<Log> Logs { get; set; }
         public virtual ICollection<Manufacture> Manufactures { get; set; }
+        public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<Product> Products { get; set; }
+        public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; }
         public virtual ICollection<ReceiveNoteDetail> ReceiveNoteDetails { get; set; }
         public virtual ICollection<StorageRoom> StorageRooms { get; set; }
         public virtual ICollection<Supplier> Suppliers { get; set; }

@@ -5,12 +5,20 @@ namespace PharmaDistiPro.Models
 {
     public partial class NoteCheck
     {
-        public int Id { get; set; }
-        public int? CheckDateId { get; set; }
-        public int? ReceivedNoteDetailsId { get; set; }
-        public int? DifferenceQuantity { get; set; }
-        public int? ActualQuantity { get; set; }
+        public NoteCheck()
+        {
+            NoteCheckDetails = new HashSet<NoteCheckDetail>();
+        }
 
-        public virtual CheckDate? CheckDate { get; set; }
+        public int NoteCheckId { get; set; }
+        public int? DifferenceQuatity { get; set; }
+        public int? StorageRoomId { get; set; }
+        public string? ReasonCheck { get; set; }
+        public string? Result { get; set; }
+        public int? CreatedBy { get; set; }
+        public DateTime? CreatedDate { get; set; }
+
+        public virtual StorageRoom? StorageRoom { get; set; }
+        public virtual ICollection<NoteCheckDetail> NoteCheckDetails { get; set; }
     }
 }

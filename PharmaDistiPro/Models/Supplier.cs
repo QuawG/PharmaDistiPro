@@ -7,7 +7,6 @@ namespace PharmaDistiPro.Models
     {
         public Supplier()
         {
-            Products = new HashSet<Product>();
             PurchaseOrders = new HashSet<PurchaseOrder>();
         }
 
@@ -20,7 +19,6 @@ namespace PharmaDistiPro.Models
         public DateTime? CreatedDate { get; set; }
 
         public virtual User? CreatedByNavigation { get; set; }
-        public virtual ICollection<Product> Products { get; set; }
         public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; }
     }
 }

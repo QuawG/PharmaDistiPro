@@ -45,10 +45,14 @@ namespace PharmaDistiPro
 
             #region Add DI for repositories
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            builder.Services.AddScoped<IOrdersDetailRepository, OrdersDetailRepository>();
             #endregion
 
             #region Add DI for services
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();  
+
             #endregion
 
             // Register AutoMapper

@@ -5,19 +5,17 @@ namespace PharmaDistiPro.Models
 {
     public partial class ReceiveNote
     {
-        public int? Id { get; set; }
+        public int? ReceiveNoteId { get; set; }
         public string? ReceiveNotesCode { get; set; }
-        public int? OrderId { get; set; }
-        public int? SupplierId { get; set; }
+        public int? PurchaseOrderId { get; set; }
         public DateTime? Date { get; set; }
-        public double? TotalAmount { get; set; }
         public int? Status { get; set; }
+        public string? DeliveryPerson { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
         public virtual User? CreatedByNavigation { get; set; }
-        public virtual ReceiveNoteDetail? IdNavigation { get; set; }
-        public virtual Order? Order { get; set; }
-        public virtual Supplier? Supplier { get; set; }
+        public virtual PurchaseOrder? PurchaseOrder { get; set; }
+        public virtual ReceiveNoteDetail? ReceiveNoteNavigation { get; set; }
     }
 }

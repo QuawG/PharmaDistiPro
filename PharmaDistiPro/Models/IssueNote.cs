@@ -21,6 +21,7 @@ namespace PharmaDistiPro.Models
         public int? Status { get; set; }
 
         public virtual User? CreatedByNavigation { get; set; }
+        public virtual Order? Order { get; set; }
         public virtual ICollection<IssueNoteDetail> IssueNoteDetails { get; set; }
     }
 }

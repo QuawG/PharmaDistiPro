@@ -30,11 +30,15 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var users = await _userRepository.GetByConditionAsync(u => u.RoleId == 5);
-                response.Data = _mapper.Map<IEnumerable<UserDTO>>(users);
-                response.Success = true;
-
-                if (users.Count() == 0) response.Message = "Không có dữ liệu";
-
+                if (users.Count() == 0)
+                {
+                    response.Message = "Không có dữ liệu";
+                    response.Success = false;
+                } else
+                {
+                    response.Data = _mapper.Map<IEnumerable<UserDTO>>(users);
+                    response.Success = true;
+                }
                 return response;
 
             }
@@ -196,7 +200,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 // Kiểm tra người dùng có tồn tại không
-                var userToUpdate = await _userRepository.GetByIdAsync(userUpdateRequest.Id);
+                var userToUpdate = await _userRepository.GetByIdAsync(userUpdateRequest.UserId);
                 if (userToUpdate == null)
                 {
                     response.Success = false;
@@ -204,9 +208,11 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
+                //Chi update avatar cho nguoi dung khong phai customer
+                if (userUpdateRequest.RoleId == 5) userUpdateRequest.Avatar = null;
                 // Kiểm tra và upload avatar nếu có thay đổi
                 if (userUpdateRequest.Avatar != null &&
-                    userUpdateRequest.Avatar.FileName != Path.GetFileName(userToUpdate.Avatar) && userUpdateRequest.Id != 5)
+                    userUpdateRequest.Avatar.FileName != Path.GetFileName(userToUpdate.Avatar))  
                 {
                     var uploadParams = new ImageUploadParams()
                     {
@@ -216,8 +222,9 @@ namespace PharmaDistiPro.Services.Impl
 
                     var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                     imageUrl = uploadResult.SecureUri.ToString();
+                    
                 }
-
+               
                 // Map dữ liệu từ DTO sang thực thể
                 _mapper.Map(userUpdateRequest, userToUpdate);
 

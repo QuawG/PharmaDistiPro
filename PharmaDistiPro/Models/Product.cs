@@ -7,18 +7,16 @@ namespace PharmaDistiPro.Models
     {
         public Product()
         {
-            OrdersDetails = new HashSet<OrdersDetail>();
+            ProductLots = new HashSet<ProductLot>();
         }
 
-        public int Id { get; set; }
+        public int ProductId { get; set; }
         public string? ProductCode { get; set; }
         public int? ManufactureId { get; set; }
         public string? ProductName { get; set; }
         public int? UnitId { get; set; }
         public int? CategoryId { get; set; }
         public string? Description { get; set; }
-        public int? SupplierId { get; set; }
-        public double? ImportRetailPrice { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public bool? Status { get; set; }
@@ -29,8 +27,7 @@ namespace PharmaDistiPro.Models
         public virtual Category? Category { get; set; }
         public virtual User? CreatedByNavigation { get; set; }
         public virtual Manufacture? Manufacture { get; set; }
-        public virtual Supplier? Supplier { get; set; }
         public virtual Unit? Unit { get; set; }
-        public virtual ICollection<OrdersDetail> OrdersDetails { get; set; }
+        public virtual ICollection<ProductLot> ProductLots { get; set; }
     }
 }
