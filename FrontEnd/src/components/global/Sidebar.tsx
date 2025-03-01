@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     return (
         <div className="w-[260px] border-r-[1px] border-r-gray-200 z-20 bg-white h-full">
             <div className="w-full">
-                <img className="w-[180px] mx-auto my-4" src="/img/logo.png" alt="Logo" />
+            <img className="w-[150px] mx-auto my-1" src="/img/logoPharma.png" alt="Pharma Logo" />
             </div>
 
             <div className="p-5 w-full">
