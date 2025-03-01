@@ -46,7 +46,7 @@ const PRODUCTS_DATA: Product[] = [
   },
   {
     id: 3,
-    image: "https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=612x612&w=0&k=20&c=rnCKVbdxqkjlcs3xH87-9gocETqpspHFXu5dIGB4wuM=",
+    image: "https://genk.mediacdn.vn/139269124445442048/2023/6/6/macbook-air-15-inch-6-16860313066961124865501-1686038279968-168603828012719897017.jpg",
     name: "Pineapple",
     sku: "PT003",
     category: "Fruits",

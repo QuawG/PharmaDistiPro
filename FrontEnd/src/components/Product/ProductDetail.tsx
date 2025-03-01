@@ -57,14 +57,7 @@ export default function ProductDetailsModal({
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <div className="mb-6 p-4 border-gray-300 border-[1px] rounded-lg inline-block">
-                <div className="flex items-center gap-4">
-                  <img src="https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-a58b9b0/www.gtin.info/wp-content/uploads/2015/02/barcode-16.png" alt="Barcode" className="h-20" />
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <Printer className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
+              
 
               {/* Details Table */}
               <div className="border-[1px] border-gray-300 rounded-lg overflow-hidden">
