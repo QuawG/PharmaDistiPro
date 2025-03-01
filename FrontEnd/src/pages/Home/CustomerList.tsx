@@ -101,13 +101,13 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
       {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Customer List</h1>
-          <p className="text-sm text-gray-500">Manage your customers</p>
+          <h1 className="text-xl font-semibold text-gray-900">Danh sách khách hàng</h1>
+          <p className="text-sm text-gray-500">Quản lý khách hàng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Add Customer')}
+          onClick={() => handleChangePage('Thêm khách hàng')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Add New Customer
+          <PlusIcon className='w-5 h-5 font-bold'/> Thêm khách hàng mới
         </button>
       </div>
 
@@ -121,7 +121,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Tìm kiếm..."
                 className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
                 value={searchTerm}
                 onChange={handleSearch}

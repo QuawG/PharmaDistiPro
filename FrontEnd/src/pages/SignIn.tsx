@@ -11,14 +11,14 @@ const SignIn: React.FC = () => {
     if (email && password) {
       navigate("/");
     } else {
-      alert("Please enter email and password!");
+      alert("Vui lòng nhập email và mật khẩu!!");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f9fafb] px-4">
       <div className="max-w-md w-full bg-white shadow-lg rounded-xl p-8 border border-gray-200">
-        <h3 className="text-2xl font-bold text-[#ff9f43] text-center">Sign In</h3>
+        <h3 className="text-2xl font-bold text-[#ff9f43] text-center">Đăng nhập</h3>
 
         {/* Input fields */}
         <input
@@ -45,15 +45,7 @@ const SignIn: React.FC = () => {
         </button>
 
         {/* Chuyển sang SignUp */}
-        <p className="text-gray-700 text-center mt-4">
-          Don't have an account?{" "}
-          <span
-            className="text-[#ff9f43] cursor-pointer hover:underline font-semibold"
-            onClick={() => navigate("/signup")}
-          >
-            Sign Up
-          </span>
-        </p>
+        
       </div>
     </div>
   );

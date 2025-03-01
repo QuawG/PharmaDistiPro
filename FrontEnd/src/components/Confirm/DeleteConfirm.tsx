@@ -65,11 +65,10 @@ export default function DeleteConfirmation({
           {/* Content */}
           <div className="text-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Confirm Deletion
+              xác nhận xóa
             </h2>
             <p className="text-gray-600">
-              Are you sure you want to delete ? 
-              This action cannot be undone.
+              Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không thể hoàn tác.
             </p>
           </div>
 

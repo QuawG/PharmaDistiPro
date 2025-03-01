@@ -23,13 +23,13 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
 
     return (
         <div className="p-6 mt-[60px] w-full bg-[#f8f9fc]">
-            <h1 className="text-2xl font-semibold text-gray-900">Add Category</h1>
-            <p className="text-sm text-gray-500">Create new category</p>
+            <h1 className="text-2xl font-semibold text-gray-900">Thêm danh mục chính</h1>
+            <p className="text-sm text-gray-500">Tạo danh mục chính mới</p>
 
             <div className="mt-5 bg-white shadow rounded-lg p-6">
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-medium">Category Name</label>
+                        <label className="block text-gray-700 font-medium">tên danh mục</label>
                         <input
                             type="text"
                             className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -40,7 +40,7 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-medium">Category Code</label>
+                        <label className="block text-gray-700 font-medium">Mã danh mục</label>
                         <input
                             type="text"
                             className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -51,7 +51,7 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-medium">Description</label>
+                        <label className="block text-gray-700 font-medium">Mô tả</label>
                         <textarea
                             className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={description}
@@ -61,7 +61,7 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-medium">Upload Image</label>
+                        <label className="block text-gray-700 font-medium">Tải ảnh lên</label>
                         <input
                             type="file"
                             onChange={(e) => setImage(e.target.files ? e.target.files[0] : null)}
@@ -74,14 +74,14 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
                             type="submit"
                             className="bg-[#FF9F43] hover:bg-orange-600 text-white px-5 py-2 rounded-md font-medium shadow-md"
                         >
-                            Submit
+                            Lưu
                         </button>
                         <button
                             type="button"
                             onClick={handleCancel}
                             className="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-md font-medium shadow-md"
                         >
-                            Cancel
+                            Hủy
                         </button>
                     </div>
                 </form>

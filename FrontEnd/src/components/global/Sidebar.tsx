@@ -2,18 +2,18 @@ import React, { useState } from "react";
 import { HomeIcon, InboxStackIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 const ProductList = [
-    "Product List",
-    "Add Product",
-    "Category List",
-    "Add Category",
-    "Sub Category List",
-    "Add Sub Category",
-    "Import Product"
+    "Danh sách sản phẩm",
+    "Thêm sản phẩm",
+    "Danh sách danh mục chính",
+    "Thêm danh mục chính",
+    "Danh sách danh mục phụ",
+    "Thêm danh mục phụ",
+    "Nhập sản phẩm"
 ];
 
 const CustomerList = [
-    "Customer List",
-    "Add Customer",
+    "Danh sách khách hàng",
+    "Thêm khách hàng",
     "Customer Group"
 ];
 
@@ -24,7 +24,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) => {
     const [activeMenuSidebar, setActiveMenuSidebar] = useState<string | null>("product");
-    const [isProductOpen, setIsProductOpen] = useState(true);
+    const [isProductOpen, setIsProductOpen] = useState(false);
     const [isCustomerOpen, setIsCustomerOpen] = useState(false);
     const [activeItem, setActiveItem] = useState<string | null>(activeSidebar);
 
@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                     >
                         <span className="flex items-center">
                             <InboxStackIcon className="mr-[6px] w-4 h-4" />
-                            Product
+                            Sản phẩm
                         </span>
                         <ChevronRightIcon
                             className={`w-4 h-4 transition-transform ${isProductOpen ? "rotate-90" : ""}`}
@@ -98,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                     >
                         <span className="flex items-center">
                             <InboxStackIcon className="mr-[6px] w-4 h-4" />
-                            Customer
+                            Khách hàng
                         </span>
                         <ChevronRightIcon
                             className={`w-4 h-4 transition-transform ${isCustomerOpen ? "rotate-90" : ""}`}

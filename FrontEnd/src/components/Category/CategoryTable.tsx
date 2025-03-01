@@ -44,7 +44,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
   const columns: ColumnDef<Category>[] = [
     {
       accessorKey: 'name',
-      header: 'Category Name',
+      header: 'Tên danh mục',
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <img 
@@ -58,19 +58,19 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
     },
     {
       accessorKey: 'code',
-      header: 'Category Code',
+      header: 'Mã danh mục',
     },
     {
       accessorKey: 'description',
-      header: 'Description',
+      header: 'Mô tả',
     },
     {
       accessorKey: 'createdBy',
-      header: 'Created By',
+      header: 'Người tạo',
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: '',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <button className="cursor-pointer p-2 bg-blue-500 text-white rounded hover:bg-blue-700">

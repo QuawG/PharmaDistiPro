@@ -44,7 +44,7 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA })
   const columns: ColumnDef<SubCategory>[] = [
     {
       accessorKey: 'name',
-      header: 'Sub Category Name',
+      header: 'Danh mục phụ',
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <img 
@@ -58,23 +58,23 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA })
     },
     {
       accessorKey: 'parentCategory',
-      header: 'Parent Category',
+      header: 'Danh mục chính',
     },
     {
       accessorKey: 'code',
-      header: 'Category Code',
+      header: 'Mã danh mục',
     },
     {
       accessorKey: 'description',
-      header: 'Description',
+      header: 'Mô tả',
     },
     {
       accessorKey: 'createdBy',
-      header: 'Created By',
+      header: 'Người tạo',
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: '',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <button className="cursor-pointer p-2 bg-blue-500 text-white rounded hover:bg-blue-700">

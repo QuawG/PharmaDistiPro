@@ -68,7 +68,7 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
     },
     {
       accessorKey: 'name',
-      header: 'Product Name',
+      header: 'Tên sản phẩm',
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <img 
@@ -81,12 +81,8 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
       ),
     },
     {
-      accessorKey: 'sku',
-      header: 'SKU',
-    },
-    {
       accessorKey: 'category',
-      header: 'Category',
+      header: 'Danh mục chính',
     },
     {
       accessorKey: 'brand',
@@ -94,29 +90,29 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
     },
     {
       accessorKey: 'price',
-      header: 'Price',
+      header: 'Giá',
       cell: ({ row }) => (
         <span>${parseFloat(row.original.price).toFixed(2)}</span>
       ),
     },
     {
       accessorKey: 'unit',
-      header: 'Unit',
+      header: 'Đơn vị',
     },
     {
       accessorKey: 'qty',
-      header: 'Qty',
+      header: 'Số lượng',
       cell: ({ row }) => (
         <span>{parseFloat(row.original.qty).toFixed(2)}</span>
       ),
     },
     {
       accessorKey: 'createdBy',
-      header: 'Created By',
+      header: 'Người tạo',
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: '',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <button 

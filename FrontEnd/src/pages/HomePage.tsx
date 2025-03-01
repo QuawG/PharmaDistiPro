@@ -23,14 +23,15 @@ const HomePage = () => {
             <Sidebar activeSidebar={activePage} handleChangePage={handleChangePage} />
             <div className="flex-grow">
                 <Navbar />
-                {activePage === 'Product List' && <ProductListPage handleChangePage={handleChangePage} />}
-                {activePage === 'Category List' && <CategoryList handleChangePage={handleChangePage} />}
-                {activePage === 'Add Product' && <ProductAdd />}
-                {activePage === 'Add Category' && <CategoryAdd handleChangePage={handleChangePage} />} 
-                {activePage === 'SubCategory List' && <SubCategoryList handleChangePage={handleChangePage} />}
-                {activePage === 'Add Sub Category' && <SubAddCategory handleChangePage={handleChangePage} />}
-                {activePage === 'Customer List' && <CustomerListPage handleChangePage={handleChangePage} />}
-                {activePage === 'Add Customer' && <CustomerAdd />}
+                {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}
+                {activePage === 'Danh sách danh mục chính' && <CategoryList handleChangePage={handleChangePage} />}
+                {activePage === 'Thêm sản phẩm' && <ProductAdd />}
+                {/* {activePage === 'Add Product' && <ProductAdd handleChangePage={handleChangePage} />} */}
+                {activePage === 'Thêm danh mục chính' && <CategoryAdd handleChangePage={handleChangePage} />} 
+                {activePage === 'Danh sách danh mục phụ' && <SubCategoryList handleChangePage={handleChangePage} />}
+                {activePage === 'Thêm danh mục phụ' && <SubAddCategory handleChangePage={handleChangePage} />}
+                {activePage === 'Danh sách khách hàng' && <CustomerListPage handleChangePage={handleChangePage} />}
+                {activePage === 'Thêm khách hàng' && <CustomerAdd />}
                 
             </div>
         </div>

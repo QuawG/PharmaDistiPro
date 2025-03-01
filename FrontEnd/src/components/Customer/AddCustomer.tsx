@@ -3,8 +3,8 @@ export default function AddCustomer() {
         <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Add Customer</h1>
-                <p className="text-sm text-gray-500">Create a new customer</p>
+                <h1 className="text-xl font-semibold text-gray-900">Thêm khách hàng</h1>
+                <p className="text-sm text-gray-500">Tạo khách hàng mới</p>
             </div>
 
             {/* Form */}
@@ -12,11 +12,11 @@ export default function AddCustomer() {
                 {/* Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Full Name</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Tên khách hàng</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter full name"
+                            placeholder="Nhập tên khách hàng"
                         />
                     </div>
 
@@ -25,21 +25,21 @@ export default function AddCustomer() {
                         <input
                             type="email"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter email"
+                            placeholder="Nhập Email"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Phone</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Số điện thoại</label>
                         <input
                             type="tel"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter phone number"
+                            placeholder="Nhập số điện thoại"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Age</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Tuổi</label>
                         <input
                             type="number"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -51,20 +51,20 @@ export default function AddCustomer() {
                 {/* Row 2 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Address</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter address"
+                            placeholder="Nhập địa chỉ"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Status</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
                         <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                            <option value="">Choose Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
+                            <option value="">Chọn trạng thái</option>
+                            <option value="active">Hoạt động</option>
+                            <option value="inactive">Không hoạt động</option>
                         </select>
                     </div>
                 </div>
@@ -75,13 +75,13 @@ export default function AddCustomer() {
                         type="submit"
                         className="px-9 py-3.5 bg-amber-500 text-white rounded-sm font-bold text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
-                        Submit
+                        Lưu
                     </button>
                     <button
                         type="button"
                         className="px-9 py-3.5 bg-gray-500 text-white rounded-sm font-bold text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                     >
-                        Cancel
+                        Hủy
                     </button>
                 </div>
             </div>
