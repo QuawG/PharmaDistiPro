@@ -5,7 +5,7 @@ namespace PharmaDistiPro.Services.Interface
 {
     public interface IOrderService
     {
-        Task<Response<OrderDto>> GetOrderByCustomerId(int customerId);
+        Task<Response<IEnumerable<OrderDto>>> GetOrderByCustomerId(int customerId);
 
 
         //List ra orderDetail theo orderId

@@ -21,12 +21,12 @@ namespace PharmaDistiPro.Services.Impl
         }
 
         // get order cua customer
-        public async Task<Response<OrderDto>> GetOrderByCustomerId(int customerId)
+        public async Task<Response<IEnumerable<OrderDto>>> GetOrderByCustomerId(int customerId)
         {
-            Response<OrderDto> response = new Response<OrderDto>();
+            Response<IEnumerable<OrderDto>> response = new Response<IEnumerable<OrderDto>>();
             try
             {
-                var orders = await _orderRepository.GetSingleByConditionAsync(o => o.CustomerId == customerId);
+                var orders = await _orderRepository.GetByConditionAsync(o => o.CustomerId == customerId);
                 if (orders== null)
                 {
                     response.Success = false;
@@ -34,7 +34,7 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 else
                 {
-                    response.Data = _mapper.Map<OrderDto>(orders);
+                    response.Data = _mapper.Map<IEnumerable<OrderDto>>(orders);
                     response.Success = true;
                     return response;
                 }

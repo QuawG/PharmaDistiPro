@@ -30,7 +30,8 @@ namespace PharmaDistiPro
             options.UseSqlServer(connectionString)
            .EnableDetailedErrors()
            .EnableSensitiveDataLogging() // Thêm để ghi chi tiết lỗi
-);
+            );
+            builder.Services.AddHttpContextAccessor(); // Đăng ký IHttpContextAccessor
 
             #region cloudinary 
             var cloudName = builder.Configuration.GetValue<string>("Cloudinary:CloudName");
@@ -51,8 +52,8 @@ namespace PharmaDistiPro
 
             #region Add DI for services
             builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IOrderService, OrderService>();  
-
+            builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<ICartService, CartService>();
             #endregion
 
             // Register AutoMapper
