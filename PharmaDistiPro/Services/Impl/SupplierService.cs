@@ -125,5 +125,80 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
+        ///Deactivate/Active supplier
+        public async Task<Response<SupplierDTO>> ActivateDeactivateSupplier(int supplierId, bool update)
+        {
+            var response = new Response<SupplierDTO>();
+            try
+            {
+                //check if supplier exists
+                var suppliers = await _supplierRepository.GetByIdAsync(supplierId);
+                if (suppliers == null)
+                {
+                    response.Success = false;
+                    response.Data = _mapper.Map<SupplierDTO>(suppliers);
+                    response.Message = "Không tìm thấy nhà phân phối";
+                    return response;
+                }
+                else
+                {
+                    suppliers.Status = update;
+                    await _supplierRepository.UpdateAsync(suppliers);
+                    await _supplierRepository.SaveAsync();
+                    response.Success = true;
+                    response.Data = _mapper.Map<SupplierDTO>(suppliers);
+                    response.Message = "Cập nhật thành công";
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                return response;
+            }
+        }
+
+        // Update  supplier
+        public async Task<Response<SupplierDTO>> UpdateSupplier(SupplierInputRequest supplierUpdateRequest)
+        {
+            var response = new Response<SupplierDTO>();
+           
+
+            try
+            {
+                // Kiểm tra nhà phân phối có tồn tại không
+                var suppplierToUpdate = await _supplierRepository.GetByIdAsync(supplierUpdateRequest.Id);
+                if (suppplierToUpdate == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy nhà phân phối";
+                    return response;
+                }
+
+           
+
+                // Map dữ liệu từ DTO sang thực thể
+                _mapper.Map(supplierUpdateRequest, suppplierToUpdate);
+
+            
+
+                await _supplierRepository.UpdateAsync(suppplierToUpdate);
+                await _supplierRepository.SaveAsync();
+
+                response.Success = true;
+                response.Data = _mapper.Map<SupplierDTO>(suppplierToUpdate);
+                response.Message = "Cập nhật nhà phân phối thành công";
+            }
+            catch (Exception ex)
+            {
+               
+                response.Success = false;
+                response.Message = "Đã xảy ra lỗi trong quá trình cập nhật nhà phân phối.";
+            }
+
+            return response;
+        }
+
     }
 }

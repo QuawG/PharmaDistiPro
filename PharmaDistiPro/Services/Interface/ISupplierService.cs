@@ -4,16 +4,15 @@ namespace PharmaDistiPro.Services.Interface
 {
     public interface ISupplierService
     {
-        Task<Services.Response<SupplierDTO>> GetSupplierById(int supplierId);
         #region Supplier Management
+        Task<Services.Response<SupplierDTO>> ActivateDeactivateSupplier(int supplierId, bool update);
+        Task<Services.Response<SupplierDTO>> CreateNewSupplier(SupplierInputRequest supplierInputRequest);
+        Task<Services.Response<SupplierDTO>> GetSupplierById(int supplierId);
+     
 
         Task<Services.Response<IEnumerable<SupplierDTO>>> GetSupplierList();
-        //Task<Response<SupplierDTO>> ActivateDeactivateSupplier(int supplierId, bool update);
-
-        //Task<Response<SupplierDTO>> CreateNewSupplier(SupplierInputRequest supplier);
-        //Task<Response<SupplierDTO>> GetSupplierById(int supplierId);
-        //Task<Response<SupplierDTO>> UpdateSupplier(SupplierInputRequest supplier);
-
+        Task<Services.Response<SupplierDTO>> UpdateSupplier(SupplierInputRequest supplierUpdateRequest);
+      
 
         #endregion
 

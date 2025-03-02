@@ -26,8 +26,8 @@ namespace PharmaDistiPro.Helper
             //#endregion
 
             #region Supplier
-            CreateMap<Order, SupplierDTO>();
-            CreateMap<SupplierDTO, Order>();
+            CreateMap<Supplier, SupplierDTO>();
+            CreateMap<SupplierDTO, Supplier>();
             #endregion
 
 
