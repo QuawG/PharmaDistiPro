@@ -11,11 +11,8 @@ namespace PharmaDistiPro.Models
         }
 
         public int Id { get; set; }
-        public string? Name { get; set; }
-        public int? CreatedBy { get; set; }
-        public DateTime? CreatedDate { get; set; }
+        public string? RoleName { get; set; }
 
-        public virtual User? CreatedByNavigation { get; set; }
         public virtual ICollection<User> Users { get; set; }
     }
 }

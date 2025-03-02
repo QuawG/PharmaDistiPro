@@ -11,7 +11,7 @@ namespace PharmaDistiPro.Models
         }
 
         public int Id { get; set; }
-        public string? Code { get; set; }
+        public string? IssueNotesCode { get; set; }
         public int? OrderId { get; set; }
         public int? CustomerId { get; set; }
         public DateTime? Date { get; set; }
@@ -21,6 +21,7 @@ namespace PharmaDistiPro.Models
         public int? Status { get; set; }
 
         public virtual User? CreatedByNavigation { get; set; }
+        public virtual Order? Order { get; set; }
         public virtual ICollection<IssueNoteDetail> IssueNoteDetails { get; set; }
     }
 }
