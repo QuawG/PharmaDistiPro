@@ -1,10 +1,10 @@
-export default function AddCustomer() {
+export default function AddSupplier() {
     return (
         <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Thêm khách hàng</h1>
-                <p className="text-sm text-gray-500">Tạo khách hàng mới</p>
+                <h1 className="text-xl font-semibold text-gray-900">Tạo mới nhà cung cấp</h1>
+                <p className="text-sm text-gray-500">Tạo mới nhà cung cấp theo form bên dưới</p>
             </div>
 
             {/* Form */}
@@ -12,11 +12,11 @@ export default function AddCustomer() {
                 {/* Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tên khách hàng</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Tên nhà cung cấp</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên khách hàng"
+                            placeholder="Nhập tên nhà cung cấp "
                         />
                     </div>
 
@@ -25,7 +25,7 @@ export default function AddCustomer() {
                         <input
                             type="email"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập Email"
+                            placeholder="Nhập email"
                         />
                     </div>
 
@@ -39,18 +39,6 @@ export default function AddCustomer() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tuổi</label>
-                        <input
-                            type="number"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter age"
-                        />
-                    </div>
-                </div>
-
-                {/* Row 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1">
                         <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ</label>
                         <input
                             type="text"
@@ -58,11 +46,23 @@ export default function AddCustomer() {
                             placeholder="Nhập địa chỉ"
                         />
                     </div>
+                </div>
+
+                {/* Row 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Tạo bởi</label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập tên người tạo"
+                        />
+                    </div>
 
                     <div className="space-y-1">
                         <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
                         <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                            <option value="">Chọn trạng thái</option>
+                            <option value="">Tùy chỉnh trạng thái</option>
                             <option value="active">Hoạt động</option>
                             <option value="inactive">Không hoạt động</option>
                         </select>
@@ -81,7 +81,7 @@ export default function AddCustomer() {
                         type="button"
                         className="px-9 py-3.5 bg-gray-500 text-white rounded-sm font-bold text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                     >
-                        Hủy
+                       Hủy
                     </button>
                 </div>
             </div>

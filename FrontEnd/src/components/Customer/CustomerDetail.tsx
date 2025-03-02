@@ -53,8 +53,8 @@ export default function CustomerDetail({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Customer Details</h1>
-            <p className="text-sm text-gray-500">Full details of the customer</p>
+            <h1 className="text-xl font-semibold text-gray-900">Thông tin khách hàng</h1>
+            <p className="text-sm text-gray-500">Toàn bộ thông tin khách hàng</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -62,11 +62,11 @@ export default function CustomerDetail({
               <table className="w-full">
                 <tbody>
                   <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 w-1/3">Name</td>
+                    <td className="px-4 py-3 bg-gray-50 w-1/3">Tên</td>
                     <td className="px-4 py-3">{customer?.name || "N/A"}</td>
                   </tr>
                   <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Age</td>
+                    <td className="px-4 py-3 bg-gray-50">Tuổi</td>
                     <td className="px-4 py-3">{customer?.age || "N/A"}</td>
                   </tr>
                   <tr className="border-b-[1px] border-b-gray-300">
@@ -74,11 +74,11 @@ export default function CustomerDetail({
                     <td className="px-4 py-3">{customer?.email || "N/A"}</td>
                   </tr>
                   <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Phone</td>
+                    <td className="px-4 py-3 bg-gray-50">Số điện thoại</td>
                     <td className="px-4 py-3">{customer?.phone || "N/A"}</td>
                   </tr>
                   <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Address</td>
+                    <td className="px-4 py-3 bg-gray-50">Địa chỉ</td>
                     <td className="px-4 py-3">{customer?.address || "N/A"}</td>
                   </tr>
                   <tr className="border-b-[1px] border-b-gray-300">
@@ -86,12 +86,12 @@ export default function CustomerDetail({
                     <td className="px-4 py-3">{customer?.createdBy || "N/A"}</td>
                   </tr>
                   <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Created At</td>
+                    <td className="px-4 py-3 bg-gray-50">Người tạo</td>
                     <td className="px-4 py-3">{customer?.createdAt || "N/A"}</td>
                   </tr>
       
                   <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Status</td>
+                    <td className="px-4 py-3 bg-gray-50">Trạng thái</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-sm ${customer?.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>{customer?.status || "N/A"}</span>
                     </td>

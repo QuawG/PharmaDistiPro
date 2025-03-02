@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Printer, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function ProductDetailsModal({
@@ -51,35 +51,28 @@ export default function ProductDetailsModal({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Product Details</h1>
-            <p className="text-sm text-gray-500">Full details of a product</p>
+            <h1 className="text-xl font-semibold text-gray-900">Chi tiết sản phẩm</h1>
+            <p className="text-sm text-gray-500">Toàn bộ thông tin về sản phẩm</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <div className="mb-6 p-4 border-gray-300 border-[1px] rounded-lg inline-block">
-                <div className="flex items-center gap-4">
-                  <img src="https://cdn-dfhjh.nitrocdn.com/BzQnABYFnLkAUVnIDRwDtFjmHEaLtdtL/assets/images/optimized/rev-a58b9b0/www.gtin.info/wp-content/uploads/2015/02/barcode-16.png" alt="Barcode" className="h-20" />
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <Printer className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
+              
 
               {/* Details Table */}
               <div className="border-[1px] border-gray-300 rounded-lg overflow-hidden">
                 <table className="w-full">
                   <tbody >
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50 w-1/3">Product</td>
+                      <td className="px-4 py-3 bg-gray-50 w-1/3">Sản phẩm</td>
                       <td className="px-4 py-3">Macbook pro</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Category</td>
+                      <td className="px-4 py-3 bg-gray-50">Danh mục</td>
                       <td className="px-4 py-3">Computers</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Sub Category</td>
+                      <td className="px-4 py-3 bg-gray-50">Danh mục phụ</td>
                       <td className="px-4 py-3">None</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
@@ -87,7 +80,7 @@ export default function ProductDetailsModal({
                       <td className="px-4 py-3">None</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Unit</td>
+                      <td className="px-4 py-3 bg-gray-50">Đơn vị</td>
                       <td className="px-4 py-3">Piece</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
@@ -99,29 +92,29 @@ export default function ProductDetailsModal({
                       <td className="px-4 py-3">5</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Quantity</td>
+                      <td className="px-4 py-3 bg-gray-50">Số lượng</td>
                       <td className="px-4 py-3">50</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Tax</td>
+                      <td className="px-4 py-3 bg-gray-50">Thuế</td>
                       <td className="px-4 py-3">0.00 %</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Discount Type</td>
+                      <td className="px-4 py-3 bg-gray-50">Giảm giá</td>
                       <td className="px-4 py-3">Percentage</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Price</td>
+                      <td className="px-4 py-3 bg-gray-50">Giá</td>
                       <td className="px-4 py-3">1500.00</td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Status</td>
+                      <td className="px-4 py-3 bg-gray-50">Trạng thái</td>
                       <td className="px-4 py-3">
                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Active</span>
                       </td>
                     </tr>
                     <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Description</td>
+                      <td className="px-4 py-3 bg-gray-50">Mô tả</td>
                       <td className="px-4 py-3">
                         Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
                         industry's standard dummy text ever since the 1500s,

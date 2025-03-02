@@ -1,10 +1,10 @@
-export default function AddCustomer() {
+export default function AddUser() {
     return (
         <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Thêm khách hàng</h1>
-                <p className="text-sm text-gray-500">Tạo khách hàng mới</p>
+                <h1 className="text-xl font-semibold text-gray-900">Thêm người dùng mới</h1>
+                <p className="text-sm text-gray-500">Tạo một người dùng mới theo form bên dưới</p>
             </div>
 
             {/* Form */}
@@ -12,11 +12,20 @@ export default function AddCustomer() {
                 {/* Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tên khách hàng</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Tên riêng</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên khách hàng"
+                            placeholder="Nhập tên riêng "
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Tên họ</label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập tên họ "
                         />
                     </div>
 
@@ -25,7 +34,7 @@ export default function AddCustomer() {
                         <input
                             type="email"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập Email"
+                            placeholder="Nhập email "
                         />
                     </div>
 
@@ -37,15 +46,6 @@ export default function AddCustomer() {
                             placeholder="Nhập số điện thoại"
                         />
                     </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tuổi</label>
-                        <input
-                            type="number"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter age"
-                        />
-                    </div>
                 </div>
 
                 {/* Row 2 */}
@@ -55,16 +55,34 @@ export default function AddCustomer() {
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập địa chỉ"
+                            placeholder="Nhập địa chỉ "
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Vai trò</label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập vai trò"
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Mã số nhân viên</label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập mã số nhân viên "
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Trạng thái tài khoản</label>
                         <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                            <option value="">Chọn trạng thái</option>
-                            <option value="active">Hoạt động</option>
-                            <option value="inactive">Không hoạt động</option>
+                            <option value="">Thiết lập trạng thái</option>
+                            <option value="active">Kích hoạt</option>
+                            <option value="inactive">Vô hiệu hóa</option>
                         </select>
                     </div>
                 </div>

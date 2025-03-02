@@ -10,40 +10,40 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Eye, Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import ProductDetailsModal from './ProductDetail';
+import SupplierDetailsModal from './SupplierDetail'; // Cần tạo SupplierDetail
 
-interface Product {
-  id: number;
-  image: string;
+interface Supplier {
+  supplierId: number;
   name: string;
-  sku: string;
-  category: string;
-  brand: string;
-  price: string;
-  unit: string;
-  qty: string;
+  address: string;
+  phone: string;
   createdBy: string;
+  createdDate: string; 
 }
 
-interface ProductTable {
-  PRODUCTS_DATA: Product[]
+interface SupplierTableProps {
+  SUPPLIERS_DATA: Supplier[];
 }
 
-
-
-const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
+const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+
   const handleDelete = () => {
-    setIsDeleteModalOpen(false)
-  }
-  const columns: ColumnDef<Product>[] = [
+    setIsDeleteModalOpen(false);
+    // Thực hiện xóa nhà cung cấp ở đây
+  };
+  const handleSave = (updatedSupplier: any) => {
+    console.log('Supplier saved:', updatedSupplier);
+};
+  const columns: ColumnDef<Supplier>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -62,72 +62,23 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
           onChange={row.getToggleSelectedHandler()}
         />
       ),
-            
-      
       enableSorting: false,
     },
-    {
-      accessorKey: 'name',
-      header: 'Tên sản phẩm',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-3">
-          <img 
-            src={row.original.image} 
-            alt={row.original.name}
-            className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-          />
-          <span className="font-medium">{row.original.name}</span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'category',
-      header: 'Danh mục chính',
-    },
-    {
-      accessorKey: 'brand',
-      header: 'Brand',
-    },
-    {
-      accessorKey: 'price',
-      header: 'Giá',
-      cell: ({ row }) => (
-        <span>${parseFloat(row.original.price).toFixed(2)}</span>
-      ),
-    },
-    {
-      accessorKey: 'unit',
-      header: 'Đơn vị',
-    },
-    {
-      accessorKey: 'qty',
-      header: 'Số lượng',
-      cell: ({ row }) => (
-        <span>{parseFloat(row.original.qty).toFixed(2)}</span>
-      ),
-    },
-    {
-      accessorKey: 'createdBy',
-      header: 'Người tạo',
-    },
+    { accessorKey: 'supplierId', header: 'ID' },
+    { accessorKey: 'name', header: 'Tên' },
+    { accessorKey: 'phone', header: 'Số điện thoại' },
     {
       id: 'actions',
-      header: '',
+      header: 'Tính năng',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button 
-            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
-            onClick={() => setIsOpen(true)}
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button 
+          <button
             className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
             onClick={() => handleEdit(row.original)}
           >
             <Pencil className="w-4 h-4" />
           </button>
-          <button 
+          <button
             className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
             onClick={() => setIsDeleteModalOpen(true)}
           >
@@ -139,16 +90,13 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
     },
   ];
 
-
-
-  const handleEdit = (product: Product) => {
-    console.log('Edit product:', product);
+  const handleEdit = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setIsOpen(true);
   };
 
-
-
   const table = useReactTable({
-    data: PRODUCTS_DATA,
+    data: SUPPLIERS_DATA,
     columns,
     state: {
       sorting,
@@ -177,21 +125,13 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="border-none bg-gray-50">
                 {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id}
-                    className="px-4 py-3 text-left text-[14px] font-bold"
-                  >
+                  <th key={header.id} className="px-4 py-3 text-left text-[14px] font-bold">
                     {header.isPlaceholder ? null : (
                       <div
-                        className={`flex items-center gap-2 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none' : ''
-                        }`}
+                        className="flex items-center gap-2 cursor-pointer select-none"
                         onClick={header.column.getToggleSortingHandler()}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
                         {{
                           asc: <ChevronUp className="w-4 h-4" />,
                           desc: <ChevronDown className="w-4 h-4" />,
@@ -205,10 +145,7 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr 
-                key={row.id}
-                className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors"
-              >
+              <tr key={row.id} className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors">
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="px-4 py-3 text-sm text-gray-800 opacity-90">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -222,7 +159,7 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
 
       <div className="flex items-center justify-between px-4 py-3 border-t">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Show</span>
+          <span className="text-sm text-gray-600">Hiển thị</span>
           <select
             value={pageSize}
             onChange={e => {
@@ -237,12 +174,12 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
               </option>
             ))}
           </select>
-          <span className="text-sm text-gray-600">entries</span>
+          <span className="text-sm text-gray-600">mục</span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="text-sm text-gray-600">
-            Page{' '}
+            Trang{' '}
             <strong>
               {table.getState().pagination.pageIndex + 1} of{' '}
               {table.getPageCount()}
@@ -258,7 +195,7 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Previous
+              Trước
             </button>
             <button
               className={`px-3 py-1 text-sm rounded ${
@@ -269,22 +206,25 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Next
+              Sau
             </button>
           </div>
         </div>
       </div>
+
       <DeleteConfirmation
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
       />
-      <ProductDetailsModal 
+      <SupplierDetailsModal 
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        supplier={selectedSupplier} // Truyền supplier vào modal
+        onSave={handleSave} // Truyền hàm handleSave vào modal
       />
     </div>
   );
 };
 
-export default ProductTable;
+export default SupplierTable;

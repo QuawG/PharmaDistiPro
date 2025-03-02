@@ -46,7 +46,7 @@ const PRODUCTS_DATA: Product[] = [
   },
   {
     id: 3,
-    image: "https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=612x612&w=0&k=20&c=rnCKVbdxqkjlcs3xH87-9gocETqpspHFXu5dIGB4wuM=",
+    image: "https://genk.mediacdn.vn/139269124445442048/2023/6/6/macbook-air-15-inch-6-16860313066961124865501-1686038279968-168603828012719897017.jpg",
     name: "Pineapple",
     sku: "PT003",
     category: "Fruits",
@@ -165,15 +165,15 @@ const ProductListPage: React.FC <ProductListPageProps> = ({handleChangePage}) =>
       {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Product List</h1>
-          <p className="text-sm text-gray-500">Manage your products</p>
+          <h1 className="text-xl font-semibold text-gray-900">Danh sách sản phẩm</h1>
+          <p className="text-sm text-gray-500">Quản lý sản phẩm</p>
         </div>
         <button 
         onClick={() => {
-          handleChangePage('Add Product')
+          handleChangePage('Thêm sản phẩm')
         }}
         className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Add New Product
+          <PlusIcon className='w-5 h-5 font-bold'/> Thêm sản phẩm mới
         </button>
       </div>
 
@@ -187,7 +187,7 @@ const ProductListPage: React.FC <ProductListPageProps> = ({handleChangePage}) =>
             <div className="relative">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Tìm kiếm..."
               className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
               value={searchTerm}
               onChange={handleSearch}

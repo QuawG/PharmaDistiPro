@@ -3,8 +3,8 @@ export default function ProductAdd() {
       <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-xl font-semibold text-gray-900">Product Add</h1>
-          <p className="text-sm text-gray-500">Create new product</p>
+          <h1 className="text-xl font-semibold text-gray-900">Thêm sản phẩm</h1>
+          <p className="text-sm text-gray-500">Tạo sản phẩm mới</p>
         </div>
   
         {/* Form */}
@@ -13,21 +13,21 @@ export default function ProductAdd() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Product Name
+                Tên sản phẩm
               </label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter product name"
+                placeholder="Nhập tên sản phẩm"
               />
             </div>
   
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Category
+                Danh mục chính
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white">
-                <option value="">Choose Category</option>
+                <option value="">Chọn danh mục chính</option>
                 <option value="electronics">Electronics</option>
                 <option value="clothing">Clothing</option>
                 <option value="food">Food</option>
@@ -36,10 +36,10 @@ export default function ProductAdd() {
   
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Sub Category
+                Danh mục phụ
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white">
-                <option value="">Choose Sub Category</option>
+                <option value="">Chọn danh mục phụ</option>
                 <option value="phones">Phones</option>
                 <option value="laptops">Laptops</option>
                 <option value="tablets">Tablets</option>
@@ -63,26 +63,16 @@ export default function ProductAdd() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Unit
+                Đơn vị
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white">
-                <option value="">Choose Unit</option>
+                <option value="">Chọn đơn vị</option>
                 <option value="piece">Piece</option>
                 <option value="kg">Kilogram</option>
                 <option value="liter">Liter</option>
               </select>
             </div>
   
-            <div className="space-y-1">
-              <label className="block text-[14px] mb-2 text-gray-700">
-                SKU
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter SKU"
-              />
-            </div>
   
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
@@ -97,7 +87,7 @@ export default function ProductAdd() {
   
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Quantity
+                Số lượng
               </label>
               <input
                 type="number"
@@ -110,7 +100,7 @@ export default function ProductAdd() {
           {/* Description */}
           <div className="space-y-1">
             <label className="block text-[14px] mb-2 text-gray-700">
-              Description
+              Mô tả
             </label>
             <textarea
               rows={4}
@@ -123,10 +113,10 @@ export default function ProductAdd() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Tax
+                Thuế
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white">
-                <option value="">Choose Tax</option>
+                <option value="">Chọn loại thuế</option>
                 <option value="none">None</option>
                 <option value="vat">VAT (10%)</option>
                 <option value="gst">GST (7%)</option>
@@ -135,7 +125,7 @@ export default function ProductAdd() {
   
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Discount Type
+                Hình thức giảm giá
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white">
                 <option value="">Percentage</option>
@@ -146,7 +136,7 @@ export default function ProductAdd() {
   
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Price
+                Giá
               </label>
               <input
                 type="number"
@@ -157,7 +147,7 @@ export default function ProductAdd() {
   
             <div className="space-y-1">
               <label className="block text-[14px] mb-2 text-gray-700">
-                Status
+                Trạng thái
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white">
                 <option value="">Closed</option>
@@ -169,7 +159,7 @@ export default function ProductAdd() {
   
           <div className="space-y-1">
             <label className="block text-[14px] mb-2 text-gray-700">
-              Product Image
+              Ảnh sản phẩm
             </label>
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
               <div className="space-y-1 text-center">
@@ -192,12 +182,12 @@ export default function ProductAdd() {
                     htmlFor="file-upload"
                     className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                   >
-                    <span>Upload a file</span>
+                    <span>Chọn file</span>
                     <input id="file-upload" name="file-upload" type="file" className="sr-only" />
                   </label>
-                  <p className="pl-1">or drag and drop</p>
+                  <p className="pl-1">hoặc kéo thả</p>
                 </div>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                <p className="text-xs text-gray-500">PNG, JPG, GIF tới 10MB</p>
               </div>
             </div>
           </div>
@@ -207,17 +197,16 @@ export default function ProductAdd() {
               type="submit"
               className="px-9 py-3.5 bg-amber-500 text-white rounded-sm font-bold text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              Submit
+              Lưu
             </button>
             <button
               type="button"
               className="px-9 py-3.5 bg-gray-500 text-white rounded-sm font-bold text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
-              Cancel
+              Hủy
             </button>
           </div>
         </div>
       </div>
     )
   }
-  

@@ -10,40 +10,48 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Eye, Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import ProductDetailsModal from './ProductDetail';
+import UserDetailsModal from './UserDetail'; // Đảm bảo bạn đã tạo UserDetail
 
-interface Product {
+interface User {
   id: number;
-  image: string;
-  name: string;
-  sku: string;
-  category: string;
-  brand: string;
-  price: string;
-  unit: string;
-  qty: string;
+  avatar: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  role: string;
+  employeeCode: string;
   createdBy: string;
+  createdDate: string; 
 }
 
-interface ProductTable {
-  PRODUCTS_DATA: Product[]
+interface UserTableProps {
+  USERS_DATA: User[];
 }
 
-
-
-const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
+const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const handleSave = (updatedUser: User) => {
+    console.log('User updated:', updatedUser);
+    // Cập nhật danh sách người dùng nếu cần
+  };
+
   const handleDelete = () => {
-    setIsDeleteModalOpen(false)
-  }
-  const columns: ColumnDef<Product>[] = [
+    setIsDeleteModalOpen(false);
+    // Logic xóa người dùng
+  };
+
+  const columns: ColumnDef<User>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -62,75 +70,30 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
           onChange={row.getToggleSelectedHandler()}
         />
       ),
-            
-      
       enableSorting: false,
     },
     {
-      accessorKey: 'name',
-      header: 'Tên sản phẩm',
+      id: 'avatar',
+      header: 'Ảnh đại diện',
       cell: ({ row }) => (
-        <div className="flex items-center gap-3">
-          <img 
-            src={row.original.image} 
-            alt={row.original.name}
-            className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-          />
-          <span className="font-medium">{row.original.name}</span>
-        </div>
+        <img src={row.original.avatar} alt={`${row.original.firstName} ${row.original.lastName}`} className="w-28 h-20" />
       ),
+      enableSorting: false,
     },
-    {
-      accessorKey: 'category',
-      header: 'Danh mục chính',
-    },
-    {
-      accessorKey: 'brand',
-      header: 'Brand',
-    },
-    {
-      accessorKey: 'price',
-      header: 'Giá',
-      cell: ({ row }) => (
-        <span>${parseFloat(row.original.price).toFixed(2)}</span>
-      ),
-    },
-    {
-      accessorKey: 'unit',
-      header: 'Đơn vị',
-    },
-    {
-      accessorKey: 'qty',
-      header: 'Số lượng',
-      cell: ({ row }) => (
-        <span>{parseFloat(row.original.qty).toFixed(2)}</span>
-      ),
-    },
-    {
-      accessorKey: 'createdBy',
-      header: 'Người tạo',
-    },
+    { accessorKey: 'firstName', header: 'Tên riêng' },
+    { accessorKey: 'lastName', header: 'Tên họ' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'phone', header: 'Số điện thoại' },
+    { accessorKey: 'address', header: 'Địa chỉ' },
     {
       id: 'actions',
-      header: '',
+      header: 'Tính năng',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button 
-            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
-            onClick={() => setIsOpen(true)}
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button 
-            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
-            onClick={() => handleEdit(row.original)}
-          >
+          <button className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500" onClick={() => handleEdit(row.original)}>
             <Pencil className="w-4 h-4" />
           </button>
-          <button 
-            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
-            onClick={() => setIsDeleteModalOpen(true)}
-          >
+          <button className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500" onClick={() => setIsDeleteModalOpen(true)}>
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -139,16 +102,13 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
     },
   ];
 
-
-
-  const handleEdit = (product: Product) => {
-    console.log('Edit product:', product);
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setIsOpen(true);
   };
 
-
-
   const table = useReactTable({
-    data: PRODUCTS_DATA,
+    data: USERS_DATA,
     columns,
     state: {
       sorting,
@@ -177,21 +137,13 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="border-none bg-gray-50">
                 {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id}
-                    className="px-4 py-3 text-left text-[14px] font-bold"
-                  >
+                  <th key={header.id} className="px-4 py-3 text-left text-[14px] font-bold">
                     {header.isPlaceholder ? null : (
                       <div
-                        className={`flex items-center gap-2 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none' : ''
-                        }`}
+                        className="flex items-center gap-2 cursor-pointer select-none"
                         onClick={header.column.getToggleSortingHandler()}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
                         {{
                           asc: <ChevronUp className="w-4 h-4" />,
                           desc: <ChevronDown className="w-4 h-4" />,
@@ -205,10 +157,7 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr 
-                key={row.id}
-                className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors"
-              >
+              <tr key={row.id} className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors">
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="px-4 py-3 text-sm text-gray-800 opacity-90">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -222,7 +171,7 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
 
       <div className="flex items-center justify-between px-4 py-3 border-t">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Show</span>
+          <span className="text-sm text-gray-600">Hiển thị</span>
           <select
             value={pageSize}
             onChange={e => {
@@ -237,12 +186,12 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
               </option>
             ))}
           </select>
-          <span className="text-sm text-gray-600">entries</span>
+          <span className="text-sm text-gray-600">mục</span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="text-sm text-gray-600">
-            Page{' '}
+            Trang{' '}
             <strong>
               {table.getState().pagination.pageIndex + 1} of{' '}
               {table.getPageCount()}
@@ -258,7 +207,7 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Previous
+             Trước
             </button>
             <button
               className={`px-3 py-1 text-sm rounded ${
@@ -269,22 +218,25 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Next
+              Sau
             </button>
           </div>
         </div>
       </div>
+
       <DeleteConfirmation
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
       />
-      <ProductDetailsModal 
+      <UserDetailsModal 
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        user={selectedUser} 
+        onSave={handleSave} 
       />
     </div>
   );
 };
 
-export default ProductTable;
+export default UserTable;

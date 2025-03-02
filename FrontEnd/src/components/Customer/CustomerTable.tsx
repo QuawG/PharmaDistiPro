@@ -68,13 +68,13 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
       ),
       enableSorting: false,
     },
-    { accessorKey: 'name', header: 'Name' },
+    { accessorKey: 'name', header: 'Tên khách hàng' },
     { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'phone', header: 'Phone' },
-    { accessorKey: 'address', header: 'Address' },
+    { accessorKey: 'phone', header: 'Số điện thoại' },
+    { accessorKey: 'address', header: 'Địa chỉ' },
     {
       id: 'actions',
-      header: 'Actions',
+      header: '',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <button className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500" onClick={() => setIsOpen(true)}>
