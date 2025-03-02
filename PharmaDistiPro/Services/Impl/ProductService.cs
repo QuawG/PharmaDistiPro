@@ -1,4 +1,4 @@
-﻿namespace PharmaDistiPro.Services
+﻿namespace PharmaDistiPro.Services.Impl
 {
     public class ProductService
     {

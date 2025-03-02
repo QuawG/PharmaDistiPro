@@ -151,3 +151,6 @@ D:\PharmaDistiPro\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\refint\PharmaDi
 D:\PharmaDistiPro\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDistiPro.pdb
 D:\PharmaDistiPro\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDistiPro.genruntimeconfig.cache
 D:\PharmaDistiPro\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\ref\PharmaDistiPro.dll
+D:\PharmaDistiPro\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\AutoMapper.dll
+D:\PharmaDistiPro\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\CloudinaryDotNet.dll
+D:\PharmaDistiPro\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\Newtonsoft.Json.dll
