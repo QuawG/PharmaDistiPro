@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { HomeIcon, InboxStackIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, InboxStackIcon, ChevronRightIcon, UserIcon } from "@heroicons/react/24/outline";
+import { StoreIcon } from "lucide-react";
 
 const ProductList = [
     "Danh sách sản phẩm",
@@ -13,8 +14,17 @@ const ProductList = [
 
 const CustomerList = [
     "Danh sách khách hàng",
-    "Thêm khách hàng",
-    "Customer Group"
+    "Thêm khách hàng"
+];
+
+const UserList = [
+    "Danh sách người dùng",
+    "Thêm người dùng"
+];
+
+const SupplierList = [
+    "Danh sách nhà cung cấp",
+    "Thêm nhà cung cấp"
 ];
 
 interface SidebarProps {
@@ -23,17 +33,14 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) => {
-    const [activeMenuSidebar, setActiveMenuSidebar] = useState<string | null>("product");
-    const [isProductOpen, setIsProductOpen] = useState(false);
+    const [activeMenuSidebar] = useState<string | null>("product");
+    const [isProductOpen, setIsProductOpen] = useState(false); 
+    const [activeItem, setActiveItem] = useState<string | null>(activeSidebar); 
     const [isCustomerOpen, setIsCustomerOpen] = useState(false);
-    const [activeItem, setActiveItem] = useState<string | null>(activeSidebar);
+    const [isUserOpen, setIsUserOpen] = useState(false);
+    const [isSupplierOpen, setIsSupplierOpen] = useState(false);
 
     const handleItemClick = (item: string) => {
-        if (ProductList.includes(item)) {
-            setActiveMenuSidebar("product");
-        } else if (CustomerList.includes(item)) {
-            setActiveMenuSidebar("customer");
-        }
         setActiveItem(item);
         handleChangePage(item);
     };
@@ -41,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     return (
         <div className="w-[260px] border-r-[1px] border-r-gray-200 z-20 bg-white h-full">
             <div className="w-full">
-            <img className="w-[150px] mx-auto my-1" src="/img/logoPharma.png" alt="Pharma Logo" />
+                <img className="w-[150px] mx-auto my-1" src="/img/logoPharma.png" alt="Pharma Logo" />
             </div>
 
             <div className="p-5 w-full">
@@ -72,8 +79,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                             className={`w-4 h-4 transition-transform ${isProductOpen ? "rotate-90" : ""}`}
                         />
                     </div>
-
-                    {/* Danh sách ProductList */}
                     <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isProductOpen ? "max-h-[500px]" : "max-h-0"}`}>
                         {ProductList.map((item, index) => (
                             <li
@@ -97,17 +102,73 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                         onClick={() => setIsCustomerOpen(!isCustomerOpen)}
                     >
                         <span className="flex items-center">
-                            <InboxStackIcon className="mr-[6px] w-4 h-4" />
+                            <UserIcon className="mr-[6px] w-4 h-4" />
                             Khách hàng
                         </span>
                         <ChevronRightIcon
                             className={`w-4 h-4 transition-transform ${isCustomerOpen ? "rotate-90" : ""}`}
                         />
                     </div>
-
-                    {/* Danh sách CustomerList */}
                     <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isCustomerOpen ? "max-h-[500px]" : "max-h-0"}`}>
                         {CustomerList.map((item, index) => (
+                            <li
+                                key={index}
+                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400
+                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
+                                onClick={() => handleItemClick(item)}
+                            >
+                                {item}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* User */}
+                <div>
+                    <div
+                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
+                            ${isUserOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
+                        onClick={() => setIsUserOpen(!isUserOpen)}
+                    >
+                        <span className="flex items-center">
+                            <UserIcon className="mr-[6px] w-4 h-4" />
+                            Người dùng
+                        </span>
+                        <ChevronRightIcon
+                            className={`w-4 h-4 transition-transform ${isUserOpen ? "rotate-90" : ""}`}
+                        />
+                    </div>
+                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isUserOpen ? "max-h-[500px]" : "max-h-0"}`}>
+                        {UserList.map((item, index) => (
+                            <li
+                                key={index}
+                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400
+                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
+                                onClick={() => handleItemClick(item)}
+                            >
+                                {item}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* Supplier */}
+                <div>
+                    <div
+                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
+                            ${isSupplierOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
+                        onClick={() => setIsSupplierOpen(!isSupplierOpen)}
+                    >
+                        <span className="flex items-center">
+                            <StoreIcon className="mr-[6px] w-4 h-4" />
+                            Nhà cung cấp
+                        </span>
+                        <ChevronRightIcon
+                            className={`w-4 h-4 transition-transform ${isSupplierOpen ? "rotate-90" : ""}`}
+                        />
+                    </div>
+                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isSupplierOpen ? "max-h-[500px]" : "max-h-0"}`}>
+                        {SupplierList.map((item, index) => (
                             <li
                                 key={index}
                                 className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400

@@ -62,7 +62,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
     },
     {
       id: 'avatar',
-      header: 'Hình đại diện',
+      header: 'Avatar',
       cell: ({ row }) => (
         <img src={row.original.avatar} alt={row.original.name} className="w-28 h-20 " />
       ),

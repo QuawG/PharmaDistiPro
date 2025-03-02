@@ -1,99 +1,67 @@
 import React, { useState } from 'react'; 
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import CustomerTable from '../../components/Customer/CustomerTable';
+import UserTable from '../../components/User/UserTable'; // Đảm bảo bạn đã tạo UserTable
 
-interface CustomerListPageProps {
+interface UserListPageProps {
   handleChangePage: (page: string) => void;
 }
 
-interface Customer {
+interface User {
     id: number;
     avatar: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     address: string;
+    role: string;
+    employeeCode: string;
     createdBy: string;
-    createdAt: string; 
-  }
+    createdDate: string; 
+}
 
-const CUSTOMERS_DATA: Customer[] = [
+const USERS_DATA: User[] = [
   {
     id: 1,
-    name: "John Doe",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
+    firstName: "John",
+    lastName: "Doe",
+    avatar: "https://via.placeholder.com/150",
     email: "john@example.com",
     phone: "123-456-7890",
     address: "123 Main St",
+    role: "Admin",
+    employeeCode: "EMP001",
     createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
+    createdDate: "2023-01-01T00:00:00Z" 
   },
   {
     id: 2,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
+    firstName: "Jane",
+    lastName: "Smith",
+    avatar: "https://via.placeholder.com/150",
     email: "jane@example.com",
     phone: "234-567-8901",
     address: "456 Maple Ave",
+    role: "User",
+    employeeCode: "EMP002",
     createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
+    createdDate: "2023-01-02T00:00:00Z" 
   },
-  {
-    id: 3,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  },
-
-  {
-    id: 4,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  },
-  {
-    id: 5,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  },
-  {
-    id: 6,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  }
 ];
 
-const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage }) => {
+const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>(CUSTOMERS_DATA);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>(USERS_DATA);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
 
-    const filtered = CUSTOMERS_DATA.filter(customer =>
-      customer.name.toLowerCase().includes(value.toLowerCase())
+    const filtered = USERS_DATA.filter(user =>
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(value.toLowerCase())
     );
-    setFilteredCustomers(filtered);
+    setFilteredUsers(filtered);
   };
 
   return (
@@ -101,13 +69,13 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
       {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Danh sách khách hàng</h1>
-          <p className="text-sm text-gray-500">Quản lí khách hàng</p>
+          <h1 className="text-xl font-semibold text-gray-900">Danh sách người dùng</h1>
+          <p className="text-sm text-gray-500">Quản lí người dùng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Add Customer')}
+          onClick={() => handleChangePage('Add User')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/>Thêm khách hàng mới
+          <PlusIcon className='w-5 h-5 font-bold'/> Thêm người dùng mới
         </button>
       </div>
 
@@ -121,7 +89,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
             <div className="relative">
               <input
                 type="text"
-                placeholder="Tìm kiếm..."
+                placeholder="Search..."
                 className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -147,11 +115,12 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
         </div>
 
         {/* Table */}
-        <CustomerTable CUSTOMERS_DATA={filteredCustomers} />
+        <UserTable USERS_DATA={filteredUsers} />
+        {/* <UserDetail isOpen={true} onClose={() => {}} user={userData} /> */}
         
       </div>
     </div>
   );
 };
 
-export default CustomerListPage;
+export default UserListPage;

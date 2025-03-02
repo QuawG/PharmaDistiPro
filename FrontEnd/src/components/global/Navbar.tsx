@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Transition } from "@headlessui/react";
-import { Bell, Settings, User, LogOut } from "lucide-react";
+import {  Settings, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export interface Language {
@@ -24,12 +24,12 @@ export interface User {
     avatar: string;
 }
 
-const languages: Language[] = [
-    { code: "en", name: "English", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWYW5_EOLH0Qo4eAH8icpJc_yYWszkhNs-Lg&s" },
-    { code: "fr", name: "French", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJTdYV8slYr9JgTw4LsMPP9DdaEj36iVVfEA&s" },
-    { code: "es", name: "Spanish", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMMr0gPdt8WQFr18uN4gdiNz_lJZCZfexCbg&s" },
-    { code: "de", name: "German", flag: "https://www.countryflags.com/wp-content/uploads/germany-flag-png-xl.png" },
-];
+// const languages: Language[] = [
+//     { code: "en", name: "English", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWYW5_EOLH0Qo4eAH8icpJc_yYWszkhNs-Lg&s" },
+//     { code: "fr", name: "French", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJTdYV8slYr9JgTw4LsMPP9DdaEj36iVVfEA&s" },
+//     { code: "es", name: "Spanish", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMMr0gPdt8WQFr18uN4gdiNz_lJZCZfexCbg&s" },
+//     { code: "de", name: "German", flag: "https://www.countryflags.com/wp-content/uploads/germany-flag-png-xl.png" },
+// ];
 
 const currentUser: User = {
     name: "John Doe",
