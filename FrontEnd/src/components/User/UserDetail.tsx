@@ -5,16 +5,16 @@ export default function UserDetail({
   isOpen,
   onClose,
   user,
-  onSave, // Thêm prop onSave để xử lý lưu thông tin
+  onSave,
 }: {
   isOpen: boolean;
   onClose: () => void;
   user: any;
-  onSave: (updatedUser: any) => void; // Thêm kiểu cho onSave
+  onSave: (updatedUser: any) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [formData, setFormData] = useState(user); // State để lưu thông tin chỉnh sửa
+  const [formData, setFormData] = useState(user);
 
   useEffect(() => {
     if (isOpen) {
@@ -32,7 +32,7 @@ export default function UserDetail({
   }, [isOpen]);
 
   useEffect(() => {
-    setFormData(user); // Cập nhật formData khi user thay đổi
+    setFormData(user);
   }, [user]);
 
   if (!mounted) return null;
@@ -47,9 +47,9 @@ export default function UserDetail({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData) {
-      onSave(formData); // Gọi hàm onSave với thông tin đã chỉnh sửa
-      alert('Thay đổi thông tin thành công!'); 
-      onClose(); 
+      onSave(formData);
+      alert('Thay đổi thông tin thành công!');
+      onClose();
     }
   };
 
@@ -58,7 +58,7 @@ export default function UserDetail({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, avatar: reader.result }); // Cập nhật avatar
+        setFormData({ ...formData, avatar: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -163,6 +163,20 @@ export default function UserDetail({
                     onChange={handleChange}
                     className="mt-1 border rounded p-2 w-full"
                   />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                  <select
+                    name="status"
+                    value={formData?.status || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  >
+                    <option value="">Chọn trạng thái</option>
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Không hoạt động</option>
+                    <option value="pending">Đang chờ</option>
+                  </select>
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Cập nhật ảnh đại diện</label>

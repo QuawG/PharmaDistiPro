@@ -1,17 +1,20 @@
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 export default function CustomerDetail({
   isOpen,
   onClose,
   customer,
+  onSave,
 }: {
   isOpen: boolean;
   onClose: () => void;
   customer: any;
+  onSave: (updatedCustomer: any) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [formData, setFormData] = useState(customer);
 
   useEffect(() => {
     if (isOpen) {
@@ -28,7 +31,38 @@ export default function CustomerDetail({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    setFormData(customer);
+  }, [customer]);
+
   if (!mounted) return null;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData) {
+      onSave(formData);
+      alert('Thay đổi thông tin thành công!');
+      onClose();
+    }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, avatar: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div
@@ -53,73 +87,137 @@ export default function CustomerDetail({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Thông tin khách hàng</h1>
-            <p className="text-sm text-gray-500">Toàn bộ thông tin khách hàng</p>
+            <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin khách hàng</h1>
+            <p className="text-sm text-gray-500">Cập nhật thông tin khách hàng ở form bên dưới</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border-[1px] border-gray-300 rounded-lg overflow-hidden">
-              <table className="w-full">
-                <tbody>
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50 w-1/3">Tên</td>
-                    <td className="px-4 py-3">{customer?.name || "N/A"}</td>
-                  </tr>
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Tuổi</td>
-                    <td className="px-4 py-3">{customer?.age || "N/A"}</td>
-                  </tr>
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Email</td>
-                    <td className="px-4 py-3">{customer?.email || "N/A"}</td>
-                  </tr>
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Số điện thoại</td>
-                    <td className="px-4 py-3">{customer?.phone || "N/A"}</td>
-                  </tr>
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Địa chỉ</td>
-                    <td className="px-4 py-3">{customer?.address || "N/A"}</td>
-                  </tr>
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Created By</td>
-                    <td className="px-4 py-3">{customer?.createdBy || "N/A"}</td>
-                  </tr>
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Người tạo</td>
-                    <td className="px-4 py-3">{customer?.createdAt || "N/A"}</td>
-                  </tr>
-      
-                  <tr className="border-b-[1px] border-b-gray-300">
-                    <td className="px-4 py-3 bg-gray-50">Trạng thái</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-sm ${customer?.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>{customer?.status || "N/A"}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="border-[1px] border-gray-300 rounded-lg p-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Tên riêng</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData?.firstName || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Tên họ</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData?.lastName || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData?.email || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={formData?.phone || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData?.address || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Tuổi</label>
+                  <input
+                    type="number"
+                    name="age"
+                    value={formData?.age || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                  <select
+                    name="status"
+                    value={formData?.status || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  >
+                    <option value="">Chọn trạng thái</option>
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Không hoạt động</option>
+                    <option value="pending">Đang chờ</option>
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Cập nhật ảnh đại diện</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  />
+                </div>
+              </div>
 
-            {/* Customer Avatar */}
-            <div className="flex flex-col items-center justify-center border-[1px] border-gray-300 rounded-lg p-4">
-              <div className="relative">
+              {/* User Avatar */}
+              <div className="flex flex-col items-center justify-center border-[1px] border-gray-300 rounded-lg p-4">
                 <img
-                  src={customer?.avatar || "https://via.placeholder.com/150"}
-                  alt="Customer Avatar"
+                  src={formData?.avatar || "https://via.placeholder.com/150"}
+                  alt="User Avatar"
                   className="w-32 h-32 rounded-full border border-gray-300"
                 />
-                <button className="absolute left-2 top-1/2 -translate-y-1/2 p-1 bg-white rounded-full shadow-lg hover:bg-gray-50">
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-white rounded-full shadow-lg hover:bg-gray-50">
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="mt-2 text-center text-sm text-gray-600">
-                {customer?.name || "Unknown"}
+                <div className="mt-2 text-center text-sm text-gray-600">
+                  {formData?.firstName || "Unknown"} {formData?.lastName || ""}
+                </div>
               </div>
             </div>
-          </div>
+
+            <div className="mt-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
+                <input
+                  type="text"
+                  value={customer?.createdBy || "N/A"}
+                  readOnly
+                  className="mt-1 border rounded p-2 w-full bg-gray-100"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
+                <input
+                  type="text"
+                  value={customer?.createdDate || "N/A"}
+                  readOnly
+                  className="mt-1 border rounded p-2 w-full bg-gray-100"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button type="button" onClick={onClose} className="mr-2 border rounded p-2">Hủy</button>
+              <button type="submit" className="bg-blue-500 text-white rounded p-2">Lưu</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

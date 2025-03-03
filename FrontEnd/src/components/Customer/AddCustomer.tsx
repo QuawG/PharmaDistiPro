@@ -12,11 +12,20 @@ export default function AddCustomer() {
                 {/* Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tên khách hàng</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Tên riêng</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên khách hàng"
+                            placeholder="Nhập tên riêng"
+                        />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Tên họ</label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập tên họ"
                         />
                     </div>
 
@@ -37,19 +46,19 @@ export default function AddCustomer() {
                             placeholder="Nhập số điện thoại"
                         />
                     </div>
+                </div>
 
+                {/* Row 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
                         <label className="block text-[14px] mb-2 text-gray-700">Tuổi</label>
                         <input
                             type="number"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter age"
+                            placeholder="Nhập tuổi"
                         />
                     </div>
-                </div>
 
-                {/* Row 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
                         <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ</label>
                         <input

@@ -5,16 +5,16 @@ export default function SupplierDetail({
   isOpen,
   onClose,
   supplier,
-  onSave, // Thêm prop onSave để xử lý lưu thông tin
+  onSave,
 }: {
   isOpen: boolean;
   onClose: () => void;
   supplier: any;
-  onSave: (updatedSupplier: any) => void; // Thêm kiểu cho onSave
+  onSave: (updatedSupplier: any) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [formData, setFormData] = useState(supplier); // State để lưu thông tin chỉnh sửa
+  const [formData, setFormData] = useState(supplier);
 
   useEffect(() => {
     if (isOpen) {
@@ -32,7 +32,7 @@ export default function SupplierDetail({
   }, [isOpen]);
 
   useEffect(() => {
-    setFormData(supplier); // Cập nhật formData khi supplier thay đổi
+    setFormData(supplier);
   }, [supplier]);
 
   if (!mounted) return null;
@@ -47,9 +47,9 @@ export default function SupplierDetail({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData) {
-      onSave(formData); // Gọi hàm onSave với thông tin đã chỉnh sửa
-      alert('Information saved successfully!'); // Hiển thị thông báo thành công
-      onClose(); // Đóng modal
+      onSave(formData);
+      alert('Information saved successfully!');
+      onClose();
     }
   };
 
@@ -77,7 +77,7 @@ export default function SupplierDetail({
         <div className="p-6">
           <div className="mb-6">
             <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin nhà cung cấp</h1>
-            <p className="text-sm text-gray-500">Cập nhật thông tin nhà cung cáp theo form bên dưới</p>
+            <p className="text-sm text-gray-500">Cập nhật thông tin nhà cung cấp theo form bên dưới</p>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -114,6 +114,20 @@ export default function SupplierDetail({
                   />
                 </div>
                 <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                  <select
+                    name="status"
+                    value={formData?.status || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                  >
+                    <option value="">Chọn trạng thái</option>
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Không hoạt động</option>
+                    <option value="pending">Đang chờ</option>
+                  </select>
+                </div>
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
                   <input
                     type="text"
@@ -135,8 +149,8 @@ export default function SupplierDetail({
             </div>
 
             <div className="flex justify-end mt-4">
-              <button type="button" onClick={onClose} className="mr-2 border rounded p-2">Cancel</button>
-              <button type="submit" className="bg-blue-500 text-white rounded p-2">Save</button>
+              <button type="button" onClick={onClose} className="mr-2 border rounded p-2">Hủy</button>
+              <button type="submit" className="bg-blue-500 text-white rounded p-2">Lưu</button>
             </div>
           </form>
         </div>

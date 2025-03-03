@@ -1,85 +1,49 @@
 import React, { useState } from 'react'; 
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import CustomerTable from '../../components/Customer/CustomerTable';
-
-interface CustomerListPageProps {
-  handleChangePage: (page: string) => void;
-}
+import CustomerTable from '../../components/Customer/CustomerTable'; // Ensure you have created CustomerTable
 
 interface Customer {
     id: number;
     avatar: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     address: string;
+    age: number;  // Added age property
     createdBy: string;
-    createdAt: string; 
-  }
-
+    createdDate: string; 
+}
+interface CustomerListPageProps {
+  handleChangePage: (page: string) => void;
+}
 const CUSTOMERS_DATA: Customer[] = [
   {
     id: 1,
-    name: "John Doe",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "john@example.com",
-    phone: "123-456-7890",
-    address: "123 Main St",
+    firstName: "Alice",
+    lastName: "Johnson",
+    avatar: "https://via.placeholder.com/150",
+    email: "alice@example.com",
+    phone: "321-654-0987",
+    address: "789 Oak St",
+    age: 30,  // Added age
     createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
+    createdDate: "2023-01-10T00:00:00Z" 
   },
   {
     id: 2,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
+    firstName: "Bob",
+    lastName: "Brown",
+    avatar: "https://via.placeholder.com/150",
+    email: "bob@example.com",
+    phone: "432-765-0987",
+    address: "101 Pine St",
+    age: 25,  // Added age
     createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
+    createdDate: "2023-01-11T00:00:00Z" 
   },
-  {
-    id: 3,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  },
-
-  {
-    id: 4,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  },
-  {
-    id: 5,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  },
-  {
-    id: 6,
-    name: "Jane Smith",
-    avatar: "https://lumiere-a.akamaihd.net/v1/images/a_avatarpandorapedia_moat_16x9_1098_07_23778d78.jpeg?region=0%2C0%2C1920%2C1080",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    createdBy: "Admin",
-    createdAt: "2023-01-01T00:00:00Z" 
-  }
+  // Add more customers as needed
 ];
 
 const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage }) => {
@@ -91,7 +55,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
     setSearchTerm(value);
 
     const filtered = CUSTOMERS_DATA.filter(customer =>
-      customer.name.toLowerCase().includes(value.toLowerCase())
+      `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredCustomers(filtered);
   };
@@ -105,9 +69,9 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
           <p className="text-sm text-gray-500">Quản lí khách hàng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Add Customer')}
+          onClick={() => handleChangePage('Thêm khách hàng')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/>Thêm khách hàng mới
+          <PlusIcon className='w-5 h-5 font-bold'/> Thêm khách hàng mới
         </button>
       </div>
 
@@ -121,7 +85,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
             <div className="relative">
               <input
                 type="text"
-                placeholder="Tìm kiếm..."
+                placeholder="Search..."
                 className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -148,7 +112,6 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
 
         {/* Table */}
         <CustomerTable CUSTOMERS_DATA={filteredCustomers} />
-        
       </div>
     </div>
   );
