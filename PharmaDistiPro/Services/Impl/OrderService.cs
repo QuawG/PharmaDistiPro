@@ -4,6 +4,8 @@ using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
+using System.Collections;
+using System.Linq;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -27,7 +29,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var orders = await _orderRepository.GetByConditionAsync(o => o.CustomerId == customerId);
-                if (orders== null)
+                if (orders == null)
                 {
                     response.Success = false;
                     response.Message = "Không có dữ liệu";
@@ -39,7 +41,7 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = ex.Message;
@@ -54,7 +56,8 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var ordersDetails = await _ordersDetailRepository.GetByConditionAsync(o => o.OrderId == orderId);
-                if(ordersDetails.Count() == 0) {
+                if (!ordersDetails.Any())
+                {
                     response.Success = false;
                     response.Message = "Không có dữ liệu";
                 }
@@ -65,12 +68,47 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 return response;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = ex.Message;
                 return response;
             }
         }
+
+        // get all order trong he thong
+        public async Task<Response<IEnumerable<OrderDto>>> GetAllOrders(int[] status, DateTime? dateCreatedFrom, DateTime? dateCreatedTo)
+        {
+            var response = new Response<IEnumerable<OrderDto>>();
+            try
+            {
+                IEnumerable<Order> ordersList = await _orderRepository.GetByConditionAsync(x =>
+                             (!status.Any() || status.Contains(x.Status ?? -1))&&
+                             (!dateCreatedFrom.HasValue || x.CreatedDate >= dateCreatedFrom.Value) &&
+                             (!dateCreatedTo.HasValue || x.CreatedDate <= dateCreatedTo.Value));
+
+                if (!ordersList.Any())
+                {
+                    return new Response<IEnumerable<OrderDto>>
+                    {
+                        Success = false,
+                        Message = "Không có dữ liệu"
+                    };
+                }
+
+                response.Data = _mapper.Map<IEnumerable<OrderDto>>(ordersList);
+                response.Success = true;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new Response<IEnumerable<OrderDto>>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+        }
+
     }
 }

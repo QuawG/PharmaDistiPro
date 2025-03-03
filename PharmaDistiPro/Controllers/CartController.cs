@@ -17,7 +17,7 @@ namespace PharmaDistiPro.Controllers
 
         //api get all cart list
         [HttpGet("GetAllCartList")]
-        public async Task<IActionResult> GetAllCartList()
+        public async Task<IActionResult> GetCartList()
         {
             var response = await _cartService.GetCartList();
             if (!response.Success)
@@ -42,6 +42,7 @@ namespace PharmaDistiPro.Controllers
         }
 
 
+        // api update quantity
         [HttpPut("UpdateCart/{productId}/{quantity}")]
         public async Task<IActionResult> UpdateCart(int productId, int quantity)
         {
@@ -53,6 +54,7 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        // api remove item from cart
         [HttpDelete("RemoveItem/{productId}")]
         public async Task<IActionResult> RemoveItem(int productId)
         {

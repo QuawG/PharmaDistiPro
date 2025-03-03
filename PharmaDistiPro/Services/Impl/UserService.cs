@@ -141,6 +141,7 @@ namespace PharmaDistiPro.Services.Impl
                 var newCustomer = _mapper.Map<User>(userInputRequest);
                 newCustomer.Avatar = imageUrl;
                 newCustomer.CreatedDate = DateTime.Now;
+                newCustomer.Status = true;
 
                 // Thêm mới user vào database
                 await _userRepository.InsertAsync(newCustomer);
