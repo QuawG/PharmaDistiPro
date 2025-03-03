@@ -48,6 +48,43 @@ const USERS_DATA: User[] = [
     createdBy: "Admin",
     createdDate: "2023-01-02T00:00:00Z" 
   },
+  {
+    id: 3,
+    firstName: "Jane",
+    lastName: "Smith",
+    avatar: "https://via.placeholder.com/150",
+    email: "jane@example.com",
+    phone: "234-567-8901",
+    address: "456 Maple Ave",
+    role: "User",
+    employeeCode: "EMP003",
+    createdBy: "Admin",
+    createdDate: "2023-01-02T00:00:00Z" 
+  }, {
+    id: 4,
+    firstName: "Jane",
+    lastName: "Smith",
+    avatar: "https://via.placeholder.com/150",
+    email: "jane@example.com",
+    phone: "234-567-8901",
+    address: "456 Maple Ave",
+    role: "User",
+    employeeCode: "EMP004",
+    createdBy: "Admin",
+    createdDate: "2023-01-02T00:00:00Z" 
+  }, {
+    id: 5,
+    firstName: "Jane",
+    lastName: "Smith",
+    avatar: "https://via.placeholder.com/150",
+    email: "jane@example.com",
+    phone: "234-567-8901",
+    address: "456 Maple Ave",
+    role: "User",
+    employeeCode: "EMP005",
+    createdBy: "Admin",
+    createdDate: "2023-01-02T00:00:00Z" 
+  }
 ];
 
 const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
@@ -73,7 +110,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
           <p className="text-sm text-gray-500">Quản lí người dùng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Add User')}
+          onClick={() => handleChangePage('Thêm người dùng')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
           <PlusIcon className='w-5 h-5 font-bold'/> Thêm người dùng mới
         </button>
