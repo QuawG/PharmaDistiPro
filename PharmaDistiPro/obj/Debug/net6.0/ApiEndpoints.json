@@ -1,5 +1,164 @@
 [
   {
+    "ContainingType": "PharmaDistiPro.Controllers.StorageRoomController",
+    "Method": "ActivateDeactivateStorageRoom",
+    "RelativePath": "api/StorageRoom/ActivateDeactivateStorageRoom/{storageRoomId}/{status}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "storageRoomId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "status",
+        "Type": "System.Boolean",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.StorageRoomController",
+    "Method": "CreateStorageRoom",
+    "RelativePath": "api/StorageRoom/CreateStorageRoom",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "StorageRoomId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "StorageRoomCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "StorageRoomName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Humidity",
+        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Temperature",
+        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Quantity",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Status",
+        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "CreatedBy",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "CreatedDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.StorageRoomController",
+    "Method": "GetStorageRoomById",
+    "RelativePath": "api/StorageRoom/GetStorageRoomById/{storageRoomId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "storageRoomId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.StorageRoomController",
+    "Method": "GetStorageRoomList",
+    "RelativePath": "api/StorageRoom/GetStorageRoomList",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.StorageRoomController",
+    "Method": "UpdateStorageRoom",
+    "RelativePath": "api/StorageRoom/UpdateStorageRoom",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "StorageRoomId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "StorageRoomCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "StorageRoomName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Humidity",
+        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Temperature",
+        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Quantity",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Status",
+        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "CreatedBy",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "CreatedDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "PharmaDistiPro.Controllers.SupplierController",
     "Method": "ActivateDeactivateSupplier",
     "RelativePath": "api/Supplier/ActivateDeactivateSupplier/{supplierId}/{status}",
@@ -73,7 +232,7 @@
   },
   {
     "ContainingType": "PharmaDistiPro.Controllers.SupplierController",
-    "Method": "GetUserById",
+    "Method": "GetSupplierById",
     "RelativePath": "api/Supplier/GetSupplierById/{supplierId}",
     "HttpMethod": "GET",
     "IsController": true,
@@ -99,7 +258,7 @@
   },
   {
     "ContainingType": "PharmaDistiPro.Controllers.SupplierController",
-    "Method": "UpdateUser",
+    "Method": "UpdateSupplier",
     "RelativePath": "api/Supplier/UpdateSupplier",
     "HttpMethod": "PUT",
     "IsController": true,

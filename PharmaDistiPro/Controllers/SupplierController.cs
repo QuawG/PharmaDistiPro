@@ -34,7 +34,7 @@ namespace PharmaDistiPro.Controllers
 
         // API lấy thông tin Supplier theo Id
         [HttpGet("GetSupplierById/{supplierId}")]
-        public async Task<IActionResult> GetUserById(int supplierId)
+        public async Task<IActionResult> GetSupplierById(int supplierId)
         {
             var response = await _supplierService.GetSupplierById(supplierId);
             if (!response.Success)
@@ -59,9 +59,9 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
-        //Api update user
+        //Api update supplier
         [HttpPut("UpdateSupplier")]
-        public async Task<IActionResult> UpdateUser([FromForm] SupplierInputRequest supplier)
+        public async Task<IActionResult> UpdateSupplier([FromForm] SupplierInputRequest supplier)
         {
             var response = await _supplierService.UpdateSupplier(supplier);
 
