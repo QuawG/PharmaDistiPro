@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -9,143 +9,114 @@ import {
   getFilteredRowModel,
   SortingState,
   RowSelectionState,
-} from '@tanstack/react-table';
-import { Eye, Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
-import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import ProductDetailsModal from './ProductDetail';
+} from "@tanstack/react-table";
+import { Eye, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import DeleteConfirmation from "../Confirm/DeleteConfirm";
+import ProductDetailsModal from "./ProductDetail";
 
 interface Product {
   id: number;
-  image: string;
-  name: string;
-  sku: string;
-  category: string;
-  brand: string;
-  price: string;
+  ProductCode: string;
+  Manufacturer: string;
+  ProductName: string;
   unit: string;
-  qty: string;
-  createdBy: string;
+  category: string;
+  Description: string;
+  status: string;
+  VAT: string;
+  image: string;
 }
 
-interface ProductTable {
-  PRODUCTS_DATA: Product[]
+interface ProductTableProps {
+  PRODUCTS_DATA: Product[];
+  handleChangePage: (page: string, productId?: number) => void;
 }
 
-
-
-const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
+const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChangePage }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [globalFilter, setGlobalFilter] = useState<string>('');
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [globalFilter, setGlobalFilter] = useState<string>("");
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
   const handleDelete = () => {
-    setIsDeleteModalOpen(false)
-  }
-  const columns: ColumnDef<Product>[] = [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <input
-          type="checkbox"
-          className="w-4 h-4 rounded border-gray-300 custom-checkbox"
-          checked={table.getIsAllRowsSelected()}
-          onChange={table.getToggleAllRowsSelectedHandler()}
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          className="w-4 h-4 rounded border-gray-300 custom-checkbox"
-          checked={row.getIsSelected()}
-          onChange={row.getToggleSelectedHandler()}
-        />
-      ),
-            
-      
-      enableSorting: false,
-    },
-    {
-      accessorKey: 'name',
-      header: 'Tên sản phẩm',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-3">
-          <img 
-            src={row.original.image} 
-            alt={row.original.name}
-            className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-          />
-          <span className="font-medium">{row.original.name}</span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'category',
-      header: 'Danh mục chính',
-    },
-    {
-      accessorKey: 'brand',
-      header: 'Brand',
-    },
-    {
-      accessorKey: 'price',
-      header: 'Giá',
-      cell: ({ row }) => (
-        <span>${parseFloat(row.original.price).toFixed(2)}</span>
-      ),
-    },
-    {
-      accessorKey: 'unit',
-      header: 'Đơn vị',
-    },
-    {
-      accessorKey: 'qty',
-      header: 'Số lượng',
-      cell: ({ row }) => (
-        <span>{parseFloat(row.original.qty).toFixed(2)}</span>
-      ),
-    },
-    {
-      accessorKey: 'createdBy',
-      header: 'Người tạo',
-    },
-    {
-      id: 'actions',
-      header: '',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <button 
-            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
-            onClick={() => setIsOpen(true)}
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button 
-            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
-            onClick={() => handleEdit(row.original)}
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button 
-            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
-            onClick={() => setIsDeleteModalOpen(true)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
-      enableSorting: false,
-    },
-  ];
-
-
-
-  const handleEdit = (product: Product) => {
-    console.log('Edit product:', product);
+    setIsDeleteModalOpen(false);
   };
 
-
+  const columns: ColumnDef<Product>[] = [
+    {
+      accessorKey: "ProductName",
+      header: "Tên sản phẩm",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={row.original.image}
+            alt={row.original.ProductName}
+            className="w-10 h-10 rounded-lg object-cover bg-gray-100"
+          />
+          <span className="font-medium">{row.original.ProductName}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "ProductCode",
+      header: "Mã sản phẩm",
+    },
+    {
+      accessorKey: "category",
+      header: "Danh mục",
+    },
+    {
+      accessorKey: "Manufacturer",
+      header: "Nhà cung cấp",
+    },
+    {
+      accessorKey: "unit",
+      header: "Đơn vị",
+    },
+    {
+      accessorKey: "VAT",
+      header: "Thuế VAT",
+    },
+    {
+      accessorKey: "status",
+      header: "Trạng thái",
+    },
+    {
+      accessorKey: "actions",
+      header: "Hành động",
+      cell: ({ row }) => (
+        <div className="flex space-x-2">
+          <button
+            className="p-1 text-blue-600 hover:bg-gray-200 rounded"
+            onClick={() => {
+              setSelectedProduct(row.original);
+              setIsOpen(true);
+            }}
+          >
+            <Eye className="w-5 h-5" />
+          </button>
+          <button
+            className="p-1 text-green-600 hover:bg-gray-200 rounded"
+            onClick={() => handleChangePage("Chỉnh sửa sản phẩm", row.original.id)}
+          >
+            <Pencil className="w-5 h-5" />
+          </button>
+          <button
+            className="p-1 text-red-600 hover:bg-gray-200 rounded"
+            onClick={() => {
+              setSelectedProduct(row.original);
+              setIsDeleteModalOpen(true);
+            }}
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   const table = useReactTable({
     data: PRODUCTS_DATA,
@@ -154,12 +125,9 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
       sorting,
       rowSelection,
       globalFilter,
-      pagination: {
-        pageSize,
-        pageIndex: 0,
-      },
+      pagination,
     },
-    enableRowSelection: true,
+    onPaginationChange: setPagination,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -170,119 +138,85 @@ const ProductTable: React.FC<ProductTable> = ({PRODUCTS_DATA}) => {
   });
 
   return (
-    <div className="bg-white">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-none bg-gray-50">
-                {headerGroup.headers.map(header => (
-                  <th 
-                    key={header.id}
-                    className="px-4 py-3 text-left text-[14px] font-bold"
-                  >
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={`flex items-center gap-2 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none' : ''
-                        }`}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {{
-                          asc: <ChevronUp className="w-4 h-4" />,
-                          desc: <ChevronDown className="w-4 h-4" />,
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr 
-                key={row.id}
-                className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-800 opacity-90">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="bg-white p-6 rounded-lg shadow">
+      {/* Thanh tìm kiếm */}
+      
 
+      {/* Bảng dữ liệu */}
+      <table className="w-full border-collapse">
+        <thead>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id} className="bg-gray-50">
+              {headerGroup.headers.map((header) => (
+                <th key={header.id} className="px-4 py-3 text-left text-sm font-bold">
+                  <div className="flex items-center gap-2" onClick={header.column.getToggleSortingHandler()}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getIsSorted() === "asc" ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : header.column.getIsSorted() === "desc" ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : null}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row) => (
+            <tr key={row.id} className="border-b border-gray-200 hover:bg-gray-50">
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id} className="px-4 py-3 text-sm">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Phân trang */}
       <div className="flex items-center justify-between px-4 py-3 border-t">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Show</span>
+          <span className="text-sm text-gray-600">Hiển thị</span>
           <select
-            value={pageSize}
-            onChange={e => {
-              setPageSize(Number(e.target.value));
-              table.setPageSize(Number(e.target.value));
-            }}
+            value={pagination.pageSize}
+            onChange={(e) => setPagination((prev) => ({ ...prev, pageSize: Number(e.target.value) }))}
             className="border rounded px-2 py-1 text-sm"
           >
-            {[10, 20, 30, 40, 50].map(size => (
+            {[10, 20, 30, 40, 50].map((size) => (
               <option key={size} value={size}>
                 {size}
               </option>
             ))}
           </select>
-          <span className="text-sm text-gray-600">entries</span>
+          <span className="text-sm text-gray-600">mục</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="text-sm text-gray-600">
-            Page{' '}
-            <strong>
-              {table.getState().pagination.pageIndex + 1} of{' '}
-              {table.getPageCount()}
-            </strong>
-          </div>
-          <div className="flex gap-1">
-            <button
-              className={`px-3 py-1 text-sm rounded ${
-                !table.getCanPreviousPage()
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-[#FF9F43] text-white hover:bg-[#ff8f20]'
-              }`}
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </button>
-            <button
-              className={`px-3 py-1 text-sm rounded ${
-                !table.getCanNextPage()
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-[#FF9F43] text-white hover:bg-[#ff8f20]'
-              }`}
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </button>
-          </div>
+          <button
+            className="px-3 py-1 text-sm rounded bg-gray-200"
+            onClick={() => setPagination((prev) => ({ ...prev, pageIndex: Math.max(prev.pageIndex - 1, 0) }))}
+            disabled={pagination.pageIndex === 0}
+          >
+            Trước
+          </button>
+          <span className="text-sm">
+            Trang {pagination.pageIndex + 1} / {table.getPageCount()}
+          </span>
+          <button
+            className="px-3 py-1 text-sm rounded bg-gray-200"
+            onClick={() => setPagination((prev) => ({ ...prev, pageIndex: Math.min(prev.pageIndex + 1, table.getPageCount() - 1) }))}
+            disabled={pagination.pageIndex >= table.getPageCount() - 1}
+          >
+            Tiếp
+          </button>
         </div>
       </div>
-      <DeleteConfirmation
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-      />
-      <ProductDetailsModal 
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-      />
+
+      {/* Modals */}
+      <DeleteConfirmation isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleDelete} />
+      <ProductDetailsModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </div>
   );
 };
