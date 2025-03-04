@@ -10,9 +10,10 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import UserDetailsModal from './UserDetail'; // Đảm bảo bạn đã tạo UserDetail
+import UserDetailsModal from './UserDetail'; 
+import UpdateUserDetailsModal from './UpdateUserDetail'; 
 
 interface User {
   id: number;
@@ -38,7 +39,8 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const handleSave = (updatedUser: User) => {
@@ -88,7 +90,10 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
       header: 'Tính năng',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500" onClick={() => handleEdit(row.original)}>
+          <button className="cursor-pointer p-1 hover:bg-gray-50 rounded text-blue-500" onClick={() => handleView(row.original)}>
+            <Eye className="w-4 h-4" />
+          </button>
+          <button className="cursor-pointer p-1 hover:bg-blue-50 rounded text-green-500" onClick={() => handleEdit(row.original)}>
             <Pencil className="w-4 h-4" />
           </button>
           <button className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500" onClick={() => setIsDeleteModalOpen(true)}>
@@ -102,7 +107,12 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
-    setIsOpen(true);
+    setIsEditModalOpen(true);
+  };
+
+  const handleView = (user: User) => {
+    setSelectedUser(user);
+    setIsUserDetailModalOpen(true); // Mở modal chi tiết
   };
 
   const table = useReactTable({
@@ -205,7 +215,7 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-             Trước
+              Trước
             </button>
             <button
               className={`px-3 py-1 text-sm rounded ${
@@ -228,8 +238,13 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
         onConfirm={handleDelete}
       />
       <UserDetailsModal 
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        isOpen={isUserDetailModalOpen} 
+        onClose={() => setIsUserDetailModalOpen(false)}
+        user={selectedUser} 
+      />
+      <UpdateUserDetailsModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
         user={selectedUser} 
         onSave={handleSave} 
       />

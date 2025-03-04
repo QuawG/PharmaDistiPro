@@ -5,16 +5,13 @@ export default function CustomerDetail({
   isOpen,
   onClose,
   customer,
-  onSave,
 }: {
   isOpen: boolean;
   onClose: () => void;
   customer: any;
-  onSave: (updatedCustomer: any) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [formData, setFormData] = useState(customer);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,38 +28,7 @@ export default function CustomerDetail({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    setFormData(customer);
-  }, [customer]);
-
   if (!mounted) return null;
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData) {
-      onSave(formData);
-      alert('Thay đổi thông tin thành công!');
-      onClose();
-    }
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, avatar: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   return (
     <div
@@ -87,137 +53,81 @@ export default function CustomerDetail({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin khách hàng</h1>
-            <p className="text-sm text-gray-500">Cập nhật thông tin khách hàng ở form bên dưới</p>
+            <h1 className="text-xl font-semibold text-gray-900">Thông tin khách hàng</h1>
+            <p className="text-sm text-gray-500">Xem thông tin khách hàng ở dưới đây</p>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="border-[1px] border-gray-300 rounded-lg p-4">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tên riêng</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData?.firstName || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tên họ</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData?.lastName || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData?.email || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData?.phone || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData?.address || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tuổi</label>
-                  <input
-                    type="number"
-                    name="age"
-                    value={formData?.age || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
-                  <select
-                    name="status"
-                    value={formData?.status || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  >
-                    <option value="">Chọn trạng thái</option>
-                    <option value="active">Hoạt động</option>
-                    <option value="inactive">Không hoạt động</option>
-                    <option value="pending">Đang chờ</option>
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Cập nhật ảnh đại diện</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-              </div>
-
-              {/* User Avatar */}
-              <div className="flex flex-col items-center justify-center border-[1px] border-gray-300 rounded-lg p-4">
-                <img
-                  src={formData?.avatar || "https://via.placeholder.com/150"}
-                  alt="User Avatar"
-                  className="w-32 h-32 rounded-full border border-gray-300"
-                />
-                <div className="mt-2 text-center text-sm text-gray-600">
-                  {formData?.firstName || "Unknown"} {formData?.lastName || ""}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="border-[1px] border-gray-300 rounded-lg p-4">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
-                <input
-                  type="text"
-                  value={customer?.createdBy || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <label className="block text-sm font-medium text-gray-700">Tên riêng</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {customer?.firstName || "N/A"}
+                </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
-                <input
-                  type="text"
-                  value={customer?.createdDate || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <label className="block text-sm font-medium text-gray-700">Tên họ</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {customer?.lastName || "N/A"}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {customer?.email || "N/A"}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {customer?.phone || "N/A"}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {customer?.address || "N/A"}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Tuổi</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {customer?.age || "N/A"}
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end mt-4">
-              <button type="button" onClick={onClose} className="mr-2 border rounded p-2">Hủy</button>
-              <button type="submit" className="bg-blue-500 text-white rounded p-2">Lưu</button>
+            {/* User Avatar */}
+            <div className="flex flex-col items-center justify-center border-[1px] border-gray-300 rounded-lg p-4">
+              <img
+                src={customer?.avatar || "https://via.placeholder.com/150"}
+                alt="Customer Avatar"
+                className="w-32 h-32 rounded-full border border-gray-300"
+              />
+              <div className="mt-2 text-center text-sm text-gray-600">
+                {customer?.firstName || "Unknown"} {customer?.lastName || ""}
+              </div>
             </div>
-          </form>
+          </div>
+
+          <div className="mt-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
+              <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                {customer?.createdBy || "N/A"}
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
+              <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                {customer?.createdDate || "N/A"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <button type="button" onClick={onClose} className="border rounded p-2">Đóng</button>
+          </div>
         </div>
       </div>
     </div>

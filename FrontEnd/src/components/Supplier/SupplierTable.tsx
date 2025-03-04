@@ -10,9 +10,10 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import SupplierDetailsModal from './SupplierDetail'; // Cần tạo SupplierDetail
+import SupplierDetailsModal from './SupplierDetail'; // Modal chỉ để xem
+import UpdateSupplierDetailsModal from './UpdateSupplierDetail'; // Modal để sửa
 
 interface Supplier {
   supplierId: number;
@@ -33,16 +34,29 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
     // Thực hiện xóa nhà cung cấp ở đây
   };
+
   const handleSave = (updatedSupplier: any) => {
     console.log('Supplier saved:', updatedSupplier);
-};
+  };
+
+  const handleViewDetail = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setIsViewModalOpen(true); // Mở modal xem chi tiết
+  };
+
+  const handleEdit = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setIsEditModalOpen(true); // Mở modal chỉnh sửa
+  };
+
   const columns: ColumnDef<Supplier>[] = [
     {
       id: 'select',
@@ -73,6 +87,12 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <button
+            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
+            onClick={() => handleViewDetail(row.original)}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
             className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
             onClick={() => handleEdit(row.original)}
           >
@@ -89,11 +109,6 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
       enableSorting: false,
     },
   ];
-
-  const handleEdit = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
-    setIsOpen(true);
-  };
 
   const table = useReactTable({
     data: SUPPLIERS_DATA,
@@ -218,10 +233,15 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
         onConfirm={handleDelete}
       />
       <SupplierDetailsModal 
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
         supplier={selectedSupplier} // Truyền supplier vào modal
-        onSave={handleSave} // Truyền hàm handleSave vào modal
+      />
+      <UpdateSupplierDetailsModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        supplier={selectedSupplier} 
+        onSave={handleSave} 
       />
     </div>
   );

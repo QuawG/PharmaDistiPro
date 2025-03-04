@@ -10,9 +10,10 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react'; // Thêm Eye từ lucide-react
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import CustomerDetailsModal from './CustomerDetail'; // Ensure you have created CustomerDetail
+import CustomerDetailsModal from './CustomerDetail'; 
+import UpdateCustomerDetailsModal from './UpdateCustomerDetail'; 
 
 interface Customer {
   id: number;
@@ -37,7 +38,8 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false); // Modal xem thêm
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Modal chỉnh sửa
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const handleSave = (updatedCustomer: Customer) => {
@@ -87,13 +89,25 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
       header: 'Tính năng',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500" onClick={() => handleEdit(row.original)}>
+          <button 
+            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
+            onClick={() => handleView(row.original)}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button 
+            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500" 
+            onClick={() => handleEdit(row.original)}
+          >
             <Pencil className="w-4 h-4" />
           </button>
-          <button className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500" onClick={() => {
-            setSelectedCustomer(row.original);
-            setIsDeleteModalOpen(true);
-          }}>
+          <button 
+            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500" 
+            onClick={() => {
+              setSelectedCustomer(row.original);
+              setIsDeleteModalOpen(true);
+            }}
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -104,7 +118,12 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
 
   const handleEdit = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setIsOpen(true);
+    setIsEditModalOpen(true);
+  };
+
+  const handleView = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsViewModalOpen(true); // Mở modal chỉ xem thông tin
   };
 
   const table = useReactTable({
@@ -230,8 +249,13 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
         onConfirm={handleDelete}
       />
       <CustomerDetailsModal 
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        isOpen={isViewModalOpen} 
+        onClose={() => setIsViewModalOpen(false)} 
+        customer={selectedCustomer} 
+      />
+      <UpdateCustomerDetailsModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
         customer={selectedCustomer} 
         onSave={handleSave} 
       />
