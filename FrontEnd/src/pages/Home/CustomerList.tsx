@@ -27,7 +27,7 @@ const CUSTOMERS_DATA: Customer[] = [
     email: "alice@example.com",
     phone: "321-654-0987",
     address: "789 Oak St",
-    age: 30,  // Added age
+    age: 30, 
     createdBy: "Admin",
     createdDate: "2023-01-10T00:00:00Z" 
   },
@@ -43,7 +43,43 @@ const CUSTOMERS_DATA: Customer[] = [
     createdBy: "Admin",
     createdDate: "2023-01-11T00:00:00Z" 
   },
-  // Add more customers as needed
+  {
+    id: 3,
+    firstName: "Bob",
+    lastName: "Brown",
+    avatar: "https://via.placeholder.com/150",
+    email: "bob@example.com",
+    phone: "432-765-0987",
+    address: "101 Pine St",
+    age: 25,  // Added age
+    createdBy: "Admin",
+    createdDate: "2023-01-11T00:00:00Z" 
+  },
+  {
+    id: 4,
+    firstName: "Bob",
+    lastName: "Brown",
+    avatar: "https://via.placeholder.com/150",
+    email: "bob@example.com",
+    phone: "432-765-0987",
+    address: "101 Pine St",
+    age: 25,  // Added age
+    createdBy: "Admin",
+    createdDate: "2023-01-11T00:00:00Z" 
+  },
+  {
+    id: 5,
+    firstName: "Bob",
+    lastName: "Brown",
+    avatar: "https://via.placeholder.com/150",
+    email: "bob@example.com",
+    phone: "432-765-0987",
+    address: "101 Pine St",
+    age: 25,  // Added age
+    createdBy: "Admin",
+    createdDate: "2023-01-11T00:00:00Z" 
+  }
+  
 ];
 
 const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage }) => {

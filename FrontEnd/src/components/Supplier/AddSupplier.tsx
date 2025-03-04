@@ -50,14 +50,6 @@ export default function AddSupplier() {
 
                 {/* Row 2 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tạo bởi</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên người tạo"
-                        />
-                    </div>
 
                     <div className="space-y-1">
                         <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
