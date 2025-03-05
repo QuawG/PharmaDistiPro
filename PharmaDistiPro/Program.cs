@@ -54,6 +54,9 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<IStorageRoomRepository, StorageRoomRepository>();
             builder.Services.AddScoped<IUnitRepository, UnitRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            builder.Services.AddScoped<IOrdersDetailRepository, OrdersDetailRepository>();
             #endregion
 
             #region Add DI for services
@@ -61,7 +64,10 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<IStorageRoomService, StorageRoomService>();
             builder.Services.AddScoped<IUnitService, UnitService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
-          
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<ICartService, CartService>();
+
             #endregion
 
             // Register AutoMapper
