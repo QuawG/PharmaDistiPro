@@ -379,6 +379,16 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.Phone).HasMaxLength(50);
 
+                entity.Property(e => e.RefreshTokenExpriedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.ResetPasswordOtp)
+                    .HasMaxLength(6)
+                    .HasColumnName("ResetPasswordOTP");
+
+                entity.Property(e => e.ResetpasswordOtpexpriedTime)
+                    .HasColumnType("datetime")
+                    .HasColumnName("ResetpasswordOTPExpriedTime");
+
                 entity.Property(e => e.TaxCode).HasMaxLength(50);
 
                 entity.Property(e => e.UserName).HasMaxLength(50);

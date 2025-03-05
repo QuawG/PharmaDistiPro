@@ -33,6 +33,10 @@ namespace PharmaDistiPro.Models
         public string? EmployeeCode { get; set; }
         public string? TaxCode { get; set; }
         public bool? Status { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpriedTime { get; set; }
+        public string? ResetPasswordOtp { get; set; }
+        public DateTime? ResetpasswordOtpexpriedTime { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
