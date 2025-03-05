@@ -17,6 +17,7 @@ namespace PharmaDistiPro.Models
         public double? Humidity { get; set; }
         public double? Temperature { get; set; }
         public int? Quantity { get; set; }
+        public bool? Status { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 

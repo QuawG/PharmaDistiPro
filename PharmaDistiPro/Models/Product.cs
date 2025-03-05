@@ -15,7 +15,7 @@ namespace PharmaDistiPro.Models
         public int? ManufactureId { get; set; }
         public string? ProductName { get; set; }
         public int? UnitId { get; set; }
-        public int? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
         public string? Description { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
@@ -24,9 +24,7 @@ namespace PharmaDistiPro.Models
         public double? Vat { get; set; }
         public int? Storageconditions { get; set; }
 
-        public virtual Category? Category { get; set; }
         public virtual User? CreatedByNavigation { get; set; }
-        public virtual Manufacture? Manufacture { get; set; }
         public virtual Unit? Unit { get; set; }
         public virtual ICollection<ProductLot> ProductLots { get; set; }
     }
