@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "MxiagryzvZtiS65rDW60DCrTnpaBpNF6olhBBsNjRaQ=",
+  "Hash": "a7KPBhD7i2hL7vcjAy/1hVlghkx1K7+EdZG6kNNF82o=",
   "Source": "PharmaDistiPro",
   "BasePath": "_content/PharmaDistiPro",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

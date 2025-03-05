@@ -11,9 +11,32 @@ namespace PharmaDistiPro.Repositories.Impl
         {
         }
 
-        public async Task<User> GetUser(string email, string password)
+        public async Task<User> GetUser(string username, string password)
         {
-            return await _context.Users.FirstAsync(u => u.Email == email && u.Password == password);
+            return await _context.Users.FirstOrDefaultAsync(u => u.UserName == username && u.Password == password);
+        }
+
+        //public async Task<User> GetUserByRefreshToken(string refreshToken)
+        //{
+        //    return await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        //}
+        public async Task<User> GetUserByEmail(string email)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        }
+
+        public Task<User> GetUserByRefreshToken(string refreshToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<User> UpdateUser(User user)
+        {
+
+            _context.Users.Update(user);
+            int rowAffected = await _context.SaveChangesAsync();
+            return user;
         }
     }
 }
