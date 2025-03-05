@@ -55,8 +55,8 @@ namespace PharmaDistiPro.Controllers
         }
 
         // api remove item from cart
-        [HttpDelete("RemoveItem/{productId}")]
-        public async Task<IActionResult> RemoveItem(int productId)
+        [HttpDelete("RemoveFromCart/{productId}")]
+        public async Task<IActionResult> RemoveFromCart(int productId)
         {
             var response = await _cartService.RemoveFromCart(productId);
             if (!response.Success)

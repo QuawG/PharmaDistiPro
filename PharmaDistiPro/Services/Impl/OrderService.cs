@@ -50,6 +50,7 @@ namespace PharmaDistiPro.Services.Impl
 
         }
 
+        //get order detail theo orderId
         public async Task<Response<IEnumerable<OrdersDetail>>> GetOrderDetailByOrderId(int orderId)
         {
             var response = new Response<IEnumerable<OrdersDetail>>();

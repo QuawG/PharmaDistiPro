@@ -20,7 +20,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 // goi list cart tu cookie
-                var cartList = CookieHelper.GetCartFromCookie(_httpContextAccessor.HttpContext);
+                var cartList =  CookieHelper.GetCartFromCookie(_httpContextAccessor.HttpContext);
                 //check xem item i da co trong cart chua
                 var itemExist = cartList.FirstOrDefault(c => c.ProductId == cartModelDto.ProductId);
 

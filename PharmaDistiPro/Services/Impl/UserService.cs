@@ -208,12 +208,15 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
-
+               
                 //Chi update avatar cho nguoi dung khong phai customer
                 if (userUpdateRequest.RoleId == 5) userUpdateRequest.Avatar = null;
+
+                // mapper request model -> entity
+                _mapper.Map(userUpdateRequest, userToUpdate);
+
                 // Kiểm tra và upload avatar nếu có thay đổi
-                if (userUpdateRequest.Avatar != null &&
-                    userUpdateRequest.Avatar.FileName != Path.GetFileName(userToUpdate.Avatar))  
+                if (userUpdateRequest.Avatar != null )  
                 {
                     var uploadParams = new ImageUploadParams()
                     {
@@ -223,18 +226,9 @@ namespace PharmaDistiPro.Services.Impl
 
                     var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                     imageUrl = uploadResult.SecureUri.ToString();
-                    
-                }
-               
-                // Map dữ liệu từ DTO sang thực thể
-                _mapper.Map(userUpdateRequest, userToUpdate);
-
-                // Chỉ cập nhật avatar nếu có URL mới
-                if (!string.IsNullOrEmpty(imageUrl))
-                {
                     userToUpdate.Avatar = imageUrl;
-                }
-
+                } 
+           
                 await _userRepository.UpdateAsync(userToUpdate);
                 await _userRepository.SaveAsync();
 

@@ -85,6 +85,7 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        //Api deactivate user
         [HttpPut("ActivateDeactivateUser/{userId}/{status}")]
         public async Task<IActionResult> ActivateDeactivateUser(int userId, bool status)
         {
