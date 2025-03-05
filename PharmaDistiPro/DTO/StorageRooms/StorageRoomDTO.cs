@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PharmaDistiPro.Models;
 
-namespace PharmaDistiPro.Models
+namespace PharmaDistiPro.DTO.StorageRooms
 {
-    public partial class StorageRoom
+    public class StorageRoomDTO
     {
-        public StorageRoom()
-        {
-            NoteChecks = new HashSet<NoteCheck>();
-            ProductStorageRooms = new HashSet<ProductStorageRoom>();
-        }
-
         public int StorageRoomId { get; set; }
         public string? StorageRoomCode { get; set; }
         public string? StorageRoomName { get; set; }

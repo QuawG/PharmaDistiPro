@@ -10,7 +10,6 @@ namespace PharmaDistiPro.Models
             Categories = new HashSet<Category>();
             IssueNotes = new HashSet<IssueNote>();
             Logs = new HashSet<Log>();
-            Manufactures = new HashSet<Manufacture>();
             Orders = new HashSet<Order>();
             Products = new HashSet<Product>();
             PurchaseOrders = new HashSet<PurchaseOrder>();
@@ -34,6 +33,10 @@ namespace PharmaDistiPro.Models
         public string? EmployeeCode { get; set; }
         public string? TaxCode { get; set; }
         public bool? Status { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpriedTime { get; set; }
+        public string? ResetPasswordOtp { get; set; }
+        public DateTime? ResetpasswordOtpexpriedTime { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
@@ -41,7 +44,6 @@ namespace PharmaDistiPro.Models
         public virtual ICollection<Category> Categories { get; set; }
         public virtual ICollection<IssueNote> IssueNotes { get; set; }
         public virtual ICollection<Log> Logs { get; set; }
-        public virtual ICollection<Manufacture> Manufactures { get; set; }
         public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<Product> Products { get; set; }
         public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; }

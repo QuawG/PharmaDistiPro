@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PharmaDistiPro.Models;
 
-namespace PharmaDistiPro.Models
+namespace PharmaDistiPro.DTO.Categorys
 {
-    public partial class Category
+    public class CategoryInputRequest
     {
         public int Id { get; set; }
         public int? CategoryMainId { get; set; }
@@ -12,6 +11,7 @@ namespace PharmaDistiPro.Models
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
-        public virtual User? CreatedByNavigation { get; set; }
+        
+
     }
 }

@@ -2,13 +2,13 @@
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Infrastructures;
 using PharmaDistiPro.Repositories.Interface;
-
 namespace PharmaDistiPro.Repositories.Impl
 {
-    public class CategoryRepository : RepositoryBase<Category>, ICategoryRepository
+    public class StorageRoomRepository :  RepositoryBase<StorageRoom>  ,IStorageRoomRepository
     {
-        public CategoryRepository(SEP490_G74Context context) : base(context)
+        public StorageRoomRepository(SEP490_G74Context context) : base(context)
         {
         }
+
     }
 }
