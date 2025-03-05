@@ -52,11 +52,16 @@ namespace PharmaDistiPro
             #region Add DI for repositories
             builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
             builder.Services.AddScoped<IStorageRoomRepository, StorageRoomRepository>();
+            builder.Services.AddScoped<IUnitRepository, UnitRepository>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             #endregion
 
             #region Add DI for services
             builder.Services.AddScoped<ISupplierService, SupplierService>();
             builder.Services.AddScoped<IStorageRoomService, StorageRoomService>();
+            builder.Services.AddScoped<IUnitService, UnitService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+          
             #endregion
 
             // Register AutoMapper

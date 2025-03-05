@@ -5,11 +5,10 @@ using PharmaDistiPro.Repositories.Interface;
 
 namespace PharmaDistiPro.Repositories.Impl
 {
-    //public class CategoryRepository : RepositoryBase<Category>, ICategoryRepository
-    //{
-    //    private readonly SEP490_G74Context _context;
-
-      
-       
-    //}
+    public class CategoryRepository : RepositoryBase<Category>, ICategoryRepository
+    {
+        public CategoryRepository(SEP490_G74Context context) : base(context)
+        {
+        }
+    }
 }

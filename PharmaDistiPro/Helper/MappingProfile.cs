@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
+using PharmaDistiPro.DTO.Categorys;
 using PharmaDistiPro.DTO.StorageRooms;
 using PharmaDistiPro.DTO.Suppliers;
-
+using PharmaDistiPro.DTO.Units;
 using PharmaDistiPro.Models;
 namespace PharmaDistiPro.Helper
 {
@@ -21,6 +22,16 @@ namespace PharmaDistiPro.Helper
             CreateMap<StorageRoomDTO, StorageRoom>();
             #endregion
 
+            #region Unit
+            CreateMap<Unit, UnitDTO>();
+            CreateMap<UnitDTO, Unit>();
+            #endregion
+
+
+            #region Category
+            CreateMap<Category, CategoryDTO>();
+            CreateMap<CategoryDTO, Category>();
+            #endregion
         }
     }
 }

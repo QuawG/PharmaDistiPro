@@ -21,7 +21,6 @@ namespace PharmaDistiPro.Models
         public virtual DbSet<IssueNoteDetail> IssueNoteDetails { get; set; } = null!;
         public virtual DbSet<Log> Logs { get; set; } = null!;
         public virtual DbSet<Lot> Lots { get; set; } = null!;
-        public virtual DbSet<Manufacture> Manufactures { get; set; } = null!;
         public virtual DbSet<NoteCheck> NoteChecks { get; set; } = null!;
         public virtual DbSet<NoteCheckDetail> NoteCheckDetails { get; set; } = null!;
         public virtual DbSet<Order> Orders { get; set; } = null!;
@@ -57,8 +56,6 @@ namespace PharmaDistiPro.Models
                 entity.Property(e => e.CategoryName).HasMaxLength(50);
 
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-
-                entity.Property(e => e.MainCategory).HasMaxLength(50);
 
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Categories)
@@ -119,18 +116,6 @@ namespace PharmaDistiPro.Models
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
                 entity.Property(e => e.LotCode).HasMaxLength(50);
-            });
-
-            modelBuilder.Entity<Manufacture>(entity =>
-            {
-                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-
-                entity.Property(e => e.ManufacturesCode).HasMaxLength(50);
-
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.Manufactures)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .HasConstraintName("FK_Manufactures_Users");
             });
 
             modelBuilder.Entity<NoteCheck>(entity =>
@@ -199,20 +184,10 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.Vat).HasColumnName("VAT");
 
-                entity.HasOne(d => d.Category)
-                    .WithMany(p => p.Products)
-                    .HasForeignKey(d => d.CategoryId)
-                    .HasConstraintName("FK_Products_Categorys");
-
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Products)
                     .HasForeignKey(d => d.CreatedBy)
                     .HasConstraintName("FK_Products_Users");
-
-                entity.HasOne(d => d.Manufacture)
-                    .WithMany(p => p.Products)
-                    .HasForeignKey(d => d.ManufactureId)
-                    .HasConstraintName("FK_Products_Manufactures");
 
                 entity.HasOne(d => d.Unit)
                     .WithMany(p => p.Products)
