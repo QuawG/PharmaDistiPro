@@ -105,11 +105,11 @@ export default function UpdateCustomerDetail({
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tên họ</label>
+                  <label className="block text-sm font-medium text-gray-700">Mã khách hàng</label>
                   <input
                     type="text"
-                    name="lastName"
-                    value={formData?.lastName || ""}
+                    name="employeeCode"
+                    value={formData?.employeeCode || ""}
                     onChange={handleChange}
                     className="mt-1 border rounded p-2 w-full"
                   />
@@ -145,11 +145,11 @@ export default function UpdateCustomerDetail({
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tuổi</label>
+                  <label className="block text-sm font-medium text-gray-700">Mã số thuế</label>
                   <input
                     type="number"
-                    name="age"
-                    value={formData?.age || ""}
+                    name="taxCode"
+                    value={formData?.taxCode || ""}
                     onChange={handleChange}
                     className="mt-1 border rounded p-2 w-full"
                   />
@@ -187,7 +187,7 @@ export default function UpdateCustomerDetail({
                   className="w-32 h-32 rounded-full border border-gray-300"
                 />
                 <div className="mt-2 text-center text-sm text-gray-600">
-                  {formData?.firstName || "Unknown"} {formData?.lastName || ""}
+                  {formData?.firstName || "Unknown"} {formData?.employeeCode || ""}
                 </div>
               </div>
             </div>

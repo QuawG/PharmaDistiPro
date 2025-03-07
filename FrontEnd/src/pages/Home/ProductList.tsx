@@ -108,6 +108,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
 
         {/* Table */}
         <ProductTable PRODUCTS_DATA={filteredProducts} handleChangePage={handleChangePage} />
+        
       </div>
     </div>
   );

@@ -1,80 +1,47 @@
-import { useState } from "react";
-
-export default function AddUser() {
-    const [avatarPreview, setAvatarPreview] = useState(null);
-
-    const handleAvatarChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setAvatarPreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
+export default function AddPurchaseOrder() {
     return (
         <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Thêm người dùng mới</h1>
-                <p className="text-sm text-gray-500">Tạo một người dùng mới theo form bên dưới</p>
+                <h1 className="text-xl font-semibold text-gray-900">Thêm đơn đặt hàng(PO)</h1>
+                <p className="text-sm text-gray-500">Tạo đơn đặt hàng mới</p>
             </div>
 
             {/* Form */}
             <div className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
-                {/* Row for Avatar */}
-                <div className="flex items-center space-x-4 mb-6">
-                    <label className="block text-[14px] text-gray-700">Avatar</label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="border border-gray-300 rounded-md"
-                    />
-                </div>
-                {avatarPreview && (
-                    <div className="mb-4">
-                        <img src={avatarPreview} alt="Avatar Preview" className="w-24 h-24 rounded-full border border-gray-300" />
-                    </div>
-                )}
-
                 {/* Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tên riêng</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Mã đơn đặt hàng</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên riêng"
+                            placeholder="Nhập mã đơn đặt hàng"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tên họ</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Nhà cung cấp</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên họ"
+                            placeholder="Nhập tên nhà cung cấp"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Email</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Ngày đặt hàng</label>
                         <input
-                            type="email"
+                            type="date"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập email"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Số điện thoại</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Ngày giao hàng</label>
                         <input
-                            type="tel"
+                            type="date"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập số điện thoại"
                         />
                     </div>
                 </div>
@@ -82,53 +49,44 @@ export default function AddUser() {
                 {/* Row 2 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Tổng số tiền</label>
                         <input
-                            type="text"
+                            type="number"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập địa chỉ"
+                            placeholder="Nhập tổng số tiền"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Vai trò</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Phí vận chuyển</label>
                         <input
-                            type="text"
+                            type="number"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập vai trò"
+                            placeholder="Nhập phí vận chuyển"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Mã số nhân viên</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ giao hàng</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập mã số nhân viên"
+                            placeholder="Nhập địa chỉ giao hàng"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Trạng thái tài khoản</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
                         <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                            <option value="">Thiết lập trạng thái</option>
-                            <option value="active">Kích hoạt</option>
-                            <option value="inactive">Vô hiệu hóa</option>
+                            <option value="">Chọn trạng thái</option>
+                            <option value="completed">Hoàn thành</option>
+                            <option value="pending">Đang chờ</option>
+                            <option value="canceled">Đã hủy</option>
                         </select>
                     </div>
                 </div>
 
-                {/* Row 3 - Password Field */}
-                <div className="space-y-1">
-                    <label className="block text-[14px] mb-2 text-gray-700">Mật khẩu</label>
-                    <input
-                        type="password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Nhập mật khẩu"
-                    />
-                </div>
-
-                {/* Row 4 */}
+                {/* Row 3 */}
                 <div className="flex gap-4">
                     <button
                         type="submit"

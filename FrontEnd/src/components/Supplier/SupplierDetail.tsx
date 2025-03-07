@@ -57,64 +57,66 @@ export default function SupplierDetail({
             <p className="text-sm text-gray-500">Thông tin chi tiết nhà cung cấp</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border-[1px] border-gray-300 rounded-lg p-4">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tên</label>
-                <input
-                  type="text"
-                  value={supplier?.name || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                <input
-                  type="text"
-                  value={supplier?.address || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                <input
-                  type="text"
-                  value={supplier?.phone || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
-                <input
-                  type="text"
-                  value={supplier?.status || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
-                <input
-                  type="text"
-                  value={supplier?.createdBy || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
-                <input
-                  type="text"
-                  value={supplier?.createdDate || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+          <form className="flex flex-col items-center">
+            <div className="w-full">
+              <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Tên</label>
+                  <input
+                    type="text"
+                    value={supplier?.name || "N/A"}
+                    readOnly
+                    className="mt-1 border rounded p-2 w-full bg-gray-100"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                  <input
+                    type="text"
+                    value={supplier?.address || "N/A"}
+                    readOnly
+                    className="mt-1 border rounded p-2 w-full bg-gray-100"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                  <input
+                    type="text"
+                    value={supplier?.phone || "N/A"}
+                    readOnly
+                    className="mt-1 border rounded p-2 w-full bg-gray-100"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                  <input
+                    type="text"
+                    value={supplier?.status || "N/A"}
+                    readOnly
+                    className="mt-1 border rounded p-2 w-full bg-gray-100"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
+                  <input
+                    type="text"
+                    value={supplier?.createdBy || "N/A"}
+                    readOnly
+                    className="mt-1 border rounded p-2 w-full bg-gray-100"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
+                  <input
+                    type="text"
+                    value={supplier?.createdDate || "N/A"}
+                    readOnly
+                    className="mt-1 border rounded p-2 w-full bg-gray-100"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </form>
 
           <div className="flex justify-end mt-4">
             <button type="button" onClick={onClose} className="border rounded p-2">Đóng</button>
