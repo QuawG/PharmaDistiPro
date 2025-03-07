@@ -4,6 +4,7 @@ using PharmaDistiPro.DTO.StorageRooms;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
+using System.Linq.Expressions;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -19,136 +20,166 @@ namespace PharmaDistiPro.Services.Impl
             _mapper = mapper;
         }
 
-        /// <summary>
-        /// Lấy toàn bộ danh mục và sắp xếp thành cấu trúc cây (cha - con).
-        /// </summary>
-        /// <returns>Danh sách danh mục theo dạng cây</returns>
-        public async Task<Response<List<CategoryDTO>>> GetCategoryTree()
+        //category tree list
+        public async Task<Response<IEnumerable<CategoryDTO>>> GetCategoryTreeAsync()
         {
-            var response = new Response<List<CategoryDTO>>();
+            var response = new Response<IEnumerable<CategoryDTO>>();
+
             try
             {
-                // Lấy toàn bộ danh mục từ repository
                 var categories = await _categoryRepository.GetAllAsync();
+
                 if (!categories.Any())
                 {
                     response.Success = false;
-                    response.Message = "Không có dữ liệu";
+                    response.Message = "Không có dữ liệu danh mục";
                     return response;
                 }
 
-                // Map sang CategoryDTO
-                var categoryDtoList = _mapper.Map<List<CategoryDTO>>(categories);
+         
+                var categoryDTOs = _mapper.Map<IEnumerable<CategoryDTO>>(categories);
 
-                // Xây dựng cây danh mục
-                var categoryTree = BuildCategoryTree(categoryDtoList);
+                // build tree
+                var categoryTree = BuildCategoryTree(categoryDTOs.ToList());
 
                 response.Success = true;
                 response.Data = categoryTree;
+                response.Message = "Lấy danh sách danh mục thành công";
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = $"Lỗi: {ex.Message}";
             }
+
             return response;
         }
 
-      
+        //build tree class
         private List<CategoryDTO> BuildCategoryTree(List<CategoryDTO> categories)
         {
-            
-            var lookup = categories.ToDictionary(c => c.Id, c => c);
-
-           
+            var categoryDict = categories.ToDictionary(c => c.Id, c => c);
             var rootCategories = new List<CategoryDTO>();
 
             foreach (var category in categories)
             {
-                if (category.CategoryMainId.HasValue && lookup.ContainsKey(category.CategoryMainId.Value))
+                if (category.CategoryMainId == null)
                 {
-           
-                    var parent = lookup[category.CategoryMainId.Value];
-                    parent.SubCategories.Add(category);
+                    rootCategories.Add(category);
                 }
                 else
                 {
-                   
-                    rootCategories.Add(category);
+                    if (categoryDict.TryGetValue(category.CategoryMainId.Value, out var parent))
+                    {
+                        parent.SubCategories.Add(category);
+                    }
                 }
             }
 
             return rootCategories;
         }
 
-    
-        public async Task<Response<CategoryDTO>> GetCategoryById(int categoryId)
+        // Filter by name
+        public async Task<Response<IEnumerable<CategoryDTO>>> FilterCategoriesAsync(string? searchTerm)
         {
-            var response = new Response<CategoryDTO>();
+            var response = new Response<IEnumerable<CategoryDTO>>();
+
             try
             {
-                var category = await _categoryRepository.GetByIdAsync(categoryId);
-                if (category == null)
+                // Create condition filter
+                Expression<Func<Category, bool>> filter = c => true; 
+
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    searchTerm = searchTerm.ToLower();
+                    filter = c => c.CategoryName.ToLower().Contains(searchTerm) || (c.CategoryCode != null && c.CategoryCode.ToLower().Contains(searchTerm));
+                }
+
+
+                
+                var categories = await _categoryRepository.GetByConditionAsync(filter);
+
+                if (!categories.Any())
                 {
                     response.Success = false;
-                    response.Message = "Không tìm thấy danh mục";
-                }
-                else
-                {
-                    response.Success = true;
-                    response.Data = _mapper.Map<CategoryDTO>(category);
-                    response.Message = "Danh mục tìm thấy";
-                }
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.Message = ex.Message;
-            }
-            return response;
-        }
-
-        public async Task<Response<CategoryDTO>> CreateNewCategory(CategoryInputRequest categoryInputRequest)
-        {
-            var response = new Response<CategoryDTO>();
-            try
-            {
-                // Kiểm tra xem danh mục đã tồn tại chưa
-                var existingCategory = await _categoryRepository.GetSingleByConditionAsync(x =>
-                    x.CategoryCode == categoryInputRequest.CategoryCode ||
-                    x.CategoryName == categoryInputRequest.CategoryName);
-
-                if (existingCategory != null)
-                {
-                    response.Success = false;
-                    response.Message = "Mã danh mục hoặc tên danh mục đã tồn tại.";
+                    response.Message = "Không tìm thấy danh mục phù hợp";
                     return response;
                 }
 
-                // Map dữ liệu từ DTO sang Entity
-                var newCategory = _mapper.Map<Category>(categoryInputRequest);
-                newCategory.CreatedDate = DateTime.Now;
-
-                await _categoryRepository.InsertAsync(newCategory);
-                await _categoryRepository.SaveAsync();
+                var categoryDTOs = _mapper.Map<IEnumerable<CategoryDTO>>(categories);
 
                 response.Success = true;
-                response.Message = "Tạo mới danh mục thành công";
-                response.Data = _mapper.Map<CategoryDTO>(newCategory);
+                response.Data = categoryDTOs;
+                response.Message = "Lọc danh mục thành công";
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = $"Lỗi: {ex.Message}";
             }
+
             return response;
         }
 
-        public async Task<Response<CategoryDTO>> UpdateCategory(CategoryInputRequest categoryUpdateRequest)
+        // Create Category
+        public async Task<Response<CategoryDTO>> CreateCategoryAsync(CategoryInputRequest categoryInputRequest)
         {
             var response = new Response<CategoryDTO>();
+
             try
             {
+               
+                var existingCategory = await _categoryRepository.GetSingleByConditionAsync(
+                    c => c.CategoryName.Equals(categoryInputRequest.CategoryName) || (c.CategoryCode != null && c.CategoryCode.Equals(categoryInputRequest.CategoryCode))
+                );
+
+                if (existingCategory != null)
+                {
+                    response.Success = false;
+                    response.Message = "Tên hoặc mã danh mục đã tồn tại.";
+                    return response;
+                }
+
+              
+                if (categoryInputRequest.CategoryMainId.HasValue)
+                {
+                    var parentCategory = await _categoryRepository.GetByIdAsync(categoryInputRequest.CategoryMainId.Value);
+                    if (parentCategory == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Danh mục cha không tồn tại.";
+                        return response;
+                    }
+                }
+
+                
+                var newCategory = _mapper.Map<Category>(categoryInputRequest);
+                newCategory.CreatedDate = DateTime.Now;
+              
+
+                await _categoryRepository.InsertAsync(newCategory);
+                await _categoryRepository.SaveAsync();
+
+                response.Success = true;
+                response.Data = _mapper.Map<CategoryDTO>(newCategory);
+                response.Message = "Tạo danh mục thành công";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Lỗi: {ex.Message}";
+            }
+
+            return response;
+        }
+
+        public async Task<Response<CategoryDTO>> UpdateCategoryAsync(CategoryInputRequest categoryUpdateRequest)
+        {
+            var response = new Response<CategoryDTO>();
+
+            try
+            {
+                
                 var categoryToUpdate = await _categoryRepository.GetByIdAsync(categoryUpdateRequest.Id);
                 if (categoryToUpdate == null)
                 {
@@ -157,25 +188,108 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-                // Map dữ liệu từ DTO sang thực thể hiện tại
-                _mapper.Map(categoryUpdateRequest, categoryToUpdate);
+             
+                if (categoryUpdateRequest.CategoryMainId.HasValue)
+                {
+                    var parentCategory = await _categoryRepository.GetByIdAsync(categoryUpdateRequest.CategoryMainId.Value);
+                    if (parentCategory == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Danh mục cha không tồn tại.";
+                        return response;
+                    }
+                 
+                    if (categoryUpdateRequest.CategoryMainId == categoryUpdateRequest.Id)
+                    {
+                        response.Success = false;
+                        response.Message = "Danh mục không thể là cha của chính nó.";
+                        return response;
+                    }
+                }
+
+                
+                var duplicateCategory = await _categoryRepository.GetSingleByConditionAsync(
+                    c => (c.CategoryName.Equals(categoryUpdateRequest.CategoryName) || (c.CategoryCode != null && c.CategoryCode.Equals(categoryUpdateRequest.CategoryCode))) && c.Id != categoryUpdateRequest.Id
+                );
+
+                if (duplicateCategory != null)
+                {
+                    response.Success = false;
+                    response.Message = "Tên hoặc mã danh mục đã tồn tại.";
+                    return response;
+                }
+
+                
+                if (!string.IsNullOrEmpty(categoryUpdateRequest.CategoryName))
+                    categoryToUpdate.CategoryName = categoryUpdateRequest.CategoryName;
+
+                if (!string.IsNullOrEmpty(categoryUpdateRequest.CategoryCode))
+                    categoryToUpdate.CategoryCode = categoryUpdateRequest.CategoryCode;
+
+                if (categoryUpdateRequest.CategoryMainId.HasValue)
+                    categoryToUpdate.CategoryMainId = categoryUpdateRequest.CategoryMainId;
+
+               
 
                 await _categoryRepository.UpdateAsync(categoryToUpdate);
                 await _categoryRepository.SaveAsync();
 
                 response.Success = true;
-                response.Message = "Cập nhật danh mục thành công";
                 response.Data = _mapper.Map<CategoryDTO>(categoryToUpdate);
+                response.Message = "Cập nhật danh mục thành công";
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = "Đã xảy ra lỗi khi cập nhật danh mục.";
+                response.Message = $"Lỗi: {ex.Message}";
             }
+
             return response;
         }
 
-      
+
+        //public async Task<Response<bool>> DeleteCategoryAsync(int categoryId)
+        //{
+        //    var response = new Response<bool>();
+
+        //    try
+        //    {
+        //        Kiểm tra danh mục có tồn tại không
+        //        var categoryToDelete = await _categoryRepository.GetByIdAsync(categoryId);
+        //        if (categoryToDelete == null)
+        //        {
+        //            response.Success = false;
+        //            response.Message = "Không tìm thấy danh mục";
+        //            return response;
+        //        }
+
+        //        Kiểm tra xem danh mục có danh mục con không
+        //        var hasSubCategories = await _categoryRepository.GetSingleByConditionAsync(c => c.CategoryMainId == categoryId);
+        //        if (hasSubCategories != null)
+        //        {
+        //            response.Success = false;
+        //            response.Message = "Không thể xóa danh mục vì vẫn còn danh mục con.";
+        //            return response;
+        //        }
+
+        //        Xóa danh mục
+        //       await _categoryRepository.DeleteAsync(categoryToDelete);
+        //        await _categoryRepository.SaveAsync();
+
+        //        response.Success = true;
+        //        response.Data = true;
+        //        response.Message = "Xóa danh mục thành công";
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        response.Success = false;
+        //        response.Message = $"Lỗi: {ex.Message}";
+        //    }
+
+        //    return response;
+        //}
+
+
     }
 
 

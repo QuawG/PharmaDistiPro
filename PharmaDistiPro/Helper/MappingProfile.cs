@@ -33,6 +33,12 @@ namespace PharmaDistiPro.Helper
             #region Category
             CreateMap<Category, CategoryDTO>();
             CreateMap<CategoryDTO, Category>();
+           
+
+            CreateMap<CategoryInputRequest, Category>()
+                .ForMember(dest => dest.CreatedByNavigation, opt => opt.Ignore());
+
+            CreateMap<Category, CategoryInputRequest>();
             #endregion
 
             #region User
