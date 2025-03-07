@@ -1,4 +1,19 @@
+import { useState } from "react";
+
 export default function AddCustomer() {
+    const [avatarPreview, setAvatarPreview] = useState(null);
+
+    const handleAvatarChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatarPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     return (
         <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
             {/* Header */}
@@ -9,6 +24,22 @@ export default function AddCustomer() {
 
             {/* Form */}
             <div className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
+                {/* Row for Avatar */}
+                <div className="flex items-center space-x-4 mb-6">
+                    <label className="block text-[14px] text-gray-700">Avatar</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="border border-gray-300 rounded-md"
+                    />
+                </div>
+                {avatarPreview && (
+                    <div className="mb-4">
+                        <img src={avatarPreview} alt="Avatar Preview" className="w-24 h-24 rounded-full border border-gray-300" />
+                    </div>
+                )}
+
                 {/* Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">

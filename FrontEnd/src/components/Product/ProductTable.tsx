@@ -39,6 +39,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleDelete = () => {

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-export default function CustomerDetail({
+export default function PurchaseOrderDetail({
   isOpen,
   onClose,
-  customer,
+  order,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  customer: any;
+  order: any;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -53,59 +53,59 @@ export default function CustomerDetail({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Thông tin khách hàng</h1>
-            <p className="text-sm text-gray-500">Xem thông tin khách hàng ở dưới đây</p>
+            <h1 className="text-xl font-semibold text-gray-900">Thông tin đơn đặt hàng</h1>
+            <p className="text-sm text-gray-500">Xem thông tin đơn đặt hàng ở dưới đây</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border-[1px] border-gray-300 rounded-lg p-4">
+          <div className="flex justify-center">
+            <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tên riêng</label>
+                <label className="block text-sm font-medium text-gray-700">Mã đơn đặt hàng</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.firstName || "N/A"}
+                  {order?.purchaseOrderCode || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Mã khách hàng</label>
+                <label className="block text-sm font-medium text-gray-700">Nhà cung cấp</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.employeeCode || "N/A"}
+                  {order?.supplierName || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-gray-700">Ngày đặt hàng</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.email || "N/A"}
+                  {order?.date || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                <label className="block text-sm font-medium text-gray-700">Ngày giao hàng</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.phone || "N/A"}
+                  {order?.goodsIssueDate || "N/A"}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Tổng số tiền</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {order?.totalAmount || "N/A"}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Phí vận chuyển</label>
+                <div className="mt-1 border rounded p-2 w-full bg-gray-100">
+                  {order?.deliveryFee || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.address || "N/A"}
+                  {order?.address || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Mã số thuế</label>
+                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.taxCode || "N/A"}
+                  {order?.status || "N/A"}
                 </div>
-              </div>
-            </div>
-
-            {/* User Avatar */}
-            <div className="flex flex-col items-center justify-center border-[1px] border-gray-300 rounded-lg p-4">
-              <img
-                src={customer?.avatar || "https://via.placeholder.com/150"}
-                alt="Customer Avatar"
-                className="w-32 h-32 rounded-full border border-gray-300"
-              />
-              <div className="mt-2 text-center text-sm text-gray-600">
-                {customer?.firstName || "Unknown"} {customer?.employeeCode || ""}
               </div>
             </div>
           </div>
@@ -114,13 +114,13 @@ export default function CustomerDetail({
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
               <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                {customer?.createdBy || "N/A"}
+                {order?.createdBy || "N/A"}
               </div>
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
               <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                {customer?.createdDate || "N/A"}
+                {order?.createdDate || "N/A"}
               </div>
             </div>
           </div>

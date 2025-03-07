@@ -12,28 +12,28 @@ import {
 } from '@tanstack/react-table';
 import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react'; // Thêm Eye từ lucide-react
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import CustomerDetailsModal from './CustomerDetail'; 
-import UpdateCustomerDetailsModal from './UpdateCustomerDetail'; 
+import PurchaseOrderDetailsModal from './PurchaseOrderDetail'; 
+import UpdatePurchaseOrderDetailsModal from './UpdatePurchaseOrderDetail'; 
 
-interface Customer {
-  id: number;
-  avatar: string;
-  firstName: string;
-  employeeCode: string;
-  email: string;
-  phone: string;
-  address: string;
-  age: number;  // Added age property
+interface PurchaseOrder {
+  purchaseOrderId: number;
+  purchaseOrderCode: string;
+  supplierName: string;
+  date: string; // Định dạng ngày
+  goodsIssueDate: string; // Định dạng ngày
+  totalAmount: number;
   createdBy: string;
-  createdDate: string; 
-  taxCode:number;
+  createdDate: string; // Định dạng ngày
+  status: string;
+  deliveryFee: number;
+  address: string;
 }
 
-interface CustomerTableProps {
-  CUSTOMERS_DATA: Customer[];
+interface PurchaseOrderTableProps {
+  PURCHASE_ORDERS_DATA: PurchaseOrder[];
 }
 
-const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
+const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS_DATA }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState<string>('');
@@ -41,19 +41,19 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false); // Modal xem thêm
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Modal chỉnh sửa
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
 
-  const handleSave = (updatedCustomer: Customer) => {
-    console.log('Customer updated:', updatedCustomer);
-    // Update customer list if necessary
+  const handleSave = (updatedOrder: PurchaseOrder) => {
+    console.log('Order updated:', updatedOrder);
+    // Update order list if necessary
   };
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
-    // Logic to delete the customer
+    // Logic to delete the order
   };
 
-  const columns: ColumnDef<Customer>[] = [
+  const columns: ColumnDef<PurchaseOrder>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -74,17 +74,14 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
       ),
       enableSorting: false,
     },
-    {
-      id: 'avatar',
-      header: 'Ảnh đại diện',
-      cell: ({ row }) => (
-        <img src={row.original.avatar} alt={`${row.original.firstName} ${row.original.employeeCode}`} className="w-28 h-20" />
-      ),
-      enableSorting: false,
-    },
-    { accessorKey: 'firstName', header: 'Tên riêng' },
-    { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'phone', header: 'Số điện thoại' },
+    { accessorKey: 'purchaseOrderId', header: 'ID Đơn Đặt Hàng' },
+    { accessorKey: 'purchaseOrderCode', header: 'Mã Đơn Đặt Hàng' },
+    { accessorKey: 'supplierName', header: 'Nhà Cung Cấp' },
+    { accessorKey: 'date', header: 'Ngày Đặt Hàng' },
+    { accessorKey: 'goodsIssueDate', header: 'Ngày Giao Hàng' },
+
+    { accessorKey: 'status', header: 'Trạng Thái' },
+    { accessorKey: 'address', header: 'Địa Chỉ' },
     {
       id: 'actions',
       header: 'Tính năng',
@@ -105,7 +102,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
           <button 
             className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500" 
             onClick={() => {
-              setSelectedCustomer(row.original);
+              setSelectedOrder(row.original);
               setIsDeleteModalOpen(true);
             }}
           >
@@ -117,18 +114,18 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
     },
   ];
 
-  const handleEdit = (customer: Customer) => {
-    setSelectedCustomer(customer);
+  const handleEdit = (order: PurchaseOrder) => {
+    setSelectedOrder(order);
     setIsEditModalOpen(true);
   };
 
-  const handleView = (customer: Customer) => {
-    setSelectedCustomer(customer);
+  const handleView = (order: PurchaseOrder) => {
+    setSelectedOrder(order);
     setIsViewModalOpen(true); // Mở modal chỉ xem thông tin
   };
 
   const table = useReactTable({
-    data: CUSTOMERS_DATA,
+    data: PURCHASE_ORDERS_DATA,
     columns,
     state: {
       sorting,
@@ -249,19 +246,19 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
       />
-      <CustomerDetailsModal 
+      <PurchaseOrderDetailsModal 
         isOpen={isViewModalOpen} 
         onClose={() => setIsViewModalOpen(false)} 
-        customer={selectedCustomer} 
+        order={selectedOrder} 
       />
-      <UpdateCustomerDetailsModal 
+      <UpdatePurchaseOrderDetailsModal 
         isOpen={isEditModalOpen} 
         onClose={() => setIsEditModalOpen(false)} 
-        customer={selectedCustomer} 
+        order={selectedOrder} 
         onSave={handleSave} 
       />
     </div>
   );
 };
 
-export default CustomerTable;
+export default PurchaseOrderTable;

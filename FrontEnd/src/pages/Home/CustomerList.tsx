@@ -7,13 +7,14 @@ interface Customer {
     id: number;
     avatar: string;
     firstName: string;
-    lastName: string;
+    employeeCode: string;
     email: string;
     phone: string;
     address: string;
     age: number;  // Added age property
     createdBy: string;
     createdDate: string; 
+    taxCode:number;
 }
 interface CustomerListPageProps {
   handleChangePage: (page: string) => void;
@@ -22,62 +23,67 @@ const CUSTOMERS_DATA: Customer[] = [
   {
     id: 1,
     firstName: "Alice",
-    lastName: "Johnson",
+    employeeCode: "KH001",
     avatar: "https://via.placeholder.com/150",
     email: "alice@example.com",
     phone: "321-654-0987",
     address: "789 Oak St",
     age: 30, 
     createdBy: "Admin",
-    createdDate: "2023-01-10T00:00:00Z" 
+    createdDate: "2023-01-10T00:00:00Z",
+    taxCode: 104224702
   },
   {
     id: 2,
     firstName: "Bob",
-    lastName: "Brown",
+    employeeCode: "KH002",
     avatar: "https://via.placeholder.com/150",
     email: "bob@example.com",
     phone: "432-765-0987",
     address: "101 Pine St",
     age: 25,  // Added age
     createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" 
+    createdDate: "2023-01-11T00:00:00Z" ,
+    taxCode: 104224702
   },
   {
     id: 3,
     firstName: "Bob",
-    lastName: "Brown",
+    employeeCode: "KH003",
     avatar: "https://via.placeholder.com/150",
     email: "bob@example.com",
     phone: "432-765-0987",
     address: "101 Pine St",
     age: 25,  // Added age
     createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" 
+    createdDate: "2023-01-11T00:00:00Z" ,
+    taxCode: 104224702
   },
   {
     id: 4,
     firstName: "Bob",
-    lastName: "Brown",
+    employeeCode: "KH004",
     avatar: "https://via.placeholder.com/150",
     email: "bob@example.com",
     phone: "432-765-0987",
     address: "101 Pine St",
     age: 25,  // Added age
     createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" 
+    createdDate: "2023-01-11T00:00:00Z" ,
+    taxCode: 104224702
   },
   {
     id: 5,
     firstName: "Bob",
-    lastName: "Brown",
+    employeeCode: "KH005",
     avatar: "https://via.placeholder.com/150",
     email: "bob@example.com",
     phone: "432-765-0987",
     address: "101 Pine St",
     age: 25,  // Added age
     createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" 
+    createdDate: "2023-01-11T00:00:00Z" ,
+    taxCode: 104224702
   }
   
 ];
@@ -91,7 +97,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
     setSearchTerm(value);
 
     const filtered = CUSTOMERS_DATA.filter(customer =>
-      `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(value.toLowerCase())
+      `${customer.firstName} ${customer.employeeCode}`.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredCustomers(filtered);
   };

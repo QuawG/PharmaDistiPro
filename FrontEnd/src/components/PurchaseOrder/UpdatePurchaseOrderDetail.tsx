@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-export default function UpdateSupplierDetail({
+export default function UpdatePurchaseOrderDetail({
   isOpen,
   onClose,
-  supplier,
+  order,
   onSave,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  supplier: any;
-  onSave: (updatedSupplier: any) => void;
+  order: any;
+  onSave: (updatedOrder: any) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [formData, setFormData] = useState(supplier);
+  const [formData, setFormData] = useState(order);
 
   useEffect(() => {
     if (isOpen) {
@@ -32,8 +32,8 @@ export default function UpdateSupplierDetail({
   }, [isOpen]);
 
   useEffect(() => {
-    setFormData(supplier);
-  }, [supplier]);
+    setFormData(order);
+  }, [order]);
 
   if (!mounted) return null;
 
@@ -48,7 +48,7 @@ export default function UpdateSupplierDetail({
     e.preventDefault();
     if (formData) {
       onSave(formData);
-      alert('Information saved successfully!');
+      alert('Cập nhật thông tin đơn hàng thành công!');
       onClose();
     }
   };
@@ -76,19 +76,74 @@ export default function UpdateSupplierDetail({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin nhà cung cấp</h1>
-            <p className="text-sm text-gray-500">Cập nhật thông tin nhà cung cấp theo form bên dưới</p>
+            <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin đơn đặt hàng</h1>
+            <p className="text-sm text-gray-500">Cập nhật thông tin đơn đặt hàng ở form bên dưới</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col items-center">
             <div className="w-full">
               <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tên</label>
+                  <label className="block text-sm font-medium text-gray-700">Mã đơn đặt hàng</label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData?.name || ""}
+                    name="purchaseOrderCode"
+                    value={formData?.purchaseOrderCode || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Nhà cung cấp</label>
+                  <input
+                    type="text"
+                    name="supplierName"
+                    value={formData?.supplierName || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Ngày đặt hàng</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData?.date || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Ngày giao hàng</label>
+                  <input
+                    type="date"
+                    name="goodsIssueDate"
+                    value={formData?.goodsIssueDate || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Tổng số tiền</label>
+                  <input
+                    type="number"
+                    name="totalAmount"
+                    value={formData?.totalAmount || ""}
+                    onChange={handleChange}
+                    className="mt-1 border rounded p-2 w-full"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Phí vận chuyển</label>
+                  <input
+                    type="number"
+                    name="deliveryFee"
+                    value={formData?.deliveryFee || ""}
                     onChange={handleChange}
                     className="mt-1 border rounded p-2 w-full"
                   />
@@ -104,16 +159,6 @@ export default function UpdateSupplierDetail({
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData?.phone || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
                   <select
                     name="status"
@@ -122,28 +167,10 @@ export default function UpdateSupplierDetail({
                     className="mt-1 border rounded p-2 w-full"
                   >
                     <option value="">Chọn trạng thái</option>
-                    <option value="active">Hoạt động</option>
-                    <option value="inactive">Không hoạt động</option>
+                    <option value="completed">Hoàn thành</option>
                     <option value="pending">Đang chờ</option>
+                    <option value="canceled">Đã hủy</option>
                   </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
-                  <input
-                    type="text"
-                    value={supplier?.createdBy || "N/A"}
-                    readOnly
-                    className="mt-1 border rounded p-2 w-full bg-gray-100"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
-                  <input
-                    type="text"
-                    value={supplier?.createdDate || "N/A"}
-                    readOnly
-                    className="mt-1 border rounded p-2 w-full bg-gray-100"
-                  />
                 </div>
               </div>
             </div>
