@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace PharmaDistiPro.Models
+﻿namespace PharmaDistiPro.DTO.Products
 {
-    public partial class Product
+    public class ProductInputRequest
     {
-        public Product()
-        {
-            ProductLots = new HashSet<ProductLot>();
-        }
-
         public int ProductId { get; set; }
         public string? ProductCode { get; set; }
         public string? ManufactureName { get; set; }
@@ -20,13 +12,8 @@ namespace PharmaDistiPro.Models
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public bool? Status { get; set; }
-        public string? Image { get; set; }
+        public FormFile? Image { get; set; }
         public double? Vat { get; set; }
         public int? Storageconditions { get; set; }
-
-        public virtual Category? Category { get; set; }
-        public virtual User? CreatedByNavigation { get; set; }
-        public virtual Unit? Unit { get; set; }
-        public virtual ICollection<ProductLot> ProductLots { get; set; }
     }
 }

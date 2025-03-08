@@ -184,6 +184,11 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.Vat).HasColumnName("VAT");
 
+                entity.HasOne(d => d.Category)
+                    .WithMany(p => p.Products)
+                    .HasForeignKey(d => d.CategoryId)
+                    .HasConstraintName("FK_Products_Categorys");
+
                 entity.HasOne(d => d.CreatedByNavigation)
                     .WithMany(p => p.Products)
                     .HasForeignKey(d => d.CreatedBy)
