@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PharmaDistiPro.Models;
 
-namespace PharmaDistiPro.Models
+namespace PharmaDistiPro.DTO.Products
 {
-    public partial class Product
+    public class ProductDTO
     {
-        public Product()
-        {
-            ProductLots = new HashSet<ProductLot>();
-        }
-
         public int ProductId { get; set; }
         public string? ProductCode { get; set; }
         public string? ManufactureName { get; set; }
