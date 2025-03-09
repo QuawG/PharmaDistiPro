@@ -105,6 +105,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
           >
             <Pencil className="w-5 h-5" />
           </button>
+
           <button
             className="p-1 text-red-600 hover:bg-gray-200 rounded"
             onClick={() => {
@@ -141,7 +142,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       {/* Thanh tìm kiếm */}
-      
+
 
       {/* Bảng dữ liệu */}
       <table className="w-full border-collapse">

@@ -14,18 +14,20 @@ import SupplierAdd from "../components/Supplier/AddSupplier"; // Import Supplier
 import PurchaseOrderListPage from "./Home/PurchaseOrderList"; // Import PurchaseOrderListPage
 import PurchaseOrderAdd from "../components/PurchaseOrder/AddPurchaseOrder"; // Import PurchaseOrderAdd
 import Navbar from "../components/global/Navbar";
+import UpdateProduct from "../components/Product/UpdateProduct";
 import { useState } from "react";
 
 const HomePage = () => {
   const [activePage, setActivePage] = useState<string>("Danh sách sản phẩm");
-  const [, setSelectedProductId] = useState<number | null>(null);
+const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
-  const handleChangePage = (page: string, productId?: number) => {
-    setActivePage(page);
-    if (productId) {
-      setSelectedProductId(productId);
-    }
-  };
+const handleChangePage = (page: string, productId?: number) => {
+  setActivePage(page);
+  if (productId) {
+    setSelectedProductId(productId);
+  }
+};
+
 
     return (
         <div className="w-screen h-screen flex">
@@ -33,8 +35,11 @@ const HomePage = () => {
             <div className="flex-grow">
                 <Navbar />
                 {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}
+                {activePage === "Chỉnh sửa sản phẩm" && selectedProductId !== null && (
+  <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
+)}
                 {activePage === 'Danh sách danh mục chính' && <CategoryList handleChangePage={handleChangePage} />}
-                {activePage === 'Thêm sản phẩm' && <ProductAdd />}
+                {activePage === 'Thêm sản phẩm' && <ProductAdd handleChangePage={handleChangePage}/>}
                 {activePage === 'Thêm danh mục chính' && <CategoryAdd handleChangePage={handleChangePage} />} 
                 {activePage === 'Danh sách danh mục phụ' && <SubCategoryList handleChangePage={handleChangePage} />}
                 {activePage === 'Thêm danh mục phụ' && <SubAddCategory handleChangePage={handleChangePage} />}

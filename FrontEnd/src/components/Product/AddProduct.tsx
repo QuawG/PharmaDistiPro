@@ -12,7 +12,9 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     status: "active",
     description: "",
     image: null as File | null,
+    VAT: "", // Thêm trường VAT
   });
+  
 
   // Xử lý thay đổi input, select và textarea
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -120,18 +122,31 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
         </div>
 
         {/* Row 3 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-          {/* Trạng thái */}
-          <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
-            <select name="status" value={formData.status} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Không hoạt động</option>
-            </select>
-          </div>
+        {/* Row 3 */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+  {/* Trạng thái */}
+  <div className="space-y-1">
+    <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
+    <select name="status" value={formData.status} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
+      <option value="active">Hoạt động</option>
+      <option value="inactive">Không hoạt động</option>
+    </select>
+  </div>
 
+  {/* Thuế VAT */}
+  <div className="space-y-1">
+    <label className="block text-[14px] mb-2 text-gray-700">Thuế VAT</label>
+    <input
+      type="text"
+      name="VAT"
+      value={formData.VAT || ""}
+      onChange={handleChange}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+      placeholder="Nhập phần trăm thuế VAT"
+    />
+  </div>
+</div>
 
-        </div>
         {/* Mô tả */}
         <div className="space-y-1">
           <label className="block text-[14px] mb-2 text-gray-700">Mô tả</label>
