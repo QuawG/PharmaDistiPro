@@ -1,7 +1,9 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import CustomerTable from '../../components/Customer/CustomerTable'; // Ensure you have created CustomerTable
+import CustomerTable from '../../components/Customer/CustomerTable'; 
 
 interface Customer {
     id: number;
@@ -11,95 +13,67 @@ interface Customer {
     email: string;
     phone: string;
     address: string;
-    age: number;  // Added age property
+    age: number;  
     createdBy: string;
     createdDate: string; 
-    taxCode:number;
+    taxCode: number;
 }
+
 interface CustomerListPageProps {
   handleChangePage: (page: string) => void;
 }
+
 const CUSTOMERS_DATA: Customer[] = [
-  {
-    id: 1,
-    firstName: "Alice",
-    employeeCode: "KH001",
-    avatar: "https://via.placeholder.com/150",
-    email: "alice@example.com",
-    phone: "321-654-0987",
-    address: "789 Oak St",
-    age: 30, 
-    createdBy: "Admin",
-    createdDate: "2023-01-10T00:00:00Z",
-    taxCode: 104224702
-  },
-  {
-    id: 2,
-    firstName: "Bob",
-    employeeCode: "KH002",
-    avatar: "https://via.placeholder.com/150",
-    email: "bob@example.com",
-    phone: "432-765-0987",
-    address: "101 Pine St",
-    age: 25,  // Added age
-    createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" ,
-    taxCode: 104224702
-  },
-  {
-    id: 3,
-    firstName: "Bob",
-    employeeCode: "KH003",
-    avatar: "https://via.placeholder.com/150",
-    email: "bob@example.com",
-    phone: "432-765-0987",
-    address: "101 Pine St",
-    age: 25,  // Added age
-    createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" ,
-    taxCode: 104224702
-  },
-  {
-    id: 4,
-    firstName: "Bob",
-    employeeCode: "KH004",
-    avatar: "https://via.placeholder.com/150",
-    email: "bob@example.com",
-    phone: "432-765-0987",
-    address: "101 Pine St",
-    age: 25,  // Added age
-    createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" ,
-    taxCode: 104224702
-  },
-  {
-    id: 5,
-    firstName: "Bob",
-    employeeCode: "KH005",
-    avatar: "https://via.placeholder.com/150",
-    email: "bob@example.com",
-    phone: "432-765-0987",
-    address: "101 Pine St",
-    age: 25,  // Added age
-    createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z" ,
-    taxCode: 104224702
-  }
-  
+  { id: 1, firstName: "Alice", employeeCode: "KH001", avatar: "https://via.placeholder.com/150",
+    email: "alice@example.com", phone: "321-654-0987", address: "789 Oak St", age: 30, 
+    createdBy: "Admin", createdDate: "2023-01-10T00:00:00Z", taxCode: 104224702 },
+
+  { id: 2, firstName: "Bob", employeeCode: "KH002", avatar: "https://via.placeholder.com/150",
+    email: "bob@example.com", phone: "432-765-0987", address: "101 Pine St", age: 25,  
+    createdBy: "Admin", createdDate: "2023-01-11T00:00:00Z", taxCode: 104224702 },
+
+  { id: 3, firstName: "Charlie", employeeCode: "KH003", avatar: "https://via.placeholder.com/150",
+    email: "charlie@example.com", phone: "987-654-3210", address: "456 Maple Ave", age: 28,  
+    createdBy: "Admin", createdDate: "2023-01-12T00:00:00Z", taxCode: 104224703 }
 ];
 
 const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>(CUSTOMERS_DATA);
 
+  // Tìm kiếm khách hàng
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-
     const filtered = CUSTOMERS_DATA.filter(customer =>
       `${customer.firstName} ${customer.employeeCode}`.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredCustomers(filtered);
+  };
+
+  // Xuất file Excel
+  const exportToExcel = () => {
+    const excelData = filteredCustomers.map((customer) => ({
+      "ID": customer.id,
+      "Họ tên": customer.firstName,
+      "Mã KH": customer.employeeCode,
+      "Email": customer.email,
+      "SĐT": customer.phone,
+      "Địa chỉ": customer.address,
+      "Tuổi": customer.age,
+      "Mã số thuế": customer.taxCode,
+      "Người tạo": customer.createdBy,
+      "Ngày tạo": customer.createdDate,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachKhachHang");
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
+
+    saveAs(data, "DanhSachKhachHang.xlsx");
   };
 
   return (
@@ -127,7 +101,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Tìm kiếm..."
                 className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -143,7 +117,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <FileText className="w-5 h-5" />
             </button>
-            <button className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
+            <button onClick={exportToExcel} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
               <Table className="w-5 h-5" />
             </button>
             <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">

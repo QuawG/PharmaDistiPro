@@ -1,6 +1,7 @@
 import React, { useState } from 'react'; 
-import { FileText, Table, Printer } from 'lucide-react';
+import { FileText, Table, Printer, FileSpreadsheet } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import * as XLSX from 'xlsx';
 import SupplierTable from '../../components/Supplier/SupplierTable'; 
 
 interface SupplierListPageProps {
@@ -33,7 +34,6 @@ const SUPPLIERS_DATA: Supplier[] = [
     createdBy: "Admin",
     createdDate: "2023-01-02T00:00:00Z"
   },
-  // Thêm dữ liệu nhà cung cấp khác nếu cần
 ];
 
 const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage }) => {
@@ -48,6 +48,13 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
       supplier.name.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredSuppliers(filtered);
+  };
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredSuppliers);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Suppliers");
+    XLSX.writeFile(workbook, "Suppliers_List.xlsx");
   };
 
   return (
@@ -88,10 +95,11 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
             </div>
           </div>
           <div className="flex gap-2">
+            
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <FileText className="w-5 h-5" />
             </button>
-            <button className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
+            <button  onClick={exportToExcel} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
               <Table className="w-5 h-5" />
             </button>
             <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
@@ -102,8 +110,6 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
 
         {/* Table */}
         <SupplierTable SUPPLIERS_DATA={filteredSuppliers} />
-        {/* <SupplierDetail isOpen={true} onClose={() => {}} supplier={supplierData} /> */}
-        
       </div>
     </div>
   );

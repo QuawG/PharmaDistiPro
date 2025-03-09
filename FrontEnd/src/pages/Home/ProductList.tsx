@@ -17,6 +17,7 @@ interface Product {
   ProductName: string;
   unit: string;
   category: string;
+  subCategory: string;
   Description: string;
   status: string;
   VAT: string;
@@ -36,19 +37,55 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
     setFilteredProducts(filtered);
   };
 
-  // Hàm xuất dữ liệu ra file Excel
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredProducts);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachSanPham");
+  // Hàm xuất dữ liệu ra file Excel có định dạng sẵn
+  const exportToExcel = async () => {
+    try {
+      // 1️⃣ Đọc file template.xlsx từ thư mục public
+      const response = await fetch("/templates/DanhSachSanPham.xlsx");
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+  
+      // 2️⃣ Kiểm tra sheet "DanhSachSanPham"
+      const sheetName = workbook.SheetNames[0]; // Lấy tên sheet đầu tiên thay vì hardcode
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-    });
-
-    saveAs(data, "DanhSachSanPham.xlsx");
+      let worksheet = workbook.Sheets[sheetName];
+  
+      if (!worksheet) {
+        console.error(`Lỗi: Sheet "${sheetName}" không tồn tại trong file Excel mẫu.`);
+        return;
+      }
+  
+      // 3️⃣ Xác định vị trí bắt đầu nhập dữ liệu (bỏ qua tiêu đề)
+      const startRow = 4; // Ví dụ: dữ liệu bắt đầu từ dòng 2 (dòng 1 là tiêu đề)
+      
+      // 4️⃣ Chèn dữ liệu từ `filteredProducts` vào file Excel
+      filteredProducts.forEach((product, index) => {
+        const row = startRow + index; // Xác định dòng cần điền dữ liệu
+  
+        worksheet[`A${row}`] = { v: product.ProductName }; // Cột A: ID sản phẩm
+        worksheet[`B${row}`] = { v: product.ProductCode }; // Cột B: Mã sản phẩm
+        worksheet[`C${row}`] = { v: product.category }; // Cột C: Hãng sản xuất
+        worksheet[`D${row}`] = { v: product.subCategory}; // Cột D: Tên sản phẩm
+        worksheet[`E${row}`] = { v: product.Manufacturer }; // Cột E: Đơn vị
+        worksheet[`F${row}`] = { v: product.Description }; // Cột F: Danh mục
+        worksheet[`G${row}`] = { v: product.unit }; // Cột G: Mô tả
+        worksheet[`H${row}`] = { v: product.VAT }; // Cột H: Trạng thái
+        worksheet[`I${row}`] = { v: product.status }; // Cột I: Thuế VAT
+       
+      });
+  
+      // 5️⃣ Xuất file Excel với định dạng của template
+      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const data = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      });
+  
+      saveAs(data, "DanhSachSanPham.xlsx");
+    } catch (error) {
+      console.error("Lỗi xuất Excel:", error);
+    }
   };
+  
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
@@ -108,7 +145,6 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
 
         {/* Table */}
         <ProductTable PRODUCTS_DATA={filteredProducts} handleChangePage={handleChangePage} />
-        
       </div>
     </div>
   );

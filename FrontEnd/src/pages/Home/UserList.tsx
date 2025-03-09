@@ -1,4 +1,6 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import UserTable from '../../components/User/UserTable'; // Đảm bảo bạn đã tạo UserTable
@@ -47,43 +49,6 @@ const USERS_DATA: User[] = [
     employeeCode: "EMP002",
     createdBy: "Admin",
     createdDate: "2023-01-02T00:00:00Z" 
-  },
-  {
-    id: 3,
-    firstName: "Jane",
-    lastName: "Smith",
-    avatar: "https://via.placeholder.com/150",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    role: "User",
-    employeeCode: "EMP003",
-    createdBy: "Admin",
-    createdDate: "2023-01-02T00:00:00Z" 
-  }, {
-    id: 4,
-    firstName: "Jane",
-    lastName: "Smith",
-    avatar: "https://via.placeholder.com/150",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    role: "User",
-    employeeCode: "EMP004",
-    createdBy: "Admin",
-    createdDate: "2023-01-02T00:00:00Z" 
-  }, {
-    id: 5,
-    firstName: "Jane",
-    lastName: "Smith",
-    avatar: "https://via.placeholder.com/150",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    role: "User",
-    employeeCode: "EMP005",
-    createdBy: "Admin",
-    createdDate: "2023-01-02T00:00:00Z" 
   }
 ];
 
@@ -91,14 +56,38 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>(USERS_DATA);
 
+  // Tìm kiếm người dùng
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-
     const filtered = USERS_DATA.filter(user =>
       `${user.firstName} ${user.lastName}`.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredUsers(filtered);
+  };
+
+  // Xuất file Excel
+  const exportToExcel = () => {
+    const excelData = filteredUsers.map(user => ({
+      "ID": user.id,
+      "Họ tên": `${user.firstName} ${user.lastName}`,
+      "Mã NV": user.employeeCode,
+      "Email": user.email,
+      "SĐT": user.phone,
+      "Địa chỉ": user.address,
+      "Vai trò": user.role,
+      "Người tạo": user.createdBy,
+      "Ngày tạo": user.createdDate,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachNguoiDung");
+
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
+
+    saveAs(data, "DanhSachNguoiDung.xlsx");
   };
 
   return (
@@ -126,7 +115,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Tìm kiếm..."
                 className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -142,7 +131,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <FileText className="w-5 h-5" />
             </button>
-            <button className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
+            <button onClick={exportToExcel} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
               <Table className="w-5 h-5" />
             </button>
             <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
@@ -153,8 +142,6 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
 
         {/* Table */}
         <UserTable USERS_DATA={filteredUsers} />
-        {/* <UserDetail isOpen={true} onClose={() => {}} user={userData} /> */}
-        
       </div>
     </div>
   );

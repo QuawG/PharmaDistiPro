@@ -21,6 +21,7 @@ interface Product {
   ProductName: string;
   unit: string;
   category: string;
+  subCategory: string;
   Description: string;
   status: string;
   VAT: string;
@@ -157,7 +158,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
                       <ChevronUp className="w-4 h-4" />
                     ) : header.column.getIsSorted() === "desc" ? (
                       <ChevronDown className="w-4 h-4" />
-                    ) : null}
+                    ) : null} 
                   </div>
                 </th>
               ))}

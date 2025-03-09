@@ -1,17 +1,18 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import PurchaseOrderTable from '../../components/PurchaseOrder/PurchaseOrderTable'; // Đảm bảo bạn đã tạo PurchaseOrderTable
+import * as XLSX from 'xlsx';
+import PurchaseOrderTable from '../../components/PurchaseOrder/PurchaseOrderTable';
 
 interface PurchaseOrder {
     purchaseOrderId: number;
     purchaseOrderCode: string;
     supplierName: string;
-    date: string; // Định dạng ngày
-    goodsIssueDate: string; // Định dạng ngày
+    date: string;
+    goodsIssueDate: string;
     totalAmount: number;
     createdBy: string;
-    createdDate: string; // Định dạng ngày
+    createdDate: string;
     status: string;
     deliveryFee: number;
     address: string;
@@ -47,33 +48,7 @@ const PURCHASE_ORDERS_DATA: PurchaseOrder[] = [
     status: "Pending",
     deliveryFee: 75,
     address: "456 Elm St",
-  },
-  {
-    purchaseOrderId: 3,
-    purchaseOrderCode: "PO-003",
-    supplierName: "Supplier C",
-    date: "2023-01-11",
-    goodsIssueDate: "2023-01-16",
-    totalAmount: 2000,
-    createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z",
-    status: "Pending",
-    deliveryFee: 75,
-    address: "456 Elm St",
-  },
-  {
-    purchaseOrderId: 4,
-    purchaseOrderCode: "PO-004",
-    supplierName: "Supplier D",
-    date: "2023-01-11",
-    goodsIssueDate: "2023-01-16",
-    totalAmount: 2000,
-    createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z",
-    status: "Pending",
-    deliveryFee: 75,
-    address: "456 Elm St",
-  },
+  }
 ];
 
 const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleChangePage }) => {
@@ -83,7 +58,6 @@ const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleCha
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-
     const filtered = PURCHASE_ORDERS_DATA.filter(order =>
       order.purchaseOrderCode.toLowerCase().includes(value.toLowerCase()) ||
       order.supplierName.toLowerCase().includes(value.toLowerCase())
@@ -91,16 +65,26 @@ const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleCha
     setFilteredOrders(filtered);
   };
 
+  // 📤 Xuất danh sách đơn hàng ra Excel
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredOrders);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PurchaseOrders");
+
+    // Xuất file
+    XLSX.writeFile(workbook, "PurchaseOrders.xlsx");
+  };
+
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
       {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Danh sách đơn đặt hàng(PO)</h1>
-          <p className="text-sm text-gray-500">Quản lý đơn đặt hàng(PO)</p>
+          <h1 className="text-xl font-semibold text-gray-900">Danh sách đơn đặt hàng (PO)</h1>
+          <p className="text-sm text-gray-500">Quản lý đơn đặt hàng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Thêm đơn đặt hàng(PO)')}
+          onClick={() => handleChangePage('Thêm đơn đặt hàng')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
           <PlusIcon className='w-5 h-5 font-bold'/> Thêm đơn đặt hàng mới
         </button>
@@ -132,7 +116,10 @@ const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleCha
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <FileText className="w-5 h-5" />
             </button>
-            <button className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
+            <button 
+              className="p-2 text-green-500 hover:bg-green-50 rounded-lg"
+              onClick={exportToExcel} // ⬅️ Gọi hàm xuất Excel khi nhấn vào nút này
+            >
               <Table className="w-5 h-5" />
             </button>
             <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
