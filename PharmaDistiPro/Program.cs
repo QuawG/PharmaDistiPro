@@ -57,6 +57,10 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IOrdersDetailRepository, OrdersDetailRepository>();
+            builder.Services.AddScoped<IIssueNoteRepository, IssueNoteRepository>();
+            builder.Services.AddScoped<IIssueNoteDetailsRepository, IssueNoteDetailRepository>();
+            builder.Services.AddScoped<IProductLotRepository, ProductLotRepository>();
+
             #endregion
 
             #region Add DI for services

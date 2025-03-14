@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PharmaDistiPro.Models;
 
-namespace PharmaDistiPro.Models
+namespace PharmaDistiPro.DTO.Orders
 {
-    public partial class Order
+    public class OrderRequestDto
     {
-        public Order()
-        {
-            IssueNotes = new HashSet<IssueNote>();
-            OrdersDetails = new HashSet<OrdersDetail>();
-        }
-
         public int OrderId { get; set; }
         public string? OrderCode { get; set; }
         public int? CustomerId { get; set; }
@@ -23,9 +16,15 @@ namespace PharmaDistiPro.Models
         public int? ConfirmedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
-        public virtual User? ConfirmedByNavigation { get; set; }
-        public virtual User? Customer { get; set; }
-        public virtual ICollection<IssueNote> IssueNotes { get; set; }
-        public virtual ICollection<OrdersDetail> OrdersDetails { get; set; }
+        public virtual ICollection<OrdersDetailsRequestDto> OrdersDetails { get; set; }
+    }
+
+    public class OrdersDetailsRequestDto
+    {
+        public int OrderDetailId { get; set; }
+        public int? OrderId { get; set; }
+        public int? ProductId { get; set; }
+        public int? Quantity { get; set; }
+        public double? UnitsPrice { get; set; }
     }
 }

@@ -6,5 +6,7 @@ namespace PharmaDistiPro.Repositories.Interface
     public interface IUserRepository : IRepository<User>
     {
         Task<User> GetUser(string email, string password);
+
+        Task<User?> GetWarehouseManagerToConfirm();
     }
 }

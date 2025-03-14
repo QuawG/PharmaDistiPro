@@ -6,6 +6,7 @@ using AutoMapper;
 using PharmaDistiPro.Models;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
+using PharmaDistiPro.Helper;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -29,7 +30,7 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<IEnumerable<UserDTO>>();
             try
             {
-                var users = await _userRepository.GetByConditionAsync(u => u.RoleId == 5);
+                var users = await _userRepository.GetByConditionAsync(u => u.RoleId == 5, includes: new string[] { "Role"});
                 if (users.Count() == 0)
                 {
                     response.Message = "Không có dữ liệu";
@@ -57,7 +58,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 //check if customer exists
-                var user = await _userRepository.GetByIdAsync(userId);
+                var user = await _userRepository.GetSingleByConditionAsync(x=> x.UserId == userId, includes: new string[] { "Role" });
                 if (user == null)
                 {
                     response.Success = false;
@@ -90,7 +91,7 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<IEnumerable<UserDTO>>();
             try
             {
-                var users = await _userRepository.GetByConditionAsync(u => u.RoleId != 5);
+                var users = await _userRepository.GetByConditionAsync(u => u.RoleId != 5, includes: new string[] { "Role" });
                 response.Data = _mapper.Map<IEnumerable<UserDTO>>(users);
                 response.Success = true;
 
@@ -117,6 +118,11 @@ namespace PharmaDistiPro.Services.Impl
             {
                 // Kiểm tra xem user đã tồn tại chưa 
                 var existingUser = await _userRepository.GetSingleByConditionAsync(x=> x.Email.Equals(userInputRequest.Email) || x.UserName.Equals(userInputRequest.UserName));
+
+                //dem so user trong he thong
+                var countUserList = _userRepository.GetAllAsync().Result.Count();
+                
+
                 if (existingUser != null)
                 {
                     response.Success = false;
@@ -125,32 +131,40 @@ namespace PharmaDistiPro.Services.Impl
                 }
 
                 // Upload avatar lên Cloudinary nếu cần
-                if (userInputRequest.RoleId != 5 && userInputRequest.Avatar != null)
+                if (userInputRequest.RoleId != 5)
                 {
-                    var uploadParams = new ImageUploadParams()
+                    if (  userInputRequest.Avatar != null)
                     {
-                        File = new FileDescription(userInputRequest.Avatar.FileName, userInputRequest.Avatar.OpenReadStream()),
-                        PublicId = Path.GetFileNameWithoutExtension(userInputRequest.Avatar.FileName)
-                    };
+                        var uploadParams = new ImageUploadParams()
+                        {
+                            File = new FileDescription(userInputRequest.Avatar.FileName, userInputRequest.Avatar.OpenReadStream()),
+                            PublicId = Path.GetFileNameWithoutExtension(userInputRequest.Avatar.FileName)
+                        };
 
-                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                    imageUrl = uploadResult.SecureUri.ToString();
-                }
+                        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                        imageUrl = uploadResult.SecureUri.ToString();
+                    }     
+                    // update employeecode
+                    userInputRequest.EmployeeCode = ConstantStringHelper.EmployeeCode + countUserList;
+                } 
 
+
+                
                 // Map dữ liệu từ DTO sang Entity
-                var newCustomer = _mapper.Map<User>(userInputRequest);
-                newCustomer.Avatar = imageUrl;
-                newCustomer.CreatedDate = DateTime.Now;
-                newCustomer.Status = true;
+                var newUser = _mapper.Map<User>(userInputRequest);
+                newUser.Avatar = imageUrl;
+                newUser.CreatedDate = DateTime.Now;
+                newUser.Status = true;
+
 
                 // Thêm mới user vào database
-                await _userRepository.InsertAsync(newCustomer);
+                await _userRepository.InsertAsync(newUser);
                 await _userRepository.SaveAsync();
 
                 // Trả về dữ liệu đã tạo mới
                 response.Message = "Tạo mới thành công";
                 response.Success = true;
-                response.Data = _mapper.Map<UserDTO>(newCustomer);
+                response.Data = _mapper.Map<UserDTO>(newUser);
 
                 return response;
             }

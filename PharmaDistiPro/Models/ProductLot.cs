@@ -9,9 +9,7 @@ namespace PharmaDistiPro.Models
         {
             IssueNoteDetails = new HashSet<IssueNoteDetail>();
             NoteCheckDetails = new HashSet<NoteCheckDetail>();
-            OrdersDetails = new HashSet<OrdersDetail>();
             ProductStorageRooms = new HashSet<ProductStorageRoom>();
-            PurchaseOrdersDetails = new HashSet<PurchaseOrdersDetail>();
             ReceiveNoteDetails = new HashSet<ReceiveNoteDetail>();
         }
 
@@ -28,9 +26,7 @@ namespace PharmaDistiPro.Models
         public virtual Product? Product { get; set; }
         public virtual ICollection<IssueNoteDetail> IssueNoteDetails { get; set; }
         public virtual ICollection<NoteCheckDetail> NoteCheckDetails { get; set; }
-        public virtual ICollection<OrdersDetail> OrdersDetails { get; set; }
         public virtual ICollection<ProductStorageRoom> ProductStorageRooms { get; set; }
-        public virtual ICollection<PurchaseOrdersDetail> PurchaseOrdersDetails { get; set; }
         public virtual ICollection<ReceiveNoteDetail> ReceiveNoteDetails { get; set; }
     }
 }

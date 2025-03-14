@@ -3,8 +3,7 @@ using PharmaDistiPro.Repositories.Infrastructures;
 
 namespace PharmaDistiPro.Repositories.Interface
 {
-    public interface IOrderRepository : IRepository<Order>
-    {
-        Task<int> GetMaxOrderId();
+    public interface IIssueNoteRepository : IRepository<IssueNote>
+    { 
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace PharmaDistiPro.DTO.Orders
+﻿using PharmaDistiPro.DTO.Users;
+
+namespace PharmaDistiPro.DTO.Orders
 {
     public class OrderDto
     {
@@ -11,7 +13,12 @@
         public int? Status { get; set; }
         public double? DeliveryFee { get; set; }
         public string? Address { get; set; }
-        public int? CreatedBy { get; set; }
+        public int? ConfirmedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
+
+        public virtual UserDTO? Customer { get; set; }
+
+        public virtual UserDTO? ConfirmBy { get; set; }
+
     }
 }

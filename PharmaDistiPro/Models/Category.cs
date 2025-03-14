@@ -5,6 +5,11 @@ namespace PharmaDistiPro.Models
 {
     public partial class Category
     {
+        public Category()
+        {
+            Products = new HashSet<Product>();
+        }
+
         public int Id { get; set; }
         public int? CategoryMainId { get; set; }
         public string? CategoryName { get; set; }
@@ -13,5 +18,6 @@ namespace PharmaDistiPro.Models
         public DateTime? CreatedDate { get; set; }
 
         public virtual User? CreatedByNavigation { get; set; }
+        public virtual ICollection<Product> Products { get; set; }
     }
 }

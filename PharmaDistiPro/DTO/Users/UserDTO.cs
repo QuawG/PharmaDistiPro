@@ -21,6 +21,8 @@ namespace PharmaDistiPro.DTO.Users
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
-        public virtual Role? Role { get; set; }
+        public string? RoleName { get; set; }
+
+
     }
 }

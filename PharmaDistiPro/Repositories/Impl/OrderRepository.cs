@@ -1,4 +1,5 @@
-﻿using PharmaDistiPro.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Infrastructures;
 using PharmaDistiPro.Repositories.Interface;
 
@@ -8,6 +9,11 @@ namespace PharmaDistiPro.Repositories.Impl
     {
         public OrderRepository(SEP490_G74Context context) : base(context)
         {
+            
+        }
+        public async Task<int> GetMaxOrderId()
+        {
+            return await _context.Orders.MaxAsync(o => (int?)o.OrderId) ?? 0;
         }
     }
 }

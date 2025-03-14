@@ -5389,11 +5389,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+      "projectUniqueName": "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
       "projectName": "PharmaDistiPro",
-      "projectPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+      "projectPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
+      "outputPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",

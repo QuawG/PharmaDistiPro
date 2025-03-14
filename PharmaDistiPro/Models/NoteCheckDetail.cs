@@ -10,6 +10,7 @@ namespace PharmaDistiPro.Models
         public int? ProductLotId { get; set; }
         public int? StorageQuantity { get; set; }
         public int? ActualQuantity { get; set; }
+        public int? ErrorQuantity { get; set; }
         public int? Status { get; set; }
 
         public virtual NoteCheck? NoteCheck { get; set; }
