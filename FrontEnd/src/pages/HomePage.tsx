@@ -15,6 +15,7 @@ import PurchaseOrderListPage from "./Home/PurchaseOrderList"; // Import Purchase
 import PurchaseOrderAdd from "../components/PurchaseOrder/AddPurchaseOrder"; // Import PurchaseOrderAdd
 import Navbar from "../components/global/Navbar";
 import UpdateProduct from "../components/Product/UpdateProduct";
+import LotListPage from "./Home/LotList";
 import { useState } from "react";
 
 const HomePage = () => {
@@ -51,6 +52,7 @@ const handleChangePage = (page: string, productId?: number) => {
                 {activePage === 'Thêm nhà cung cấp' && <SupplierAdd />} 
                 {activePage === 'Danh sách đơn đặt hàng(PO)' && <PurchaseOrderListPage handleChangePage={handleChangePage} />} {/* Thêm PurchaseOrderListPage */}
                 {activePage === 'Thêm đơn đặt hàng(PO)' && <PurchaseOrderAdd />} 
+                {activePage === 'Danh sách lô hàng' && <LotListPage />} 
             </div>
         </div>
     );

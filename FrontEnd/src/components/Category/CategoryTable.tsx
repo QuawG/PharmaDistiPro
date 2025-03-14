@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  SortingState,
-  RowSelectionState,
-} from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { Pencil, Trash2 } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
+import UpdateCategory from '../Category/UpdateCategory';
 
 interface Category {
   id: number;
@@ -27,18 +18,20 @@ interface CategoryTableProps {
 }
 
 const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [globalFilter, setGlobalFilter] = useState<string>('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-
+  const [categories, setCategories] = useState<Category[]>(CATEGORY_DATA);
   const handleDelete = () => {
     if (selectedCategory) {
-      console.log("Deleting category:", selectedCategory);
-      // Gọi API xóa nếu cần
+      setCategories(categories.filter(cat => cat.id !== selectedCategory.id));
+      setIsDeleteModalOpen(false);
     }
-    setIsDeleteModalOpen(false);
+  };
+
+  const handleUpdate = (updatedCategory: Category) => {
+    setCategories(categories.map(cat => (cat.id === updatedCategory.id ? updatedCategory : cat)));
+    
   };
 
   const columns: ColumnDef<Category>[] = [
@@ -56,28 +49,25 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
         </div>
       ),
     },
-    {
-      accessorKey: 'code',
-      header: 'Mã danh mục',
-    },
-    {
-      accessorKey: 'description',
-      header: 'Mô tả',
-    },
-    {
-      accessorKey: 'createdBy',
-      header: 'Người tạo',
-    },
+    { accessorKey: 'code', header: 'Mã danh mục' },
+    { accessorKey: 'description', header: 'Mô tả' },
+    { accessorKey: 'createdBy', header: 'Người tạo' },
     {
       id: 'actions',
-      header: '',
+      header: 'Tính năng',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button className="cursor-pointer p-2 bg-blue-500 text-white rounded hover:bg-blue-700">
+          <button
+            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
+            onClick={() => {
+              setSelectedCategory(row.original);
+              setIsEditModalOpen(true);
+            }}
+          >
             <Pencil className="w-4 h-4" />
           </button>
           <button
-            className="cursor-pointer p-2 bg-red-500 text-white rounded hover:bg-red-700"
+            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
             onClick={() => {
               setSelectedCategory(row.original);
               setIsDeleteModalOpen(true);
@@ -87,43 +77,25 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
           </button>
         </div>
       ),
-      enableSorting: false,
     },
   ];
 
   const table = useReactTable({
-    data: CATEGORY_DATA,
+    data: categories,
     columns,
-    state: {
-      sorting,
-      rowSelection,
-      globalFilter,
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getSortedRowModel: getSortedRowModel(),
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
   });
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden p-5">
+    <div className="bg-white">
       <div className="overflow-x-auto">
-        <table className="w-full border border-gray-300 text-left text-sm text-gray-700">
-          <thead className="bg-gray-100">
+        <table className="w-full">
+          <thead>
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
+              <tr key={headerGroup.id} className="border-none bg-gray-50">
                 {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-4 py-3 border-b border-gray-300">
-                    {header.isPlaceholder ? null : (
-                      <div className="flex items-center gap-2">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getIsSorted() === 'asc' ? <ChevronUp className="w-4 h-4" /> : header.column.getIsSorted() === 'desc' ? <ChevronDown className="w-4 h-4" /> : null}
-                      </div>
-                    )}
+                  <th key={header.id} className="px-4 py-3 text-left text-[14px] font-bold">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
                 ))}
               </tr>
@@ -131,9 +103,9 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border-b border-gray-300 hover:bg-gray-50">
+              <tr key={row.id} className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors">
                 {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-4 py-3">
+                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-800 opacity-90">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -142,10 +114,20 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
           </tbody>
         </table>
       </div>
-      <DeleteConfirmation 
-        isOpen={isDeleteModalOpen} 
-        onClose={() => setIsDeleteModalOpen(false)} 
-        onConfirm={handleDelete} 
+
+      {/* Popup Update Category */}
+      <UpdateCategory
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        category={selectedCategory}
+        onSave={handleUpdate}
+      />
+
+      {/* Popup Delete Confirmation */}
+      <DeleteConfirmation
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
       />
     </div>
   );
