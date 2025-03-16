@@ -20,7 +20,7 @@ namespace PharmaDistiPro.Models
         public virtual DbSet<ImageProduct> ImageProducts { get; set; } = null!;
         public virtual DbSet<IssueNote> IssueNotes { get; set; } = null!;
         public virtual DbSet<IssueNoteDetail> IssueNoteDetails { get; set; } = null!;
-        public virtual DbSet<Log> Logs { get; set; } = null!;
+        public virtual DbSet<IventoryActivity> IventoryActivities { get; set; } = null!;
         public virtual DbSet<Lot> Lots { get; set; } = null!;
         public virtual DbSet<NoteCheck> NoteChecks { get; set; } = null!;
         public virtual DbSet<NoteCheckDetail> NoteCheckDetails { get; set; } = null!;
@@ -100,8 +100,6 @@ namespace PharmaDistiPro.Models
 
             modelBuilder.Entity<IssueNoteDetail>(entity =>
             {
-                entity.Property(e => e.NoteNumber).HasMaxLength(50);
-
                 entity.HasOne(d => d.IssueNote)
                     .WithMany(p => p.IssueNoteDetails)
                     .HasForeignKey(d => d.IssueNoteId)
@@ -113,16 +111,19 @@ namespace PharmaDistiPro.Models
                     .HasConstraintName("FK_IssueNoteDetails_ProductLot");
             });
 
-            modelBuilder.Entity<Log>(entity =>
+            modelBuilder.Entity<IventoryActivity>(entity =>
             {
-                entity.ToTable("Log");
+                entity.HasKey(e => e.LogId)
+                    .HasName("PK_Log");
+
+                entity.ToTable("IventoryActivity");
 
                 entity.Property(e => e.CreatedAt).HasColumnType("datetime");
 
                 entity.Property(e => e.Ipaddress).HasColumnName("IPAddress");
 
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.Logs)
+                    .WithMany(p => p.IventoryActivities)
                     .HasForeignKey(d => d.UserId)
                     .HasConstraintName("FK_Log_Users");
             });
@@ -228,8 +229,6 @@ namespace PharmaDistiPro.Models
                 entity.Property(e => e.ExpiredDate).HasColumnType("datetime");
 
                 entity.Property(e => e.ManufacturedDate).HasColumnType("datetime");
-
-                entity.Property(e => e.SupplyDate).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Lot)
                     .WithMany(p => p.ProductLots)

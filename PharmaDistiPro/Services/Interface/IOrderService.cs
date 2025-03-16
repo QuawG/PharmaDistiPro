@@ -24,7 +24,7 @@ namespace PharmaDistiPro.Services.Interface
         Task<Response<OrderDto>> UpdateOrderStatus(int orderId, int status);
 
         //confirm order status
-        Task<Response<IssueNoteRequestDto>> ConfirmOrder(int orderId);
+        Task<Response<OrderDto>> ConfirmOrder(int orderId);
         //List order dang can confirm
         Task<Response<IEnumerable<OrderDto>>> GetOrderNeedConfirm();
 

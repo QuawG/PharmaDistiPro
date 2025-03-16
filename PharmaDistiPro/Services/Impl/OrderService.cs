@@ -243,13 +243,11 @@ namespace PharmaDistiPro.Services.Impl
         }
 
         //confirm order
-        public async Task<Response<IssueNoteRequestDto>> ConfirmOrder(int orderId)
+        public async Task<Response<OrderDto>> ConfirmOrder(int orderId)
         {
-            var response = new Response<IssueNoteRequestDto>();
+            var response = new Response<OrderDto>();
             try
             {
-                IssueNoteRequestDto issueNoteRequestDto = new IssueNoteRequestDto();
-
                 #region Update Order Status
                 var order = await _orderRepository.GetByIdAsync(orderId);
                 if (order == null)
@@ -261,56 +259,12 @@ namespace PharmaDistiPro.Services.Impl
                 order.Status = (int)Common.Enums.OrderStatus.DA_DUYET;
                 order.Date = DateTime.Now;
                 await _orderRepository.UpdateAsync(order); // Lưu trạng thái mới của đơn hàng trước
+                await _orderRepository.SaveAsync();
                 #endregion
 
-                #region IssueNote
-                int issueNoteCount = await _issueNoteRepository.CountAsync(x => true);
-                issueNoteRequestDto.OrderId = orderId;
-                issueNoteRequestDto.IssueNotesCode = ConstantStringHelper.IssueNoteCode + (issueNoteCount + 1);
-                issueNoteRequestDto.CreatedDate = DateTime.Now;
-                issueNoteRequestDto.Status = (int)Common.Enums.IssueNotesStatus.DANG_XU_LY;
-                issueNoteRequestDto.CustomerId = order.CustomerId;
-                issueNoteRequestDto.TotalAmount = order.TotalAmount;
-
-                User? warehouseManager = await _userRepository.GetWarehouseManagerToConfirm();
-
-                issueNoteRequestDto.CreatedBy = warehouseManager.UserId;
-
-                var issueNote = _mapper.Map<IssueNote>(issueNoteRequestDto);
-                await _issueNoteRepository.InsertAsync(issueNote);
-                await _orderRepository.SaveAsync(); // Lưu để issueNote.Id có giá trị hợp lệ
-                #endregion
-
-                #region IssueNoteDetail
-                List<int> productIds = await _ordersDetailRepository.GetProductIdByOrderId(order.OrderId);
-
-                List<ProductLot> productLots = (await _productLotRepository.GetProductLotsByProductIds(productIds)).ToList();
-                if (productLots == null || productLots.Count == 0)
-                {
-                    response.Success = false;
-                    response.Message = "Không có hàng trong kho";
-                    return response;
-                }
-
-                int issueNoteDetailCount = await _issueNoteDetailsRepository.CountAsync(x => true);
-                List<IssueNoteDetail> issueNoteDetailsList = new List<IssueNoteDetail>();
-
-                foreach (ProductLot productLot in productLots)
-                {
-                    var issueNoteDetail = new IssueNoteDetail
-                    {
-                        IssueNoteId = issueNote.Id, // Đảm bảo issueNote.Id hợp lệ
-                        NoteNumber = ConstantStringHelper.IssueNotesDetailsCode + (++issueNoteDetailCount),
-                        ProductLotId = productLot.ProductLotId
-                    };
-                    await _issueNoteDetailsRepository.InsertAsync(issueNoteDetail);
-                }
-
-                await _orderRepository.SaveAsync(); // Lưu tất cả thay đổi
-                #endregion
 
                 response.Success = true;
-                response.Data = issueNoteRequestDto;
+                response.Data = _mapper.Map<OrderDto>(order);
                 return response;
             }
             catch (Exception ex)

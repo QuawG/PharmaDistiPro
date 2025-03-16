@@ -7,8 +7,8 @@ namespace PharmaDistiPro.Models
     {
         public int Id { get; set; }
         public int? IssueNoteId { get; set; }
-        public string? NoteNumber { get; set; }
         public int? ProductLotId { get; set; }
+        public int? Quantity { get; set; }
 
         public virtual IssueNote? IssueNote { get; set; }
         public virtual ProductLot? ProductLot { get; set; }

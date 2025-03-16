@@ -8,6 +8,54 @@ namespace PharmaDistiPro.Controllers
     [ApiController]
     public class IssueNoteController : ControllerBase
     {
-       // private readonly IOrderService _orderService;
+        private readonly IIssueNoteService  _issueNoteService;
+        public IssueNoteController(IIssueNoteService issueNoteService)
+        {
+            _issueNoteService = issueNoteService;
+        }
+
+        [HttpPost("CreateIssueNote/{orderId}")]
+        public async Task<IActionResult> CreateIssueNote(int orderId)
+        {
+            var response = await _issueNoteService.CreateIssueNote(orderId);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+
+        [HttpPut("CancelIssuteNot/{issueNoteId}")]
+        public async Task<IActionResult> CancelIssueNote(int issueNoteId)
+        {
+            var response = await _issueNoteService.CancelIssueNote(issueNoteId);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+
+        [HttpGet("GetIssueNoteList")]
+        public async Task<IActionResult> GetIssueNoteList()
+        {
+            var response = await _issueNoteService.GetIssueNoteList();
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+        [HttpGet("GetIssueNoteListByWarehouse/{userId}")]
+        public async Task<IActionResult> GetIssueNoteListByWarehouse(int userId)
+        {
+            var response = await _issueNoteService.GetIssueNoteByWarehouseId(userId);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+
     }
 }

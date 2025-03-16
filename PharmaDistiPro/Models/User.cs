@@ -10,7 +10,7 @@ namespace PharmaDistiPro.Models
             Categories = new HashSet<Category>();
             IssueNoteCreatedByNavigations = new HashSet<IssueNote>();
             IssueNoteCustomers = new HashSet<IssueNote>();
-            Logs = new HashSet<Log>();
+            IventoryActivities = new HashSet<IventoryActivity>();
             OrderConfirmedByNavigations = new HashSet<Order>();
             OrderCustomers = new HashSet<Order>();
             Products = new HashSet<Product>();
@@ -46,7 +46,7 @@ namespace PharmaDistiPro.Models
         public virtual ICollection<Category> Categories { get; set; }
         public virtual ICollection<IssueNote> IssueNoteCreatedByNavigations { get; set; }
         public virtual ICollection<IssueNote> IssueNoteCustomers { get; set; }
-        public virtual ICollection<Log> Logs { get; set; }
+        public virtual ICollection<IventoryActivity> IventoryActivities { get; set; }
         public virtual ICollection<Order> OrderConfirmedByNavigations { get; set; }
         public virtual ICollection<Order> OrderCustomers { get; set; }
         public virtual ICollection<Product> Products { get; set; }

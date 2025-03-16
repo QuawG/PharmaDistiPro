@@ -90,9 +90,16 @@ namespace PharmaDistiPro.Helper
             #region issue note
             CreateMap<IssueNote, IssueNoteRequestDto>(); 
             CreateMap<IssueNoteRequestDto, IssueNote>();
+
             CreateMap<IssueNoteRequestDto, IssueNoteDetail>();
             CreateMap<IssueNoteDetail, IssueNoteRequestDto>();
-          
+
+            CreateMap<IssueNoteDto, IssueNoteRequestDto>();
+            CreateMap<IssueNoteRequestDto, IssueNoteDto>();
+
+            CreateMap<IssueNoteDto, IssueNote>();
+            CreateMap<IssueNote, IssueNoteDto>();
+
             #endregion
         }
     }

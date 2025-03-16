@@ -5,5 +5,6 @@ namespace PharmaDistiPro.Repositories.Interface
 {
     public interface IIssueNoteDetailsRepository : IRepository<IssueNoteDetail>
     {
+        Task InsertRangeAsync(List<IssueNoteDetail> issueNoteDetailsList);
     }
 }
