@@ -59,6 +59,7 @@ export default function PurchaseOrderDetail({
 
           <div className="flex justify-center">
             <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
+              {/* Thông tin đơn hàng */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Mã đơn đặt hàng</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
@@ -110,6 +111,7 @@ export default function PurchaseOrderDetail({
             </div>
           </div>
 
+          {/* Thông tin người tạo và thời điểm tạo */}
           <div className="mt-4">
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
@@ -125,6 +127,36 @@ export default function PurchaseOrderDetail({
             </div>
           </div>
 
+          {/* Bảng sản phẩm trong đơn hàng */}
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Danh sách sản phẩm</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-gray-50 border border-gray-300">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="px-4 py-2">Tên sản phẩm</th>
+                  <th className="px-4 py-2">Số lượng</th>
+                  <th className="px-4 py-2">Giá nhập</th>
+                  <th className="px-4 py-2">Thuế (VAT)</th>
+                  <th className="px-4 py-2">Tổng giá</th>
+                </tr>
+              </thead>
+              <tbody>
+                {order?.products?.map((product: any) => (
+                  <tr key={product.id} className="border-b">
+                    <td className="px-4 py-2">{product.name || "N/A"}</td>
+                    <td className="px-4 py-2">{product.quantity || "N/A"}</td>
+                    <td className="px-4 py-2">{product.price || "N/A"}</td>
+                    <td className="px-4 py-2">{product.tax || "N/A"}</td>
+                    <td className="px-4 py-2">
+                      {((product.quantity * product.price) * (1 + (product.tax / 100))).toFixed(2) || "N/A"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Nút Đóng */}
           <div className="flex justify-end mt-4">
             <button type="button" onClick={onClose} className="border rounded p-2">Đóng</button>
           </div>

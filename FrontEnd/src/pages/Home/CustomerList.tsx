@@ -85,9 +85,9 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
           <p className="text-sm text-gray-500">Quản lí khách hàng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Thêm khách hàng')}
+          onClick={() => handleChangePage('Tạo khách hàng')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Thêm khách hàng mới
+          <PlusIcon className='w-5 h-5 font-bold'/> Tạo khách hàng mới
         </button>
       </div>
 

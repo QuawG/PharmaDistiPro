@@ -18,7 +18,7 @@ export default function AddCustomer() {
         <div className="bg-white rounded-lg shadow-md overflow-hidden p-5 w-full mt-[60px]">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Thêm khách hàng</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Tạo khách hàng</h1>
                 <p className="text-sm text-gray-500">Tạo khách hàng mới</p>
             </div>
 

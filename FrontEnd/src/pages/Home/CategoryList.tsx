@@ -42,9 +42,9 @@ const CategoryList: React.FC<CategoryListPageProps> = ({ handleChangePage }) => 
           <p className="text-sm text-gray-500">Quản lý danh mục chính</p>
         </div>
         <button
-          onClick={() => handleChangePage('Thêm danh mục chính')}
+          onClick={() => handleChangePage('Tạo danh mục chính')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold' /> Thêm danh mục chính mới
+          <PlusIcon className='w-5 h-5 font-bold' /> Tạo danh mục chính mới
         </button>
       </div>
 

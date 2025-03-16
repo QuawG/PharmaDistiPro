@@ -84,9 +84,9 @@ const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleCha
           <p className="text-sm text-gray-500">Quản lý đơn đặt hàng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Thêm đơn đặt hàng')}
+          onClick={() => handleChangePage('Tạo đơn đặt hàng (PO)')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Thêm đơn đặt hàng mới
+          <PlusIcon className='w-5 h-5 font-bold'/> Tạo đơn đặt hàng mới
         </button>
       </div>
 

@@ -25,7 +25,7 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
 
   return (
     <div className="p-6 mt-[60px] w-full bg-[#f8f9fc]">
-      <h1 className="text-2xl font-semibold text-gray-900">Thêm danh mục phụ</h1>
+      <h1 className="text-2xl font-semibold text-gray-900">Tạo danh mục phụ</h1>
       <p className="text-sm text-gray-500">Tạo danh mục phụ mới</p>
 
       <div className="mt-5 bg-white shadow rounded-lg p-6">
