@@ -4,32 +4,32 @@ import { PackageIcon, StoreIcon } from "lucide-react";
 
 const ProductList = [
     "Danh sách sản phẩm",
-    "Thêm sản phẩm",
+    "Tạo sản phẩm",
     "Danh sách danh mục chính",
-    "Thêm danh mục chính",
+    "Tạo danh mục chính",
     "Danh sách danh mục phụ",
-    "Thêm danh mục phụ",
+    "Tạo danh mục phụ",
     "Nhập sản phẩm"
 ];
 
 const CustomerList = [
     "Danh sách khách hàng",
-    "Thêm khách hàng"
+    "Tạo khách hàng"
 ];
 
 const UserList = [
     "Danh sách người dùng",
-    "Thêm người dùng"
+    "Tạo người dùng"
 ];
 
 const SupplierList = [
     "Danh sách nhà cung cấp",
-    "Thêm nhà cung cấp"
+    "Tạo nhà cung cấp"
 ];
 
 const PurchaseOrderList = [
     "Danh sách đơn đặt hàng(PO)",
-    "Thêm đơn đặt hàng(PO)"
+    "Tạo đơn đặt hàng (PO)"
 ];
 
 const OrderList = [

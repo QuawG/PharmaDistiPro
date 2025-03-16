@@ -18,7 +18,7 @@ export default function AddUser() {
         <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Thêm người dùng mới</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Tạo người dùng mới</h1>
                 <p className="text-sm text-gray-500">Tạo một người dùng mới theo form bên dưới</p>
             </div>
 

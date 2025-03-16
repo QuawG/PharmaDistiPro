@@ -1,15 +1,15 @@
 export default function AddSupplier() {
     return (
         <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
-            {/* Header */}
+    
             <div className="mb-6">
                 <h1 className="text-xl font-semibold text-gray-900">Tạo mới nhà cung cấp</h1>
                 <p className="text-sm text-gray-500">Tạo mới nhà cung cấp theo form bên dưới</p>
             </div>
 
-            {/* Form */}
+  
             <div className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
-                {/* Row 1 */}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
                         <label className="block text-[14px] mb-2 text-gray-700">Tên nhà cung cấp</label>

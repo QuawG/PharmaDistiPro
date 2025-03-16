@@ -10,10 +10,11 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react'; // Thêm Eye từ lucide-react
+import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
 import CustomerDetailsModal from './CustomerDetail'; 
 import UpdateCustomerDetailsModal from './UpdateCustomerDetail'; 
+import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
 
 interface Customer {
   id: number;
@@ -23,10 +24,11 @@ interface Customer {
   email: string;
   phone: string;
   address: string;
-  age: number;  // Added age property
+  age: number;  // Thêm thuộc tính tuổi
   createdBy: string;
   createdDate: string; 
-  taxCode:number;
+  taxCode: number;
+  status: string; // Thêm thuộc tính trạng thái
 }
 
 interface CustomerTableProps {
@@ -41,16 +43,35 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false); // Modal xem thêm
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Modal chỉnh sửa
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
 
   const handleSave = (updatedCustomer: Customer) => {
     console.log('Customer updated:', updatedCustomer);
-    // Update customer list if necessary
+    // Cập nhật danh sách khách hàng nếu cần
   };
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
-    // Logic to delete the customer
+    // Logic xóa khách hàng
+  };
+
+  const handleStatusChange = (index: number, newStatus: string) => {
+    setSelectedCustomer(CUSTOMERS_DATA[index]); // Lưu khách hàng được chọn
+    setNewStatus(newStatus); // Lưu trạng thái mới
+    setIsConfirmModalOpen(true); // Mở modal xác nhận
+  };
+
+  const confirmStatusChange = () => {
+    // Cập nhật trạng thái khách hàng ở đây
+    const updatedCustomers = [...CUSTOMERS_DATA];
+    const index = updatedCustomers.findIndex(customer => customer.id === selectedCustomer?.id);
+    if (index !== -1) {
+      updatedCustomers[index].status = newStatus;
+      // Cập nhật lại dữ liệu khách hàng nếu cần
+    }
+    setIsConfirmModalOpen(false);
   };
 
   const columns: ColumnDef<Customer>[] = [
@@ -85,6 +106,21 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
     { accessorKey: 'firstName', header: 'Tên riêng' },
     { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'phone', header: 'Số điện thoại' },
+    {
+      id: 'status',
+      header: 'Trạng thái',
+      cell: ({ row }) => (
+        <select
+          value={row.original.status}
+          onChange={(e) => handleStatusChange(row.index, e.target.value)}
+          className="border rounded p-1"
+        >
+          <option value="active">Hoạt động</option>
+          <option value="inactive">Không hoạt động</option>
+          <option value="pending">Đang chờ</option>
+        </select>
+      ),
+    },
     {
       id: 'actions',
       header: 'Tính năng',
@@ -259,6 +295,14 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
         onClose={() => setIsEditModalOpen(false)} 
         customer={selectedCustomer} 
         onSave={handleSave} 
+      />
+      
+      {/* Modal xác nhận */}
+      <UpdateConfirm
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={confirmStatusChange}
+        message="Bạn có chắc chắn muốn đổi trạng thái?"
       />
     </div>
   );
