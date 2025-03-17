@@ -71,7 +71,7 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
-        <h2 className="text-lg font-semibold mb-4">Cập nhật danh mục phụ</h2>
+        <h2 className="text-lg font-semibold mb-4">Cập nhật danh mục thuốc</h2>
 
         {showSuccess && (
           <div className="bg-green-500 text-white px-4 py-2 rounded-md text-center mb-3">
@@ -93,7 +93,7 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
         </div>
 
         <div className="mb-3">
-          <label className="block text-sm font-medium">Tên danh mục phụ</label>
+          <label className="block text-sm font-medium">Tên danh mục thuốc</label>
           <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-2 border rounded-md" />
         </div>
 

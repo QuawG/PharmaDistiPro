@@ -25,21 +25,21 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
 
   return (
     <div className="p-6 mt-[60px] w-full bg-[#f8f9fc]">
-      <h1 className="text-2xl font-semibold text-gray-900">Thêm danh mục phụ</h1>
-      <p className="text-sm text-gray-500">Tạo danh mục phụ mới</p>
+      <h1 className="text-2xl font-semibold text-gray-900">Thêm danh mục thuốc</h1>
+      <p className="text-sm text-gray-500">Tạo danh mục thuốc mới</p>
 
       <div className="mt-5 bg-white shadow rounded-lg p-6">
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 font-medium">Danh mục chính</label>
+            <label className="block text-gray-700 font-medium">Danh mục hệ thống</label>
             <select
               value={parentCategory}
               onChange={(e) => setParentCategory(e.target.value)}
               className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="">Chọn danh mục chính</option>
-              <option value="Category">Danh mục chính</option>
+              <option value="">Chọn danh mục hệ thống</option>
+              <option value="Category">Danh mục hệ thống</option>
             </select>
           </div>
 

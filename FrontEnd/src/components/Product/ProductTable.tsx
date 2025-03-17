@@ -67,8 +67,8 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
       header: "Mã sản phẩm",
     },
     {
-      accessorKey: "category",
-      header: "Danh mục",
+      accessorKey: "subCategory",
+      header: "Danh mục thuốc",
     },
     {
       accessorKey: "Manufacturer",

@@ -1,45 +1,18 @@
 import React, { useState } from "react";
-import { HomeIcon, InboxStackIcon, ChevronRightIcon, UserIcon, ShoppingCartIcon, ArchiveBoxIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, InboxStackIcon, ChevronRightIcon, UserIcon, ShoppingCartIcon, ArchiveBoxIcon, ArrowRightEndOnRectangleIcon, ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import { PackageIcon, StoreIcon } from "lucide-react";
 
-const ProductList = [
-    "Danh sách sản phẩm",
-    "Thêm sản phẩm",
-    "Danh sách danh mục chính",
-    "Thêm danh mục chính",
-    "Danh sách danh mục phụ",
-    "Thêm danh mục phụ",
-    "Nhập sản phẩm"
-];
-
-const CustomerList = [
-    "Danh sách khách hàng",
-    "Thêm khách hàng"
-];
-
-const UserList = [
-    "Danh sách người dùng",
-    "Thêm người dùng"
-];
-
-const SupplierList = [
-    "Danh sách nhà cung cấp",
-    "Thêm nhà cung cấp"
-];
-
-const PurchaseOrderList = [
-    "Danh sách đơn đặt hàng(PO)",
-    "Thêm đơn đặt hàng(PO)"
-];
-
-const OrderList = [
-    "Danh sách đơn hàng",
-    "Thêm đơn hàng"
-]
-
-const LotList =[
-    "Danh sách lô hàng"
-]
+const menus = {
+    "Sản phẩm": ["Danh sách sản phẩm", "Thêm sản phẩm", "Danh sách danh mục hệ thống", "Thêm danh mục hệ thống", "Danh sách danh mục thuốc", "Thêm danh mục thuốc", "Nhập sản phẩm"],
+    "Khách hàng": ["Danh sách khách hàng", "Thêm khách hàng"],
+    "Người dùng": ["Danh sách người dùng", "Thêm người dùng"],
+    "Nhà cung cấp": ["Danh sách nhà cung cấp", "Thêm nhà cung cấp"],
+    "Đơn đặt hàng": ["Danh sách đơn đặt hàng(PO)", "Thêm đơn đặt hàng(PO)"],
+    "Đơn hàng": ["Danh sách đơn hàng", "Thêm đơn hàng"],
+    "Lô hàng": ["Danh sách lô hàng", "Thêm lô hàng"],
+    "Phiếu nhập kho": ["Danh sách phiếu nhập", "Thêm phiếu nhập"],
+    "Phiếu xuất kho": ["Danh sách phiếu xuất", "Thêm phiếu xuất"]
+};
 
 interface SidebarProps {
     activeSidebar: string;
@@ -47,19 +20,16 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) => {
-    const [activeMenuSidebar] = useState<string | null>("product");
-    const [isProductOpen, setIsProductOpen] = useState(false); 
-    const [activeItem, setActiveItem] = useState<string | null>(activeSidebar); 
-    const [isCustomerOpen, setIsCustomerOpen] = useState(false);
-    const [isUserOpen, setIsUserOpen] = useState(false);
-    const [isSupplierOpen, setIsSupplierOpen] = useState(false);
-    const [isPurchaseOrderOpen, setIsPurchaseOrderOpen] = useState(false); // State for Purchase Order
-    const [isOrderOpen, setIsOrderOpen] = useState (false);
-    const [isLotOpen, setIsLotOpen] = useState (false);
+    const [openMenu, setOpenMenu] = useState<string | null>(null);
+    const [activeItem, setActiveItem] = useState<string | null>(activeSidebar);
 
     const handleItemClick = (item: string) => {
         setActiveItem(item);
         handleChangePage(item);
+    };
+
+    const toggleMenu = (menu: string) => {
+        setOpenMenu(openMenu === menu ? null : menu);
     };
 
     return (
@@ -71,8 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
             <div className="p-5 w-full">
                 {/* Dashboard */}
                 <div
-                    className={`px-[15px] mb-3 flex items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                        ${activeMenuSidebar === "dashboard" ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
+                    className="px-[15px] mb-3 flex items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] hover:text-white hover:bg-[#1b2850]"
                     onClick={() => handleItemClick("Dashboard")}
                 >
                     <span className="flex items-center">
@@ -81,211 +50,43 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                     </span>
                 </div>
 
-                {/* Product */}
-                <div>
-                    <div
-                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                            ${isProductOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
-                        onClick={() => setIsProductOpen(!isProductOpen)}
-                    >
-                        <span className="flex items-center">
-                            <InboxStackIcon className="mr-[6px] w-4 h-4" />
-                            Sản phẩm
-                        </span>
-                        <ChevronRightIcon
-                            className={`w-4 h-4 transition-transform ${isProductOpen ? "rotate-90" : ""}`}
-                        />
+                {/* Render các menu */}
+                {Object.entries(menus).map(([menuKey, menuItems]) => (
+                    <div key={menuKey}>
+                        <div
+                            className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
+                                ${openMenu === menuKey ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
+                            onClick={() => toggleMenu(menuKey)}
+                        >
+                            <span className="flex items-center">
+                                {menuKey === "Sản phẩm" && <InboxStackIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Khách hàng" && <UserIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Người dùng" && <UserIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Nhà cung cấp" && <StoreIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Đơn đặt hàng" && <PackageIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Đơn hàng" && <ShoppingCartIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Lô hàng" && <ArchiveBoxIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Phiếu nhập kho" && <ArrowRightEndOnRectangleIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Phiếu xuất kho" && <ArrowRightStartOnRectangleIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey.charAt(0).toUpperCase() + menuKey.slice(1)}
+                            </span>
+                            <ChevronRightIcon className={`w-4 h-4 transition-transform ${openMenu === menuKey ? "rotate-90" : ""}`} />
+                        </div>
+                        <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${openMenu === menuKey ? "max-h-[500px]" : "max-h-0"}`}>
+                            {menuItems.map((item, index) => (
+                                <li
+                                    key={index}
+                                    className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
+                                        transition-all cursor-pointer hover:text-amber-400
+                                        ${activeItem === item ? "text-[#1b2850]" : ""}`}
+                                    onClick={() => handleItemClick(item)}
+                                >
+                                    {item}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isProductOpen ? "max-h-[500px]" : "max-h-0"}`}>
-                        {ProductList.map((item, index) => (
-                            <li
-                                key={index}
-                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
-                                    transition-all cursor-pointer hover:text-amber-400
-                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                                onClick={() => handleItemClick(item)}
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Customer */}
-                <div>
-                    <div
-                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                            ${isCustomerOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
-                        onClick={() => setIsCustomerOpen(!isCustomerOpen)}
-                    >
-                        <span className="flex items-center">
-                            <UserIcon className="mr-[6px] w-4 h-4" />
-                            Khách hàng
-                        </span>
-                        <ChevronRightIcon
-                            className={`w-4 h-4 transition-transform ${isCustomerOpen ? "rotate-90" : ""}`}
-                        />
-                    </div>
-                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isCustomerOpen ? "max-h-[500px]" : "max-h-0"}`}>
-                        {CustomerList.map((item, index) => (
-                            <li
-                                key={index}
-                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400
-                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                                onClick={() => handleItemClick(item)}
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* User */}
-                <div>
-                    <div
-                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                            ${isUserOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
-                        onClick={() => setIsUserOpen(!isUserOpen)}
-                    >
-                        <span className="flex items-center">
-                            <UserIcon className="mr-[6px] w-4 h-4" />
-                            Người dùng
-                        </span>
-                        <ChevronRightIcon
-                            className={`w-4 h-4 transition-transform ${isUserOpen ? "rotate-90" : ""}`}
-                        />
-                    </div>
-                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isUserOpen ? "max-h-[500px]" : "max-h-0"}`}>
-                        {UserList.map((item, index) => (
-                            <li
-                                key={index}
-                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400
-                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                                onClick={() => handleItemClick(item)}
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Supplier */}
-                <div>
-                    <div
-                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                            ${isSupplierOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
-                        onClick={() => setIsSupplierOpen(!isSupplierOpen)}
-                    >
-                        <span className="flex items-center">
-                            <StoreIcon className="mr-[6px] w-4 h-4" />
-                            Nhà cung cấp
-                        </span>
-                        <ChevronRightIcon
-                            className={`w-4 h-4 transition-transform ${isSupplierOpen ? "rotate-90" : ""}`}
-                        />
-                    </div>
-                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isSupplierOpen ? "max-h-[500px]" : "max-h-0"}`}>
-                        {SupplierList.map((item, index) => (
-                            <li
-                                key={index}
-                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400
-                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                                onClick={() => handleItemClick(item)}
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Purchase Order */}
-                <div>
-                    <div
-                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                            ${isPurchaseOrderOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
-                        onClick={() => setIsPurchaseOrderOpen(!isPurchaseOrderOpen)}
-                    >
-                        <span className="flex items-center">
-                            <PackageIcon className="mr-[6px] w-4 h-4" />
-                            Đơn đặt hàng(PO)
-                        </span>
-                        <ChevronRightIcon
-                            className={`w-4 h-4 transition-transform ${isPurchaseOrderOpen ? "rotate-90" : ""}`}
-                        />
-                    </div>
-                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isPurchaseOrderOpen ? "max-h-[500px]" : "max-h-0"}`}>
-                        {PurchaseOrderList.map((item, index) => (
-                            <li
-                                key={index}
-                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md transition-all cursor-pointer hover:text-amber-400
-                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                                onClick={() => handleItemClick(item)}
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                {/* order */}
-                <div>
-                    <div
-                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                            ${isOrderOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
-                        onClick={() => setIsOrderOpen (!isOrderOpen)}
-                    >
-                        <span className="flex items-center">
-                            <ShoppingCartIcon className="mr-[6px] w-4 h-4" />
-                            Đơn hàng
-                        </span>
-                        <ChevronRightIcon
-                            className={`w-4 h-4 transition-transform ${isOrderOpen ? "rotate-90" : ""}`}
-                        />
-                    </div>
-                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isOrderOpen ? "max-h-[500px]" : "max-h-0"}`}>
-                        {OrderList.map((item, index) => (
-                            <li
-                                key={index}
-                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
-                                    transition-all cursor-pointer hover:text-amber-400
-                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                                onClick={() => handleItemClick(item)}
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Lot */}
-                <div>
-                    <div
-                        className={`px-[15px] flex justify-between items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] 
-                            ${isLotOpen ? "text-white bg-[#1b2850]" : "hover:text-white hover:bg-[#1b2850]"}`}
-                        onClick={() => setIsLotOpen (!isLotOpen)}
-                    >
-                        <span className="flex items-center">
-                            <ArchiveBoxIcon className="mr-[6px] w-4 h-4" />
-                            Lô Hàng
-                        </span>
-                        <ChevronRightIcon
-                            className={`w-4 h-4 transition-transform ${isLotOpen ? "rotate-90" : ""}`}
-                        />
-                    </div>
-                    <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${isLotOpen ? "max-h-[500px]" : "max-h-0"}`}>
-                        {LotList.map((item, index) => (
-                            <li
-                                key={index}
-                                className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
-                                    transition-all cursor-pointer hover:text-amber-400
-                                    ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                                onClick={() => handleItemClick(item)}
-                            >
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
+                ))}
             </div>
         </div>
     );

@@ -16,46 +16,50 @@ import PurchaseOrderAdd from "../components/PurchaseOrder/AddPurchaseOrder"; // 
 import Navbar from "../components/global/Navbar";
 import UpdateProduct from "../components/Product/UpdateProduct";
 import LotListPage from "./Home/LotList";
+import ReceivedNoteListPage from "./Home/ReceivedNoteList";
+import AddLot from "../components/Lot/AddLot"; // Import trang AddLot
 import { useState } from "react";
 
 const HomePage = () => {
   const [activePage, setActivePage] = useState<string>("Danh sách sản phẩm");
-const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
-const handleChangePage = (page: string, productId?: number) => {
-  setActivePage(page);
-  if (productId) {
-    setSelectedProductId(productId);
-  }
-};
+  const handleChangePage = (page: string, productId?: number) => {
+    setActivePage(page);
+    if (productId) {
+      setSelectedProductId(productId);
+    }
+  };
 
 
-    return (
-        <div className="w-screen h-screen flex">
-            <Sidebar activeSidebar={activePage} handleChangePage={handleChangePage} />
-            <div className="flex-grow">
-                <Navbar />
-                {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}
-                {activePage === "Chỉnh sửa sản phẩm" && selectedProductId !== null && (
-  <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
-)}
-                {activePage === 'Danh sách danh mục chính' && <CategoryList handleChangePage={handleChangePage} />}
-                {activePage === 'Thêm sản phẩm' && <ProductAdd handleChangePage={handleChangePage}/>}
-                {activePage === 'Thêm danh mục chính' && <CategoryAdd handleChangePage={handleChangePage} />} 
-                {activePage === 'Danh sách danh mục phụ' && <SubCategoryList handleChangePage={handleChangePage} />}
-                {activePage === 'Thêm danh mục phụ' && <SubAddCategory handleChangePage={handleChangePage} />}
-                {activePage === 'Danh sách khách hàng' && <CustomerListPage handleChangePage={handleChangePage} />}
-                {activePage === 'Thêm khách hàng' && <CustomerAdd />}
-                {activePage === 'Danh sách người dùng' && <UserListPage handleChangePage={handleChangePage} />}
-                {activePage === 'Thêm người dùng' && <UserAdd />} 
-                {activePage === 'Danh sách nhà cung cấp' && <SupplierListPage handleChangePage={handleChangePage} />} 
-                {activePage === 'Thêm nhà cung cấp' && <SupplierAdd />} 
-                {activePage === 'Danh sách đơn đặt hàng(PO)' && <PurchaseOrderListPage handleChangePage={handleChangePage} />} {/* Thêm PurchaseOrderListPage */}
-                {activePage === 'Thêm đơn đặt hàng(PO)' && <PurchaseOrderAdd />} 
-                {activePage === 'Danh sách lô hàng' && <LotListPage />} 
-            </div>
-        </div>
-    );
+  return (
+    <div className="w-screen h-screen flex">
+      <Sidebar activeSidebar={activePage} handleChangePage={handleChangePage} />
+      <div className="flex-grow">
+        <Navbar />
+        {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}
+        {activePage === "Chỉnh sửa sản phẩm" && selectedProductId !== null && (
+          <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
+        )}
+        {activePage === 'Danh sách danh mục hệ thống' && <CategoryList handleChangePage={handleChangePage} />}
+        {activePage === 'Thêm sản phẩm' && <ProductAdd handleChangePage={handleChangePage} />}
+        {activePage === 'Thêm danh mục hệ thống' && <CategoryAdd handleChangePage={handleChangePage} />}
+        {activePage === 'Danh sách danh mục thuốc' && <SubCategoryList handleChangePage={handleChangePage} />}
+        {activePage === 'Thêm danh mục thuốc' && <SubAddCategory handleChangePage={handleChangePage} />}
+        {activePage === 'Danh sách khách hàng' && <CustomerListPage handleChangePage={handleChangePage} />}
+        {activePage === 'Thêm khách hàng' && <CustomerAdd />}
+        {activePage === 'Danh sách người dùng' && <UserListPage handleChangePage={handleChangePage} />}
+        {activePage === 'Thêm người dùng' && <UserAdd />}
+        {activePage === 'Danh sách nhà cung cấp' && <SupplierListPage handleChangePage={handleChangePage} />}
+        {activePage === 'Thêm nhà cung cấp' && <SupplierAdd />}
+        {activePage === 'Danh sách đơn đặt hàng(PO)' && <PurchaseOrderListPage handleChangePage={handleChangePage} />} {/* Thêm PurchaseOrderListPage */}
+        {activePage === 'Thêm đơn đặt hàng(PO)' && <PurchaseOrderAdd />}
+        {activePage === "Danh sách lô hàng" && <LotListPage handleChangePage={setActivePage} />}
+        {activePage === "Thêm lô hàng" && <AddLot handleChangePage={setActivePage} />}
+        {activePage === "Danh sách phiếu nhập" && <ReceivedNoteListPage  />}
+      </div>
+    </div>
+  );
 };
 
 export default HomePage;

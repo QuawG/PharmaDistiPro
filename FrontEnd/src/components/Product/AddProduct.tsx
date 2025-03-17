@@ -86,9 +86,9 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Danh mục chính */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Danh mục chính</label>
+            <label className="block text-[14px] mb-2 text-gray-700">Danh mục hệ thống</label>
             <select name="mainCategory" value={formData.mainCategory} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-              <option value="">Chọn danh mục chính</option>
+              <option value="">Chọn danh mục hệ thống</option>
               <option value="category1">Danh mục 1</option>
               <option value="category2">Danh mục 2</option>
             </select>
@@ -96,9 +96,9 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
 
           {/* Danh mục phụ */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Danh mục phụ</label>
+            <label className="block text-[14px] mb-2 text-gray-700">Danh mục thuốc</label>
             <select name="subCategory" value={formData.subCategory} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-              <option value="">Chọn danh mục phụ</option>
+              <option value="">Chọn danh mục thuốc</option>
               <option value="subcategory1">Danh mục phụ 1</option>
               <option value="subcategory2">Danh mục phụ 2</option>
             </select>

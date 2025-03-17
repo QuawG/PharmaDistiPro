@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FileText, Table, Printer } from "lucide-react";
-import { PlusIcon } from "@heroicons/react/24/outline";
+// import { PlusIcon } from "@heroicons/react/24/outline";
 import LotTable from "../../components/Lot/LotTable";
 import { ITEM_DATA } from "../../components/data/ItemData";
 import * as XLSX from "xlsx";
@@ -10,7 +10,7 @@ interface Lot {
   id: number;
   LotCode: string;
   ProductName: string;
-  Status: boolean;
+  Status: string;
   SupplyPrice: number;
   ManufacturedDate: string;
   ExpiredDate: string;
@@ -19,7 +19,7 @@ interface Lot {
   CreatedDate: string;
 }
 
-const LotListPage: React.FC = () => {
+const LotListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({ handleChangePage }) => {
   const [lotCode, setLotCode] = useState("");
   const [productName, setProductName] = useState("");
   const [status, setStatus] = useState("");
@@ -44,6 +44,7 @@ const LotListPage: React.FC = () => {
     if (status !== "") {
       filteredData = filteredData.filter((lot) => lot.Status.toString() === status);
     }
+    
   
     const start = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : null;
     const end = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : null;
@@ -105,8 +106,11 @@ const LotListPage: React.FC = () => {
           <input type="text" placeholder="Tên sản phẩm" className="border px-4 py-1 w-40" value={productName} onChange={(e) => setProductName(e.target.value)} />
           <select className="border px-3 py-1 w-40" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">Tình trạng</option>
-            <option value="true">Còn sản xuất</option>
-            <option value="false">Ngừng sản xuất</option>
+            <option value="Còn hàng">Còn hàng</option>
+            <option value="Đã hết hàng">Đã hết hàng</option>
+            <option value="Đã hết hạn">Đã hết hạn</option>
+            <option value="Tạm ngưng bán">Tạm ngưng bán</option>
+            
           </select>
           <input type="date" className="border px-3 py-1 w-40" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           <input type="date" className="border px-3 py-1 w-40" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
@@ -118,7 +122,12 @@ const LotListPage: React.FC = () => {
             <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Printer className="w-5 h-5" /></button>
           </div>
         </div>
-        <button className="bg-orange-500 text-white px-3 py-2 mt-3 rounded-lg">+ Thêm lô hàng</button>
+        <button 
+          onClick={() => handleChangePage("Thêm lô hàng")} 
+          className="bg-orange-500 text-white px-3 py-2 mt-3 rounded-lg"
+        >
+          + Thêm lô hàng
+        </button>
       </div>
 
       {/* Bảng dữ liệu */}

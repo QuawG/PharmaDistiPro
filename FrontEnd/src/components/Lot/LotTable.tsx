@@ -5,7 +5,7 @@ interface Lot {
   id: number;
   LotCode: string;
   ProductName: string;
-  Status: boolean;
+  Status: string;
   SupplyPrice: number;
   ManufacturedDate: string;
   ExpiredDate: string;
@@ -20,32 +20,43 @@ interface LotTableProps {
 
 const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
   const [lots, setLots] = useState<Lot[]>([]);
-  const [sortField, setSortField] = useState<keyof Lot | null>(null);
+  const [sortField, setSortField] = useState<keyof Lot | "RemainingDays" | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
+    console.log("Dữ liệu lô hàng:", ITEM_DATA); // Kiểm tra dữ liệu đầu vào
     setLots(ITEM_DATA);
   }, [ITEM_DATA]);
-
   // Tính số ngày còn hạn
-  const calculateRemainingDays = (manufacturedDate: string, expiredDate: string) => {
-    const msPerDay = 1000 * 60 * 60 * 24;
-    return Math.floor((new Date(expiredDate).getTime() - new Date(manufacturedDate).getTime()) / msPerDay);
+  const calculateRemainingDays = (expiredDate: string) => {
+    const today = new Date();
+    return Math.floor((new Date(expiredDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 
   // Sắp xếp dữ liệu
-  const handleSort = (field: keyof Lot) => {
+  const handleSort = (field: keyof Lot | "RemainingDays") => {
     const newSortOrder = sortField === field && sortOrder === "asc" ? "desc" : "asc";
     setSortField(field);
     setSortOrder(newSortOrder);
 
     const sortedData = [...lots].sort((a, b) => {
-      if (a[field] < b[field]) return newSortOrder === "asc" ? -1 : 1;
-      if (a[field] > b[field]) return newSortOrder === "asc" ? 1 : -1;
+      let valA: number | string, valB: number | string;
+
+      if (field === "RemainingDays") {
+        valA = calculateRemainingDays(a.ExpiredDate);
+        valB = calculateRemainingDays(b.ExpiredDate);
+      } else {
+        valA = typeof a[field] === "boolean" ? Number(a[field]) : (a[field] as number | string);
+        valB = typeof b[field] === "boolean" ? Number(b[field]) : (b[field] as number | string);
+      }
+
+      if (valA < valB) return newSortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return newSortOrder === "asc" ? 1 : -1;
       return 0;
     });
+
 
     setLots(sortedData);
   };
@@ -79,12 +90,12 @@ const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
           <tr className="bg-gray-50">
             {["LotCode", "ProductName", "ManufacturedDate", "ExpiredDate", "Quantity", "RemainingDays", "Status", "Actions"].map((field) => (
               <th key={field} className="px-4 py-3 text-left text-sm font-bold">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSort(field as keyof Lot)}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSort(field as keyof Lot | "RemainingDays")}>
                   {field === "LotCode" && "Mã lô"}
                   {field === "ProductName" && "Tên sản phẩm"}
                   {field === "ManufacturedDate" && "Ngày SX"}
                   {field === "ExpiredDate" && "HSD"}
-                  {field === "Quantity" && "Số lượng"}
+                  {field === "Quantity" && "Tồn kho"}
                   {field === "RemainingDays" && "Số ngày còn hạn"}
                   {field === "Status" && "Trạng thái"}
                   {field === "Actions" && "Thao tác"}
@@ -108,11 +119,24 @@ const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
                 <td className="px-4 py-3 text-sm">{formatDate(lot.ExpiredDate)}</td>
                 <td className="px-4 py-3 text-sm">{lot.Quantity}</td>
                 <td className="px-4 py-3 text-sm">
-                  {calculateRemainingDays(lot.ManufacturedDate, lot.ExpiredDate)} ngày
+                  {calculateRemainingDays(lot.ExpiredDate)} ngày
                 </td>
                 <td className="px-4 py-3 text-sm">
-                  <span className={lot.Status ? "text-green-500" : "text-red-500"}>
-                    {lot.Status ? "Đã nhập kho" : "Đang chờ"}
+                
+                  <span
+                    className={
+                      lot.Status === "Còn hàng"
+                        ? "text-green-500"
+                        : lot.Status === "Đã hết hàng"
+                          ? "text-red-500"
+                          : lot.Status === "Đã hết hạn"
+                            ? "text-gray-500"
+                            : lot.Status === "Tạm ngưng bán"
+                              ? "text-yellow-500"
+                              : "text-blue-500"
+                    }
+                  >
+                    {lot.Status}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm flex space-x-2">
