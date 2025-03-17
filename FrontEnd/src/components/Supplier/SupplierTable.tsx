@@ -12,8 +12,9 @@ import {
 } from '@tanstack/react-table';
 import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import SupplierDetailsModal from './SupplierDetail'; // Modal chỉ để xem
-import UpdateSupplierDetailsModal from './UpdateSupplierDetail'; // Modal để sửa
+import SupplierDetailsModal from './SupplierDetail'; 
+import UpdateSupplierDetailsModal from './UpdateSupplierDetail'; 
+import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
 
 interface Supplier {
   supplierId: number;
@@ -22,6 +23,7 @@ interface Supplier {
   phone: string;
   createdBy: string;
   createdDate: string; 
+  status: string; // Thêm thuộc tính status
 }
 
 interface SupplierTableProps {
@@ -36,7 +38,9 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
@@ -45,6 +49,7 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
 
   const handleSave = (updatedSupplier: any) => {
     console.log('Supplier saved:', updatedSupplier);
+    // Cập nhật danh sách nhà cung cấp nếu cần
   };
 
   const handleViewDetail = (supplier: Supplier) => {
@@ -54,7 +59,24 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
 
   const handleEdit = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
-    setIsEditModalOpen(true); // Mở modal chỉnh sửa
+    setIsEditModalOpen(true); 
+  };
+
+  const handleStatusChange = (index: number, newStatus: string) => {
+    setSelectedSupplier(SUPPLIERS_DATA[index]); 
+    setNewStatus(newStatus); 
+    setIsConfirmModalOpen(true); // Mở modal xác nhận
+  };
+
+  const confirmStatusChange = () => {
+    // Cập nhật trạng thái nhà cung cấp ở đây
+    const updatedSuppliers = [...SUPPLIERS_DATA];
+    const index = updatedSuppliers.findIndex(supplier => supplier.supplierId === selectedSupplier?.supplierId);
+    if (index !== -1) {
+      updatedSuppliers[index].status = newStatus;
+      // Cập nhật lại dữ liệu nhà cung cấp nếu cần
+    }
+    setIsConfirmModalOpen(false);
   };
 
   const columns: ColumnDef<Supplier>[] = [
@@ -81,6 +103,21 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
     { accessorKey: 'supplierId', header: 'ID' },
     { accessorKey: 'name', header: 'Tên' },
     { accessorKey: 'phone', header: 'Số điện thoại' },
+    {
+      id: 'status',
+      header: 'Trạng thái',
+      cell: ({ row }) => (
+        <select
+          value={row.original.status}
+          onChange={(e) => handleStatusChange(row.index, e.target.value)}
+          className="border rounded p-1"
+        >
+          <option value="active">Hoạt động</option>
+          <option value="inactive">Không hoạt động</option>
+          <option value="pending">Đang chờ</option>
+        </select>
+      ),
+    },
     {
       id: 'actions',
       header: 'Tính năng',
@@ -242,6 +279,14 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
         onClose={() => setIsEditModalOpen(false)}
         supplier={selectedSupplier} 
         onSave={handleSave} 
+      />
+      
+      {/* Modal xác nhận */}
+      <UpdateConfirm
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={confirmStatusChange}
+        message="Bạn có chắc chắn muốn đổi trạng thái?"
       />
     </div>
   );

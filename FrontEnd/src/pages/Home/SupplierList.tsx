@@ -1,5 +1,6 @@
 import React, { useState } from 'react'; 
-import { FileText, Table, Printer, FileSpreadsheet } from 'lucide-react';
+// import { FileText, Table, Printer, FileSpreadsheet } from 'lucide-react';
+import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import * as XLSX from 'xlsx';
 import SupplierTable from '../../components/Supplier/SupplierTable'; 
@@ -66,7 +67,7 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
           <p className="text-sm text-gray-500">Quản lí nhà cung cấp</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Thêm nhà cung cấp')}
+          onClick={() => handleChangePage('Tạo nhà cung cấp')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
           <PlusIcon className='w-5 h-5 font-bold'/> Tạo mới nhà cung cấp
         </button>

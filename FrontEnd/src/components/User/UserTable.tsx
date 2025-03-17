@@ -14,6 +14,7 @@ import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
 import UserDetailsModal from './UserDetail'; 
 import UpdateUserDetailsModal from './UpdateUserDetail'; 
+import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
 
 interface User {
   id: number;
@@ -27,6 +28,7 @@ interface User {
   employeeCode: string;
   createdBy: string;
   createdDate: string; 
+  status: string; // Thêm thuộc tính status
 }
 
 interface UserTableProps {
@@ -41,7 +43,9 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
 
   const handleSave = (updatedUser: User) => {
     console.log('User updated:', updatedUser);
@@ -51,6 +55,23 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
     // Logic xóa người dùng
+  };
+
+  const handleStatusChange = (index: number, newStatus: string) => {
+    setSelectedUser(USERS_DATA[index]); // Lưu người dùng được chọn
+    setNewStatus(newStatus); // Lưu trạng thái mới
+    setIsConfirmModalOpen(true); // Mở modal xác nhận
+  };
+
+  const confirmStatusChange = () => {
+    // Cập nhật trạng thái người dùng ở đây
+    const updatedUsers = [...USERS_DATA];
+    const index = updatedUsers.findIndex(user => user.id === selectedUser?.id);
+    if (index !== -1) {
+      updatedUsers[index].status = newStatus;
+      // Cập nhật lại dữ liệu người dùng nếu cần
+    }
+    setIsConfirmModalOpen(false);
   };
 
   const columns: ColumnDef<User>[] = [
@@ -85,6 +106,21 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
     { accessorKey: 'firstName', header: 'Tên riêng' },
     { accessorKey: 'lastName', header: 'Tên họ' },
     { accessorKey: 'email', header: 'Email' },
+    {
+      id: 'status',
+      header: 'Trạng thái',
+      cell: ({ row }) => (
+        <select
+          value={row.original.status}
+          onChange={(e) => handleStatusChange(row.index, e.target.value)}
+          className="border rounded p-1"
+        >
+          <option value="active">Hoạt động</option>
+          <option value="inactive">Không hoạt động</option>
+          <option value="pending">Đang chờ</option>
+        </select>
+      ),
+    },
     {
       id: 'actions',
       header: 'Tính năng',
@@ -247,6 +283,14 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
         onClose={() => setIsEditModalOpen(false)}
         user={selectedUser} 
         onSave={handleSave} 
+      />
+      
+      {/* Modal xác nhận */}
+      <UpdateConfirm
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={confirmStatusChange}
+        message="Bạn có chắc chắn muốn đổi trạng thái?"
       />
     </div>
   );

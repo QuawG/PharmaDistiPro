@@ -10,21 +10,22 @@ import {
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react'; // Thêm Eye từ lucide-react
+import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
 import PurchaseOrderDetailsModal from './PurchaseOrderDetail'; 
 import UpdatePurchaseOrderDetailsModal from './UpdatePurchaseOrderDetail'; 
+import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
 
 interface PurchaseOrder {
   purchaseOrderId: number;
   purchaseOrderCode: string;
   supplierName: string;
-  date: string; // Định dạng ngày
-  goodsIssueDate: string; // Định dạng ngày
+  date: string;
+  goodsIssueDate: string;
   totalAmount: number;
   createdBy: string;
-  createdDate: string; // Định dạng ngày
-  status: string;
+  createdDate: string; 
+  status: string; // Thêm thuộc tính status
   deliveryFee: number;
   address: string;
 }
@@ -39,18 +40,47 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false); // Modal xem thêm
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Modal chỉnh sửa
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
-
-  const handleSave = (updatedOrder: PurchaseOrder) => {
-    console.log('Order updated:', updatedOrder);
-    // Update order list if necessary
-  };
+  const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
-    // Logic to delete the order
+    // Thực hiện xóa đơn hàng ở đây
+  };
+
+  const handleSave = (updatedOrder: PurchaseOrder) => {
+    console.log('Order saved:', updatedOrder);
+    // Cập nhật danh sách đơn hàng nếu cần
+  };
+
+  const handleViewDetail = (order: PurchaseOrder) => {
+    setSelectedOrder(order);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEdit = (order: PurchaseOrder) => {
+    setSelectedOrder(order);
+    setIsEditModalOpen(true); 
+  };
+
+  const handleStatusChange = (index: number, newStatus: string) => {
+    setSelectedOrder(PURCHASE_ORDERS_DATA[index]); 
+    setNewStatus(newStatus); 
+    setIsConfirmModalOpen(true); // Mở modal xác nhận
+  };
+
+  const confirmStatusChange = () => {
+    // Cập nhật trạng thái đơn hàng ở đây
+    const updatedOrders = [...PURCHASE_ORDERS_DATA];
+    const index = updatedOrders.findIndex(order => order.purchaseOrderId === selectedOrder?.purchaseOrderId);
+    if (index !== -1) {
+      updatedOrders[index].status = newStatus;
+      // Cập nhật lại dữ liệu đơn hàng nếu cần
+    }
+    setIsConfirmModalOpen(false);
   };
 
   const columns: ColumnDef<PurchaseOrder>[] = [
@@ -79,28 +109,40 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
     { accessorKey: 'supplierName', header: 'Nhà Cung Cấp' },
     { accessorKey: 'date', header: 'Ngày Đặt Hàng' },
     { accessorKey: 'goodsIssueDate', header: 'Ngày Giao Hàng' },
-
-    { accessorKey: 'status', header: 'Trạng Thái' },
-    { accessorKey: 'address', header: 'Địa Chỉ' },
+    {
+      id: 'status',
+      header: 'Trạng thái',
+      cell: ({ row }) => (
+        <select
+          value={row.original.status}
+          onChange={(e) => handleStatusChange(row.index, e.target.value)}
+          className="border rounded p-1"
+        >
+          <option value="active">Hoạt động</option>
+          <option value="inactive">Không hoạt động</option>
+          <option value="pending">Đang chờ</option>
+        </select>
+      ),
+    },
     {
       id: 'actions',
       header: 'Tính năng',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button 
+          <button
             className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
-            onClick={() => handleView(row.original)}
+            onClick={() => handleViewDetail(row.original)}
           >
             <Eye className="w-4 h-4" />
           </button>
-          <button 
-            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500" 
+          <button
+            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
             onClick={() => handleEdit(row.original)}
           >
             <Pencil className="w-4 h-4" />
           </button>
-          <button 
-            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500" 
+          <button
+            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
             onClick={() => {
               setSelectedOrder(row.original);
               setIsDeleteModalOpen(true);
@@ -113,16 +155,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
       enableSorting: false,
     },
   ];
-
-  const handleEdit = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
-    setIsEditModalOpen(true);
-  };
-
-  const handleView = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
-    setIsViewModalOpen(true); // Mở modal chỉ xem thông tin
-  };
 
   const table = useReactTable({
     data: PURCHASE_ORDERS_DATA,
@@ -256,6 +288,14 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
         onClose={() => setIsEditModalOpen(false)} 
         order={selectedOrder} 
         onSave={handleSave} 
+      />
+      
+      {/* Modal xác nhận */}
+      <UpdateConfirm
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={confirmStatusChange}
+        message="Bạn có chắc chắn muốn đổi trạng thái?"
       />
     </div>
   );

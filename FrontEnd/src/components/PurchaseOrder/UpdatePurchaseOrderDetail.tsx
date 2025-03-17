@@ -44,6 +44,23 @@ export default function UpdatePurchaseOrderDetail({
     });
   };
 
+  const handleQuantityChange = (index: number, value: number) => {
+    const updatedProducts = [...formData.products];
+    updatedProducts[index].quantity = value;
+    setFormData({ ...formData, products: updatedProducts });
+  };
+
+  const handleTaxChange = (index: number, value: number) => {
+    const updatedProducts = [...formData.products];
+    updatedProducts[index].tax = value;
+    setFormData({ ...formData, products: updatedProducts });
+  };
+
+  const handleDeleteProduct = (index: number) => {
+    const updatedProducts = formData.products.filter((_, i) => i !== index);
+    setFormData({ ...formData, products: updatedProducts });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData) {
@@ -81,7 +98,7 @@ export default function UpdatePurchaseOrderDetail({
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col items-center">
-            <div className="w-full">
+            <div className="w-full mb-4">
               <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700">Mã đơn đặt hàng</label>
@@ -173,6 +190,58 @@ export default function UpdatePurchaseOrderDetail({
                   </select>
                 </div>
               </div>
+            </div>
+
+            {/* Bảng sản phẩm */}
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Danh sách sản phẩm</h2>
+            <div className="overflow-x-auto w-full mb-4">
+              <table className="min-w-full bg-gray-50 border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="px-4 py-2">Tên sản phẩm</th>
+                    <th className="px-4 py-2">Số lượng</th>
+                    <th className="px-4 py-2">Giá nhập</th>
+                    <th className="px-4 py-2">Thuế (VAT)</th>
+                    <th className="px-4 py-2">Tổng giá</th>
+                    <th className="px-4 py-2">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData?.products?.map((product: any, index: number) => (
+                    <tr key={product.id} className="border-b">
+                      <td className="px-4 py-2">{product.name || "N/A"}</td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          value={product.quantity}
+                          onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
+                          className="border rounded p-1 w-20"
+                        />
+                      </td>
+                      <td className="px-4 py-2">{product.price || "N/A"}</td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          value={product.tax || 0}
+                          onChange={(e) => handleTaxChange(index, parseFloat(e.target.value))}
+                          className="border rounded p-1 w-20"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        {((product.quantity * product.price) * (1 + (product.tax / 100))).toFixed(2) || "N/A"}
+                      </td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={() => handleDeleteProduct(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             <div className="flex justify-end mt-4 w-full">
