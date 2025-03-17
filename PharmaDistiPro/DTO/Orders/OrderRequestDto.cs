@@ -4,10 +4,11 @@ namespace PharmaDistiPro.DTO.Orders
 {
     public class OrderRequestDto
     {
+
         public int OrderId { get; set; }
         public string? OrderCode { get; set; }
         public int? CustomerId { get; set; }
-        public DateTime? Date { get; set; }
+        public DateTime? UpdatedStatusDate { get; set; }
         public DateTime? StockReleaseDate { get; set; }
         public double? TotalAmount { get; set; }
         public int? Status { get; set; }
@@ -25,6 +26,6 @@ namespace PharmaDistiPro.DTO.Orders
         public int? OrderId { get; set; }
         public int? ProductId { get; set; }
         public int? Quantity { get; set; }
-        public double? UnitsPrice { get; set; }
+
     }
 }

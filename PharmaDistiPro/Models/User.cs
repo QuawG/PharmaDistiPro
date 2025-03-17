@@ -15,7 +15,6 @@ namespace PharmaDistiPro.Models
             OrderCustomers = new HashSet<Order>();
             Products = new HashSet<Product>();
             PurchaseOrders = new HashSet<PurchaseOrder>();
-            ReceiveNoteDetails = new HashSet<ReceiveNoteDetail>();
             StorageRooms = new HashSet<StorageRoom>();
             Suppliers = new HashSet<Supplier>();
             Units = new HashSet<Unit>();
@@ -51,7 +50,6 @@ namespace PharmaDistiPro.Models
         public virtual ICollection<Order> OrderCustomers { get; set; }
         public virtual ICollection<Product> Products { get; set; }
         public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; }
-        public virtual ICollection<ReceiveNoteDetail> ReceiveNoteDetails { get; set; }
         public virtual ICollection<StorageRoom> StorageRooms { get; set; }
         public virtual ICollection<Supplier> Suppliers { get; set; }
         public virtual ICollection<Unit> Units { get; set; }

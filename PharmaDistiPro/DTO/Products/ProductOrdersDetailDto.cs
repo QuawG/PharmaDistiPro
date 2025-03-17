@@ -9,10 +9,10 @@
         public int? UnitId { get; set; }
         public int? CategoryId { get; set; }
         public string? Description { get; set; }
+        public double? SellingPrice { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public bool? Status { get; set; }
-        public string? Image { get; set; }
         public double? Vat { get; set; }
         public int? Storageconditions { get; set; }
     }

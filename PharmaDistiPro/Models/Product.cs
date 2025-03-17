@@ -20,6 +20,7 @@ namespace PharmaDistiPro.Models
         public int? UnitId { get; set; }
         public int? CategoryId { get; set; }
         public string? Description { get; set; }
+        public double? SellingPrice { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public bool? Status { get; set; }

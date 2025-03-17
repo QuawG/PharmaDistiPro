@@ -48,6 +48,7 @@ namespace PharmaDistiPro.Services.Impl
 
                 // 2. Cập nhật trạng thái phiếu xuất kho thành HỦY
                 issueNote.Status = (int)Common.Enums.IssueNotesStatus.HUY;
+                issueNote.UpdatedStatusDate = DateTime.Now;
 
                 // 3. Lấy danh sách chi tiết phiếu xuất kho
                 var issueNoteDetails = await _issueNoteDetailsRepository.GetByConditionAsync(x => x.IssueNoteId == issueNoteId);
@@ -117,7 +118,7 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Không tìm thấy đơn hàng";
                     return response;
                 }
-
+                
                 order.Status = (int)Common.Enums.OrderStatus.XUAT_KHO;
                 await _orderRepository.UpdateAsync(order);
 
@@ -125,12 +126,13 @@ namespace PharmaDistiPro.Services.Impl
                 #region IssueNote
                 int issueNoteCount = await _issueNoteRepository.CountAsync(x => true);
                 issueNoteRequestDto.OrderId = orderId;
-                issueNoteRequestDto.IssueNotesCode = ConstantStringHelper.IssueNoteCode + (issueNoteCount + 1);
+                issueNoteRequestDto.IssueNoteCode = ConstantStringHelper.IssueNoteCode + (issueNoteCount + 1);
                 issueNoteRequestDto.CreatedDate = DateTime.Now;
+                issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
                 issueNoteRequestDto.Status = (int)Common.Enums.IssueNotesStatus.DA_XUAT;
                 issueNoteRequestDto.CustomerId = order.CustomerId;
                 issueNoteRequestDto.TotalAmount = order.TotalAmount;
-
+                issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
                 User? warehouseManager = await _userRepository.GetWarehouseManagerToConfirm();
 
                 issueNoteRequestDto.CreatedBy = warehouseManager.UserId;
@@ -168,7 +170,7 @@ namespace PharmaDistiPro.Services.Impl
                     {
                         if (remainingQuantity <= 0) break; // Đã đủ số lượng, thoát vòng lặp
 
-                        int takeQuantity = Math.Min(productLot.Quantity.Value, remainingQuantity); // Lấy tối đa có thể từ lô này
+                        int takeQuantity = Math.Min(productLot.Quantit?.Value, remainingQuantity); // Lấy tối đa có thể từ lô này
                         remainingQuantity -= takeQuantity; // Cập nhật số lượng còn lại
 
                         var issueNoteDetail = new IssueNoteDetail
@@ -197,8 +199,6 @@ namespace PharmaDistiPro.Services.Impl
                  // Cập nhật tồn kho
                 await _orderRepository.SaveAsync(); // Lưu tất cả thay đổi
                 #endregion
-
-
 
                 response.Success = true;
                 response.Data = _mapper.Map<IssueNoteDto>(issueNoteRequestDto);

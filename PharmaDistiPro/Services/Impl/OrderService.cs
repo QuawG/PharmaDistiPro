@@ -19,23 +19,17 @@ namespace PharmaDistiPro.Services.Impl
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IOrdersDetailRepository _ordersDetailRepository;
-        private readonly IProductLotRepository _productLotRepository;
-        private readonly IIssueNoteDetailsRepository _issueNoteDetailsRepository;
-        private readonly IIssueNoteRepository _issueNoteRepository;
+
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
         public OrderService(IOrderRepository orderRepository,
-            IIssueNoteRepository issuteNoteRepository,
-           IIssueNoteDetailsRepository issueNoteDetailsRepository, 
+           IIssueNoteRepository issuteNoteRepository,
            IOrdersDetailRepository ordersDetailRepository,
-            IProductLotRepository productLotRepository, IMapper mapper, IUserRepository userRepository)
+           IMapper mapper, IUserRepository userRepository)
         {
-            _issueNoteRepository = issuteNoteRepository;
-            _issueNoteDetailsRepository = issueNoteDetailsRepository;
             _orderRepository = orderRepository;
             _ordersDetailRepository = ordersDetailRepository;
-            _productLotRepository = productLotRepository;
             _mapper = mapper;
             _userRepository = userRepository;
         }
@@ -46,7 +40,7 @@ namespace PharmaDistiPro.Services.Impl
             Response<IEnumerable<OrderDto>> response = new Response<IEnumerable<OrderDto>>();
             try
             {
-                var orders = await _orderRepository.GetByConditionAsync(o => o.CustomerId == customerId, includes : new string[] { "ConfirmedByNavigation", "Customer" });
+                var orders = await _orderRepository.GetByConditionAsync(o => o.CustomerId == customerId, includes: new string[] { "ConfirmedByNavigation", "Customer" });
                 if (orders == null)
                 {
                     response.Success = false;
@@ -75,6 +69,8 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var ordersDetails = await _ordersDetailRepository.GetByConditionAsync(o => o.OrderId == orderId, includes: new string[] { "Product" });
+                ordersDetails = ordersDetails.OrderByDescending(o => o.OrderDetailId);
+
                 var orderDto = _mapper.Map<IEnumerable<OrdersDetailDto>>(ordersDetails);
                 if (!ordersDetails.Any())
                 {
@@ -144,9 +140,8 @@ namespace PharmaDistiPro.Services.Impl
                 order.CreatedDate = DateTime.Now;
                 order.StockReleaseDate = null;
                 order.ConfirmedBy = null;
-                order.Date = null;
                 order.Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN;
-
+                order.UpdatedStatusDate = DateTime.Now;
                 // Tạo OrderCode an toàn bằng cách lấy OrderId lớn nhất
                 var maxOrderId = await _orderRepository.GetMaxOrderId();
                 order.OrderCode = ConstantStringHelper.OrderCode + (maxOrderId + 1);
@@ -157,7 +152,7 @@ namespace PharmaDistiPro.Services.Impl
 
                 #region Create Order Details
 
-                
+
                 // Thực hiện mapping
                 List<OrdersDetail> ordersDetails = _mapper.Map<List<OrdersDetail>>(orderRequestDto.OrdersDetails);
                 ordersDetails.ForEach(x => x.OrderId = order.OrderId);
@@ -195,7 +190,7 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
                 order.Status = status;
-                order.Date = DateTime.Now;
+                order.UpdatedStatusDate = DateTime.Now;
 
                 await _orderRepository.UpdateAsync(order);
                 await _orderRepository.SaveAsync();
@@ -219,6 +214,8 @@ namespace PharmaDistiPro.Services.Impl
             {
                 var orders = await _orderRepository.GetByConditionAsync(o => o.Status == (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
                     includes: new string[] { "ConfirmedByNavigation", "Customer" });
+
+                orders = orders.OrderByDescending(o => o.OrderId).ToList();
                 if (!orders.Any())
                 {
                     response.Success = false;
@@ -257,7 +254,7 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
                 order.Status = (int)Common.Enums.OrderStatus.DA_DUYET;
-                order.Date = DateTime.Now;
+                order.UpdatedStatusDate = DateTime.Now;
                 await _orderRepository.UpdateAsync(order); // Lưu trạng thái mới của đơn hàng trước
                 await _orderRepository.SaveAsync();
                 #endregion
