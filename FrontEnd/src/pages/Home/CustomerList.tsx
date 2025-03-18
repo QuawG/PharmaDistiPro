@@ -17,6 +17,7 @@ interface Customer {
     createdBy: string;
     createdDate: string; 
     taxCode: number;
+    status: string; // Tạo thuộc tính status
 }
 
 interface CustomerListPageProps {
@@ -26,27 +27,44 @@ interface CustomerListPageProps {
 const CUSTOMERS_DATA: Customer[] = [
   { id: 1, firstName: "Alice", employeeCode: "KH001", avatar: "https://via.placeholder.com/150",
     email: "alice@example.com", phone: "321-654-0987", address: "789 Oak St", age: 30, 
-    createdBy: "Admin", createdDate: "2023-01-10T00:00:00Z", taxCode: 104224702 },
+    createdBy: "Admin", createdDate: "2023-01-10T00:00:00Z", taxCode: 104224702, status: "Active" },
 
   { id: 2, firstName: "Bob", employeeCode: "KH002", avatar: "https://via.placeholder.com/150",
     email: "bob@example.com", phone: "432-765-0987", address: "101 Pine St", age: 25,  
-    createdBy: "Admin", createdDate: "2023-01-11T00:00:00Z", taxCode: 104224702 },
+    createdBy: "Admin", createdDate: "2023-01-11T00:00:00Z", taxCode: 104224702, status: "Inactive" },
 
   { id: 3, firstName: "Charlie", employeeCode: "KH003", avatar: "https://via.placeholder.com/150",
     email: "charlie@example.com", phone: "987-654-3210", address: "456 Maple Ave", age: 28,  
-    createdBy: "Admin", createdDate: "2023-01-12T00:00:00Z", taxCode: 104224703 }
+    createdBy: "Admin", createdDate: "2023-01-12T00:00:00Z", taxCode: 104224703, status: "Active" }
 ];
 
 const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>(''); // Trạng thái được chọn
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>(CUSTOMERS_DATA);
 
-  // Tìm kiếm khách hàng
+  // Tìm kiếm nhà thuốc
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
+    filterCustomers(value, selectedStatus);
+  };
+
+  // Lọc nhà thuốc theo trạng thái
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const status = e.target.value;
+    setSelectedStatus(status);
+    filterCustomers(searchTerm, status);
+  };
+
+  // Hàm lọc nhà thuốc
+  const filterCustomers = (searchTerm: string, status: string) => {
     const filtered = CUSTOMERS_DATA.filter(customer =>
-      `${customer.firstName} ${customer.employeeCode}`.toLowerCase().includes(value.toLowerCase())
+      (customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm) ||
+      customer.employeeCode.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (status === '' || customer.status === status) // Lọc theo trạng thái
     );
     setFilteredCustomers(filtered);
   };
@@ -64,6 +82,7 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
       "Mã số thuế": customer.taxCode,
       "Người tạo": customer.createdBy,
       "Ngày tạo": customer.createdDate,
+      "Trạng thái": customer.status, // Tạo trạng thái vào Excel
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -81,13 +100,13 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
       {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Danh sách khách hàng</h1>
-          <p className="text-sm text-gray-500">Quản lí khách hàng</p>
+          <h1 className="text-xl font-semibold text-gray-900">Danh sách nhà thuốc</h1>
+          <p className="text-sm text-gray-500">Quản lí nhà thuốc</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Tạo khách hàng')}
+          onClick={() => handleChangePage('Tạo nhà thuốc')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Tạo khách hàng mới
+          <PlusIcon className='w-5 h-5 font-bold'/> Tạo nhà thuốc mới
         </button>
       </div>
 
@@ -112,6 +131,16 @@ const CustomerListPage: React.FC<CustomerListPageProps> = ({ handleChangePage })
                 </svg>
               </span>
             </div>
+            {/* Dropdown chọn trạng thái */}
+            <select
+              value={selectedStatus}
+              onChange={handleStatusChange}
+              className="border rounded p-1"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="Active">Hoạt động</option>
+              <option value="Inactive">Không hoạt động</option>
+            </select>
           </div>
           <div className="flex gap-2">
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">

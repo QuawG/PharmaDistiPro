@@ -12,7 +12,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     status: "active",
     description: "",
     image: null as File | null,
-    VAT: "", // Thêm trường VAT
+    VAT: "", // Tạo trường VAT
   });
   
 
@@ -47,7 +47,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     if (!validateForm()) return;
 
     console.log("Form Data:", formData);
-    alert("Add Successfully"); // Thông báo khi thêm sản phẩm thành công
+    alert("Add Successfully"); // Thông báo khi Tạo sản phẩm thành công
     handleChangePage("Danh sách sản phẩm"); // Chuyển về danh sách sản phẩm
   };
 
@@ -55,7 +55,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Thêm sản phẩm</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Tạo sản phẩm</h1>
         <p className="text-sm text-gray-500">Tạo sản phẩm mới</p>
       </div>
 

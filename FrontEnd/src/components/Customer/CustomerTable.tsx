@@ -24,7 +24,7 @@ interface Customer {
   email: string;
   phone: string;
   address: string;
-  age: number;  // Thêm thuộc tính tuổi
+  age: number;  
   createdBy: string;
   createdDate: string; 
   taxCode: number;
@@ -45,7 +45,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Modal chỉnh sửa
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
+  const [newStatus, setNewStatus] = useState<string>(''); 
 
   const handleSave = (updatedCustomer: Customer) => {
     console.log('Customer updated:', updatedCustomer);
@@ -64,13 +64,11 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
   };
 
   const confirmStatusChange = () => {
-    // Cập nhật trạng thái khách hàng ở đây
-    const updatedCustomers = [...CUSTOMERS_DATA];
-    const index = updatedCustomers.findIndex(customer => customer.id === selectedCustomer?.id);
-    if (index !== -1) {
-      updatedCustomers[index].status = newStatus;
-      // Cập nhật lại dữ liệu khách hàng nếu cần
-    }
+    const updatedCustomers = CUSTOMERS_DATA.map(customer => 
+      customer.id === selectedCustomer?.id ? { ...customer, status: newStatus } : customer
+    );
+    // Update the customer data source as needed
+    console.log('Updated Customers:', updatedCustomers);
     setIsConfirmModalOpen(false);
   };
 
@@ -103,7 +101,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
       ),
       enableSorting: false,
     },
-    { accessorKey: 'firstName', header: 'Tên riêng' },
+    { accessorKey: 'firstName', header: 'Tên nhà thuốc' },
     { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'phone', header: 'Số điện thoại' },
     {
@@ -111,8 +109,8 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
       header: 'Trạng thái',
       cell: ({ row }) => (
         <select
-          value={row.original.status}
-          onChange={(e) => handleStatusChange(row.index, e.target.value)}
+          value={row.original.status} 
+          onChange={(e) => handleStatusChange(row.index, e.target.value)} // Update the status on change
           className="border rounded p-1"
         >
           <option value="active">Hoạt động</option>
@@ -160,7 +158,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
 
   const handleView = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setIsViewModalOpen(true); // Mở modal chỉ xem thông tin
+    setIsViewModalOpen(true); 
   };
 
   const table = useReactTable({
@@ -291,8 +289,8 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
         customer={selectedCustomer} 
       />
       <UpdateCustomerDetailsModal 
-        isOpen={isEditModalOpen} 
-        onClose={() => setIsEditModalOpen(false)} 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
         customer={selectedCustomer} 
         onSave={handleSave} 
       />

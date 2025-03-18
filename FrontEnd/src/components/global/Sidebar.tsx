@@ -3,16 +3,18 @@ import { HomeIcon, InboxStackIcon, ChevronRightIcon, UserIcon, ShoppingCartIcon,
 import { PackageIcon, StoreIcon } from "lucide-react";
 
 const menus = {
-    "Sản phẩm": ["Danh sách sản phẩm", "Thêm sản phẩm", "Danh sách danh mục hệ thống", "Thêm danh mục hệ thống", "Danh sách danh mục thuốc", "Thêm danh mục thuốc", "Nhập sản phẩm"],
-    "Khách hàng": ["Danh sách khách hàng", "Thêm khách hàng"],
-    "Người dùng": ["Danh sách người dùng", "Thêm người dùng"],
-    "Nhà cung cấp": ["Danh sách nhà cung cấp", "Thêm nhà cung cấp"],
-    "Đơn đặt hàng": ["Danh sách đơn đặt hàng(PO)", "Thêm đơn đặt hàng(PO)"],
-    "Đơn hàng": ["Danh sách đơn hàng", "Thêm đơn hàng"],
-    "Lô hàng": ["Danh sách lô hàng", "Thêm lô hàng"],
-    "Phiếu nhập kho": ["Danh sách phiếu nhập", "Thêm phiếu nhập"],
-    "Phiếu xuất kho": ["Danh sách phiếu xuất", "Thêm phiếu xuất"]
+    "Sản phẩm": ["Danh sách sản phẩm", "Tạo sản phẩm", "Danh sách danh mục hệ thống", "Tạo danh mục hệ thống", "Danh sách danh mục thuốc", "Tạo danh mục thuốc", "Nhập sản phẩm"],
+    "Nhà thuốc": ["Danh sách nhà thuốc", "Tạo nhà thuốc"],
+    "Người dùng": ["Danh sách người dùng", "Tạo người dùng"],
+    "Nhà cung cấp": ["Danh sách nhà cung cấp", "Tạo nhà cung cấp"],
+    "Đơn đặt hàng": ["Danh sách đơn đặt hàng(PO)", "Tạo đơn đặt hàng(PO)"],
+    "Đơn hàng": ["Danh sách đơn hàng", "Tạo đơn hàng"],
+    "Lô hàng": ["Danh sách lô hàng", "Tạo lô hàng"],
+    "Phiếu nhập kho": ["Danh sách phiếu nhập", "Tạo phiếu nhập"],
+    "Phiếu xuất kho": ["Danh sách phiếu xuất", "Tạo phiếu xuất"],
+    "Kho" : ["Danh sách kho", "Tạo kho mới"]
 };
+
 
 interface SidebarProps {
     activeSidebar: string;
@@ -60,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                         >
                             <span className="flex items-center">
                                 {menuKey === "Sản phẩm" && <InboxStackIcon className="mr-[6px] w-4 h-4" />}
-                                {menuKey === "Khách hàng" && <UserIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Nhà thuốc" && <UserIcon className="mr-[6px] w-4 h-4" />}
                                 {menuKey === "Người dùng" && <UserIcon className="mr-[6px] w-4 h-4" />}
                                 {menuKey === "Nhà cung cấp" && <StoreIcon className="mr-[6px] w-4 h-4" />}
                                 {menuKey === "Đơn đặt hàng" && <PackageIcon className="mr-[6px] w-4 h-4" />}
@@ -68,6 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                                 {menuKey === "Lô hàng" && <ArchiveBoxIcon className="mr-[6px] w-4 h-4" />}
                                 {menuKey === "Phiếu nhập kho" && <ArrowRightEndOnRectangleIcon className="mr-[6px] w-4 h-4" />}
                                 {menuKey === "Phiếu xuất kho" && <ArrowRightStartOnRectangleIcon className="mr-[6px] w-4 h-4" />}
+                                {menuKey === "Kho" && <StoreIcon className="mr-[6px] w-4 h-4" />}
                                 {menuKey.charAt(0).toUpperCase() + menuKey.slice(1)}
                             </span>
                             <ChevronRightIcon className={`w-4 h-4 transition-transform ${openMenu === menuKey ? "rotate-90" : ""}`} />

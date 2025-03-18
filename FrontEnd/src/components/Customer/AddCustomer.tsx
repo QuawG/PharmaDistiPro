@@ -2,6 +2,16 @@ import { useState } from "react";
 
 export default function AddCustomer() {
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [customer, setCustomer] = useState({
+        firstName: '',
+        email: '',
+        phone: '',
+        address: '',
+        status: '',
+        password: '',
+        pharmacyCode: '',  // New field for Pharmacy Code
+        taxCode: '',       // New field for Tax Code
+    });
 
     const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -14,16 +24,29 @@ export default function AddCustomer() {
         }
     };
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setCustomer((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSubmit = () => {
+        // Handle form submission logic here
+        console.log('Customer data:', customer);
+    };
+
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden p-5 w-full mt-[60px]">
+        <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Tạo khách hàng</h1>
-                <p className="text-sm text-gray-500">Tạo khách hàng mới</p>
+                <h1 className="text-xl font-semibold text-gray-900">Tạo nhà thuốc</h1>
+                <p className="text-sm text-gray-500">Tạo nhà thuốc mới</p>
             </div>
 
             {/* Form */}
-            <div className="space-y-6 p-5 w-full bg-gray-100 rounded-lg">
+            <div className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
                 {/* Row for Avatar */}
                 <div className="flex items-center space-x-4 mb-6">
                     <label className="block text-sm text-gray-700 font-medium">Avatar</label>
@@ -41,69 +64,111 @@ export default function AddCustomer() {
                 )}
 
                 {/* Form Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+
                     <div className="space-y-1">
-                        <label className="block text-sm text-gray-700 font-medium">Tên khách hàng</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Tên nhà thuốc</label>
                         <input
                             type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên khách hàng"
+                            name="firstName"
+                            value={customer.firstName}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập tên nhà thuốc"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-sm text-gray-700 font-medium">Email</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Email</label>
                         <input
                             type="email"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            name="email"
+                            value={customer.email}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Nhập Email"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-sm text-gray-700 font-medium">Số điện thoại</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Số điện thoại</label>
                         <input
                             type="tel"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            name="phone"
+                            value={customer.phone}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Nhập số điện thoại"
                         />
                     </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
                     <div className="space-y-1">
-                        <label className="block text-sm text-gray-700 font-medium">Địa chỉ</label>
+                        <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ</label>
                         <input
                             type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            name="address"
+                            value={customer.address}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Nhập địa chỉ"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Mã nhà thuốc</label>
+                        <input
+                            type="text"
+                            name="pharmacyCode"
+                            value={customer.pharmacyCode}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập mã nhà thuốc"
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <label className="block text-sm text-gray-700 font-medium">Trạng thái</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        <label className="block text-[14px] mb-2 text-gray-700">Mã số thuế</label>
+                        <input
+                            type="text"
+                            name="taxCode"
+                            value={customer.taxCode}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập mã số thuế"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
+                        <select
+                            name="status"
+                            value={customer.status}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
                             <option value="">Chọn trạng thái</option>
                             <option value="active">Hoạt động</option>
                             <option value="inactive">Không hoạt động</option>
                         </select>
                     </div>
-                </div>
 
-                <div className="space-y-1">
-                    <label className="block text-sm text-gray-700 font-medium">Mật khẩu</label>
-                    <input
-                        type="password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Nhập mật khẩu"
-                    />
+                    <div className="space-y-1">
+                        <label className="block text-[14px] mb-2 text-gray-700">Mật khẩu</label>
+                        <input
+                            type="password"
+                            name="password"
+                            value={customer.password}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Nhập mật khẩu"
+                        />
+                    </div>
                 </div>
 
                 {/* Buttons */}
                 <div className="flex gap-4">
                     <button
-                        type="submit"
+                        type="button"
+                        onClick={handleSubmit}
                         className="px-6 py-3 bg-blue-500 text-white rounded-md font-semibold text-sm hover:bg-blue-600 focus:ring-2 focus:ring-blue-500"
                     >
                         Lưu

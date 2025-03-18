@@ -92,7 +92,7 @@ const LotListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
   };
   
 
-  // Thêm mới lô hàng
+  // Tạo mới lô hàng
   
 
   return (
@@ -123,10 +123,10 @@ const LotListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
           </div>
         </div>
         <button 
-          onClick={() => handleChangePage("Thêm lô hàng")} 
+          onClick={() => handleChangePage("Tạo lô hàng")} 
           className="bg-orange-500 text-white px-3 py-2 mt-3 rounded-lg"
         >
-          + Thêm lô hàng
+          + Tạo lô hàng
         </button>
       </div>
 

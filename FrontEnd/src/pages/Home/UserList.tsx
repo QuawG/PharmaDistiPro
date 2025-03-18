@@ -3,24 +3,20 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import UserTable from '../../components/User/UserTable'; // Đảm bảo bạn đã tạo UserTable
-
-interface UserListPageProps {
-  handleChangePage: (page: string) => void;
-}
-
+import UserTable from '../../components/User/UserTable';
 interface User {
-    id: number;
-    avatar: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-    role: string;
-    employeeCode: string;
-    createdBy: string;
-    createdDate: string; 
+  id: number;
+  avatar: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  role: string;
+  employeeCode: string;
+  createdBy: string;
+  createdDate: string; 
+  status: string; // New field for status
 }
 
 const USERS_DATA: User[] = [
@@ -35,7 +31,8 @@ const USERS_DATA: User[] = [
     role: "Admin",
     employeeCode: "EMP001",
     createdBy: "Admin",
-    createdDate: "2023-01-01T00:00:00Z" 
+    createdDate: "2023-01-01T00:00:00Z",
+    status: "active" // New status field
   },
   {
     id: 2,
@@ -48,25 +45,53 @@ const USERS_DATA: User[] = [
     role: "User",
     employeeCode: "EMP002",
     createdBy: "Admin",
-    createdDate: "2023-01-02T00:00:00Z" 
+    createdDate: "2023-01-02T00:00:00Z",
+    status: "inactive" // New status field
+  },
+  {
+    id: 3,
+    firstName: "Nguyễn",
+    lastName: "Thị Bích",
+    avatar: "https://via.placeholder.com/150",
+    email: "nguyen.bich@example.com",
+    phone: "345-678-9012",
+    address: "789 Pine St",
+    role: "User",
+    employeeCode: "EMP003",
+    createdBy: "Admin",
+    createdDate: "2023-01-03T00:00:00Z",
+    status: "pending" // New status field
   }
 ];
 
-const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
+const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>(''); // State for status filter
   const [filteredUsers, setFilteredUsers] = useState<User[]>(USERS_DATA);
 
-  // Tìm kiếm người dùng
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    const filtered = USERS_DATA.filter(user =>
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(value.toLowerCase())
-    );
+    filterUsers(value, selectedStatus);
+  };
+
+  const filterUsers = (searchTerm: string, status: string) => {
+    const filtered = USERS_DATA.filter(user => {
+      const matchesFirstName = user.firstName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesLastName = user.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesEmail = user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = !status || user.status === status; 
+      return (matchesFirstName || matchesLastName || matchesEmail) && matchesStatus;
+    });
     setFilteredUsers(filtered);
   };
 
-  // Xuất file Excel
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const status = e.target.value;
+    setSelectedStatus(status);
+    filterUsers(searchTerm, status);
+  };
+
   const exportToExcel = () => {
     const excelData = filteredUsers.map(user => ({
       "ID": user.id,
@@ -76,6 +101,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
       "SĐT": user.phone,
       "Địa chỉ": user.address,
       "Vai trò": user.role,
+      "Trạng thái": user.status, // Include status in the export
       "Người tạo": user.createdBy,
       "Ngày tạo": user.createdDate,
     }));
@@ -92,11 +118,10 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
-      {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Danh sách người dùng</h1>
-          <p className="text-sm text-gray-500">Quản lí người dùng</p>
+          <p className="text-sm text-gray-500">Quản lý người dùng</p>
         </div>
         <button 
           onClick={() => handleChangePage('Tạo người dùng')}
@@ -126,6 +151,17 @@ const UserListPage: React.FC<UserListPageProps> = ({ handleChangePage }) => {
                 </svg>
               </span>
             </div>
+            {/* Dropdown for status filter */}
+            <select
+              value={selectedStatus}
+              onChange={handleStatusChange}
+              className="border rounded p-1"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Không hoạt động</option>
+              <option value="pending">Đang chờ</option>
+            </select>
           </div>
           <div className="flex gap-2">
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">

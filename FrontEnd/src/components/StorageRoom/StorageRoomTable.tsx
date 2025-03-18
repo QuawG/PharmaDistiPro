@@ -12,29 +12,22 @@ import {
 } from '@tanstack/react-table';
 import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import PurchaseOrderDetailsModal from './PurchaseOrderDetail'; 
-import UpdatePurchaseOrderDetailsModal from './UpdatePurchaseOrderDetail'; 
-import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
+import StorageRoomDetailsModal from './StorageRoomDetail'; 
+import UpdateStorageRoomDetailsModal from './UpdateStorageRoomDetail'; 
+import UpdateConfirm from '../Confirm/UpdateConfirm'; 
 
-interface PurchaseOrder {
-  purchaseOrderId: number;
-  purchaseOrderCode: string;
-  supplierName: string;
-  date: string;
-  goodsIssueDate: string;
-  totalAmount: number;
-  createdBy: string;
-  createdDate: string; 
-  status: string; // Thêm thuộc tính status
-  deliveryFee: number;
-  address: string;
+interface StorageRoom {
+  id: number; // ID
+  code: string; // Mã kho
+  name: string; // Tên kho
+  status: string; // Trạng thái
 }
 
-interface PurchaseOrderTableProps {
-  PURCHASE_ORDERS_DATA: PurchaseOrder[];
+interface StorageRoomTableProps {
+  STORAGE_ROOMS_DATA: StorageRoom[];
 }
 
-const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS_DATA }) => {
+const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ STORAGE_ROOMS_DATA }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState<string>('');
@@ -43,47 +36,47 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
-  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<StorageRoom | null>(null);
   const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
-    // Thực hiện xóa đơn hàng ở đây
+    // Thực hiện xóa kho ở đây
   };
 
-  const handleSave = (updatedOrder: PurchaseOrder) => {
-    console.log('Order saved:', updatedOrder);
-    // Cập nhật danh sách đơn hàng nếu cần
+  const handleSave = (updatedRoom: StorageRoom) => {
+    console.log('Room saved:', updatedRoom);
+    // Cập nhật danh sách kho nếu cần
   };
 
-  const handleViewDetail = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
+  const handleViewDetail = (room: StorageRoom) => {
+    setSelectedRoom(room);
     setIsViewModalOpen(true);
   };
 
-  const handleEdit = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
+  const handleEdit = (room: StorageRoom) => {
+    setSelectedRoom(room);
     setIsEditModalOpen(true); 
   };
 
   const handleStatusChange = (index: number, newStatus: string) => {
-    setSelectedOrder(PURCHASE_ORDERS_DATA[index]); 
+    setSelectedRoom(STORAGE_ROOMS_DATA[index]); 
     setNewStatus(newStatus); 
     setIsConfirmModalOpen(true); // Mở modal xác nhận
   };
 
   const confirmStatusChange = () => {
-    // Cập nhật trạng thái đơn hàng ở đây
-    const updatedOrders = [...PURCHASE_ORDERS_DATA];
-    const index = updatedOrders.findIndex(order => order.purchaseOrderId === selectedOrder?.purchaseOrderId);
+    // Cập nhật trạng thái kho ở đây
+    const updatedRooms = [...STORAGE_ROOMS_DATA];
+    const index = updatedRooms.findIndex(room => room.id === selectedRoom?.id);
     if (index !== -1) {
-      updatedOrders[index].status = newStatus;
-      // Cập nhật lại dữ liệu đơn hàng nếu cần
+      updatedRooms[index].status = newStatus;
+      // Cập nhật lại dữ liệu kho nếu cần
     }
     setIsConfirmModalOpen(false);
   };
 
-  const columns: ColumnDef<PurchaseOrder>[] = [
+  const columns: ColumnDef<StorageRoom>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -104,23 +97,21 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
       ),
       enableSorting: false,
     },
-    { accessorKey: 'purchaseOrderId', header: 'ID Đơn Đặt Hàng' },
-    { accessorKey: 'purchaseOrderCode', header: 'Mã Đơn Đặt Hàng' },
-    { accessorKey: 'supplierName', header: 'Nhà Cung Cấp' },
-    { accessorKey: 'date', header: 'Ngày Đặt Hàng' },
-    { accessorKey: 'goodsIssueDate', header: 'Ngày Giao Hàng' },
+    { accessorKey: 'id', header: 'ID Kho' },
+    { accessorKey: 'code', header: 'Mã Kho' },
+    { accessorKey: 'name', header: 'Tên Kho' },
     {
       id: 'status',
       header: 'Trạng thái',
       cell: ({ row }) => (
         <select
-          value={row.original.status} // Đảm bảo giá trị này được liên kết với trạng thái của đơn hàng
+          value={row.original.status} // Đảm bảo giá trị này được liên kết với trạng thái của kho
           onChange={(e) => handleStatusChange(row.index, e.target.value)}
           className="border rounded p-1"
         >
-          <option value="Completed">Hoàn thành</option>
-          <option value="Pending">Đang chờ</option>
-          <option value="Cancelled">Đã hủy</option>
+          <option value="Hoạt động">Hoạt động</option>
+          <option value="Không hoạt động">Không hoạt động</option>
+          <option value="Đang chờ">Đang chờ</option>
         </select>
       ),
     },
@@ -144,7 +135,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
           <button
             className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
             onClick={() => {
-              setSelectedOrder(row.original);
+              setSelectedRoom(row.original);
               setIsDeleteModalOpen(true);
             }}
           >
@@ -157,7 +148,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
   ];
 
   const table = useReactTable({
-    data: PURCHASE_ORDERS_DATA,
+    data: STORAGE_ROOMS_DATA,
     columns,
     state: {
       sorting,
@@ -278,15 +269,15 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
       />
-      <PurchaseOrderDetailsModal 
+      <StorageRoomDetailsModal 
         isOpen={isViewModalOpen} 
         onClose={() => setIsViewModalOpen(false)} 
-        order={selectedOrder} 
+        room={selectedRoom} 
       />
-      <UpdatePurchaseOrderDetailsModal 
+      <UpdateStorageRoomDetailsModal 
         isOpen={isEditModalOpen} 
         onClose={() => setIsEditModalOpen(false)} 
-        order={selectedOrder} 
+        room={selectedRoom} 
         onSave={handleSave} 
       />
       
@@ -301,4 +292,4 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
   );
 };
 
-export default PurchaseOrderTable;
+export default StorageRoomTable;
