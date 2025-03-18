@@ -87,15 +87,15 @@ export default function UpdateCustomerDetail({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin khách hàng</h1>
-            <p className="text-sm text-gray-500">Cập nhật thông tin khách hàng ở form bên dưới</p>
+            <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin nhà thuốc</h1>
+            <p className="text-sm text-gray-500">Cập nhật thông tin nhà thuốc ở form bên dưới</p>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="border-[1px] border-gray-300 rounded-lg p-4">
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tên riêng</label>
+                  <label className="block text-sm font-medium text-gray-700">Tên nhà thuốc</label>
                   <input
                     type="text"
                     name="firstName"
@@ -105,7 +105,7 @@ export default function UpdateCustomerDetail({
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Mã khách hàng</label>
+                  <label className="block text-sm font-medium text-gray-700">Mã nhà thuốc</label>
                   <input
                     type="text"
                     name="employeeCode"

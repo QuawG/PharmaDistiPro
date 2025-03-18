@@ -14,7 +14,7 @@ import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
 import SupplierDetailsModal from './SupplierDetail'; 
 import UpdateSupplierDetailsModal from './UpdateSupplierDetail'; 
-import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
+import UpdateConfirm from '../Confirm/UpdateConfirm'; 
 
 interface Supplier {
   supplierId: number;
@@ -47,14 +47,14 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
     // Thực hiện xóa nhà cung cấp ở đây
   };
 
-  const handleSave = (updatedSupplier: any) => {
+  const handleSave = (updatedSupplier: Supplier) => {
     console.log('Supplier saved:', updatedSupplier);
     // Cập nhật danh sách nhà cung cấp nếu cần
   };
 
   const handleViewDetail = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
-    setIsViewModalOpen(true); // Mở modal xem chi tiết
+    setIsViewModalOpen(true);
   };
 
   const handleEdit = (supplier: Supplier) => {
@@ -112,9 +112,9 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
           onChange={(e) => handleStatusChange(row.index, e.target.value)}
           className="border rounded p-1"
         >
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-          <option value="pending">Đang chờ</option>
+          <option value="Active">Hoạt động</option>
+          <option value="Inactive">Không hoạt động</option>
+          <option value="Pending">Đang chờ</option>
         </select>
       ),
     },
@@ -137,7 +137,10 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
           </button>
           <button
             className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
-            onClick={() => setIsDeleteModalOpen(true)}
+            onClick={() => {
+              setSelectedSupplier(row.original);
+              setIsDeleteModalOpen(true);
+            }}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -270,18 +273,17 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
         onConfirm={handleDelete}
       />
       <SupplierDetailsModal 
-        isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
-        supplier={selectedSupplier} // Truyền supplier vào modal
+        isOpen={isViewModalOpen} 
+        onClose={() => setIsViewModalOpen(false)} 
+        supplier={selectedSupplier} 
       />
       <UpdateSupplierDetailsModal 
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
         supplier={selectedSupplier} 
         onSave={handleSave} 
       />
       
-      {/* Modal xác nhận */}
       <UpdateConfirm
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}

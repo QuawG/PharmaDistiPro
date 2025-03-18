@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-export default function CustomerDetail({
+export default function StorageRoomDetail({
   isOpen,
   onClose,
-  customer,
+  room,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  customer: any;
+  room: any;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -53,78 +53,53 @@ export default function CustomerDetail({
 
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Thông tin nhà thuốc</h1>
-            <p className="text-sm text-gray-500">Xem thông tin nhà thuốc ở dưới đây</p>
+            <h1 className="text-xl font-semibold text-gray-900">Thông tin kho hàng</h1>
+            <p className="text-sm text-gray-500">Xem thông tin kho hàng ở dưới đây</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border-[1px] border-gray-300 rounded-lg p-4">
+          <div className="flex justify-center">
+            <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
+              {/* Thông tin kho hàng */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tên nhà thuốc</label>
+                <label className="block text-sm font-medium text-gray-700">Mã kho</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.firstName || "N/A"}
+                  {room?.code || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Mã nhà thuốc</label>
+                <label className="block text-sm font-medium text-gray-700">Tên kho</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.employeeCode || "N/A"}
+                  {room?.name || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.email || "N/A"}
+                  {room?.status || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                <label className="block text-sm font-medium text-gray-700">Nhiệt độ (°C)</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.phone || "N/A"}
+                  {room?.temperature || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                <label className="block text-sm font-medium text-gray-700">Độ ẩm (%)</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.address || "N/A"}
+                  {room?.humidity || "N/A"}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Mã số thuế</label>
+                <label className="block text-sm font-medium text-gray-700">Sức chứa</label>
                 <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                  {customer?.taxCode || "N/A"}
+                  {room?.capacity || "N/A"}
                 </div>
-              </div>
-            </div>
-
-            {/* User Avatar */}
-            <div className="flex flex-col items-center justify-center border-[1px] border-gray-300 rounded-lg p-4">
-              <img
-                src={customer?.avatar || "https://via.placeholder.com/150"}
-                alt="Customer Avatar"
-                className="w-32 h-32 rounded-full border border-gray-300"
-              />
-              <div className="mt-2 text-center text-sm text-gray-600">
-                {customer?.firstName || "Unknown"} {customer?.employeeCode || ""}
               </div>
             </div>
           </div>
 
-          <div className="mt-4">
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
-              <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                {customer?.createdBy || "N/A"}
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
-              <div className="mt-1 border rounded p-2 w-full bg-gray-100">
-                {customer?.createdDate || "N/A"}
-              </div>
-            </div>
-          </div>
-
+          {/* Nút Đóng */}
           <div className="flex justify-end mt-4">
             <button type="button" onClick={onClose} className="border rounded p-2">Đóng</button>
           </div>
