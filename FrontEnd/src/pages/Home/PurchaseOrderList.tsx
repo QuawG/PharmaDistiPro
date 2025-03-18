@@ -1,133 +1,140 @@
 import React, { useState } from 'react';
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import UserTable from '../../components/User/UserTable';
+import * as XLSX from 'xlsx';
+import PurchaseOrderTable from '../../components/PurchaseOrder/PurchaseOrderTable';
 
-interface User {
-  id: number;
-  avatar: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  role: string;
-  employeeCode: string;
+interface PurchaseOrder {
+  purchaseOrderId: number;
+  purchaseOrderCode: string;
+  supplierName: string;
+  date: string;
+  goodsIssueDate: string;
+  totalAmount: number;
   createdBy: string;
-  createdDate: string; 
-  status: string; // New field for status
+  createdDate: string;
+  status: string; // Thêm thuộc tính status
+  deliveryFee: number;
+  address: string;
 }
 
-const USERS_DATA: User[] = [
+interface PurchaseOrderListPageProps {
+  handleChangePage: (page: string) => void;
+}
+
+const PURCHASE_ORDERS_DATA: PurchaseOrder[] = [
   {
-    id: 1,
-    firstName: "John",
-    lastName: "Doe",
-    avatar: "https://via.placeholder.com/150",
-    email: "john@example.com",
-    phone: "123-456-7890",
+    purchaseOrderId: 1,
+    purchaseOrderCode: "PO-001",
+    supplierName: "Supplier A",
+    date: "2025-01-10",
+    goodsIssueDate: "2025-01-15",
+    totalAmount: 1500,
+    createdBy: "Admin",
+    createdDate: "2025-01-10T00:00:00Z",
+    status: "Completed",
+    deliveryFee: 50,
     address: "123 Main St",
-    role: "Admin",
-    employeeCode: "EMP001",
-    createdBy: "Admin",
-    createdDate: "2023-01-01T00:00:00Z",
-    status: "active" // New status field
   },
   {
-    id: 2,
-    firstName: "Jane",
-    lastName: "Smith",
-    avatar: "https://via.placeholder.com/150",
-    email: "jane@example.com",
-    phone: "234-567-8901",
-    address: "456 Maple Ave",
-    role: "User",
-    employeeCode: "EMP002",
+    purchaseOrderId: 2,
+    purchaseOrderCode: "PO-002",
+    supplierName: "Supplier B",
+    date: "2025-01-11",
+    goodsIssueDate: "2025-01-16",
+    totalAmount: 2000,
     createdBy: "Admin",
-    createdDate: "2023-01-02T00:00:00Z",
-    status: "inactive" // New status field
+    createdDate: "2025-01-11T00:00:00Z",
+    status: "Pending",
+    deliveryFee: 75,
+    address: "456 Elm St",
   },
   {
-    id: 3,
-    firstName: "Nguyễn",
-    lastName: "Thị Bích",
-    avatar: "https://via.placeholder.com/150",
-    email: "nguyen.bich@example.com",
-    phone: "345-678-9012",
-    address: "789 Pine St",
-    role: "User",
-    employeeCode: "EMP003",
+    purchaseOrderId: 3,
+    purchaseOrderCode: "PO-003",
+    supplierName: "Supplier B",
+    date: "2025-02-14",
+    goodsIssueDate: "2025-02-16",
+    totalAmount: 2000,
     createdBy: "Admin",
-    createdDate: "2023-01-03T00:00:00Z",
-    status: "pending" // New status field
+    createdDate: "2025-01-14T00:00:00Z",
+    status: "Pending",
+    deliveryFee: 75,
+    address: "456 Elm St",
+  },
+  {
+    purchaseOrderId: 4,
+    purchaseOrderCode: "PO-004",
+    supplierName: "Supplier C",
+    date: "2025-03-14",
+    goodsIssueDate: "2025-03-16",
+    totalAmount: 2000,
+    createdBy: "Admin",
+    createdDate: "2025-03-14T00:00:00Z",
+    status: "Completed",
+    deliveryFee: 75,
+    address: "456 Elm St",
   }
 ];
 
-const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
+const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>(''); // State for status filter
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(USERS_DATA);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>(''); // Thêm trạng thái được chọn
+  const [filteredOrders, setFilteredOrders] = useState<PurchaseOrder[]>(PURCHASE_ORDERS_DATA);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    filterUsers(value, selectedStatus);
+    filterOrders(value, startDate, endDate, selectedStatus);
   };
 
-  const filterUsers = (searchTerm: string, status: string) => {
-    const filtered = USERS_DATA.filter(user => {
-      const matchesFirstName = user.firstName.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLastName = user.lastName.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesEmail = user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = !status || user.status === status; 
-      return (matchesFirstName || matchesLastName || matchesEmail) && matchesStatus;
+  const filterOrders = (searchTerm: string, startDate: string, endDate: string, status: string) => {
+    const filtered = PURCHASE_ORDERS_DATA.filter(order => {
+      const matchesCode = order.purchaseOrderCode.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSupplier = order.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const orderDate = new Date(order.date);
+      const isWithinDateRange =
+        (!startDate && !endDate) ||
+        (orderDate >= new Date(startDate) && orderDate <= new Date(endDate));
+
+      const matchesStatus = !status || order.status === status; // Kiểm tra trạng thái
+
+      return (matchesCode || matchesSupplier) && isWithinDateRange && matchesStatus;
     });
-    setFilteredUsers(filtered);
+    setFilteredOrders(filtered);
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const status = e.target.value;
     setSelectedStatus(status);
-    filterUsers(searchTerm, status);
+    filterOrders(searchTerm, startDate, endDate, status);
   };
 
+  // 📤 Xuất danh sách đơn hàng ra Excel
   const exportToExcel = () => {
-    const excelData = filteredUsers.map(user => ({
-      "ID": user.id,
-      "Họ tên": `${user.firstName} ${user.lastName}`,
-      "Mã NV": user.employeeCode,
-      "Email": user.email,
-      "SĐT": user.phone,
-      "Địa chỉ": user.address,
-      "Vai trò": user.role,
-      "Trạng thái": user.status, // Include status in the export
-      "Người tạo": user.createdBy,
-      "Ngày tạo": user.createdDate,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const worksheet = XLSX.utils.json_to_sheet(filteredOrders);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachNguoiDung");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PurchaseOrders");
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
-
-    saveAs(data, "DanhSachNguoiDung.xlsx");
+    // Xuất file
+    XLSX.writeFile(workbook, "PurchaseOrders.xlsx");
   };
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
+      {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Danh sách người dùng</h1>
-          <p className="text-sm text-gray-500">Quản lý người dùng</p>
+          <h1 className="text-xl font-semibold text-gray-900">Danh sách đơn đặt hàng (PO)</h1>
+          <p className="text-sm text-gray-500">Quản lý đơn đặt hàng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Tạo người dùng')}
+          onClick={() => handleChangePage('Tạo đơn đặt hàng(PO)')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Tạo người dùng mới
+          <PlusIcon className='w-5 h-5 font-bold'/> Tạo đơn đặt hàng mới
         </button>
       </div>
 
@@ -141,7 +148,7 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder="Tìm kiếm..."
+                placeholder="Search..."
                 className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -152,23 +159,46 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
                 </svg>
               </span>
             </div>
-            {/* Dropdown for status filter */}
-            <select
-              value={selectedStatus}
-              onChange={handleStatusChange}
-              className="border rounded p-1"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Không hoạt động</option>
-              <option value="pending">Đang chờ</option>
-            </select>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  filterOrders(searchTerm, e.target.value, endDate, selectedStatus);
+                }}
+                className="border rounded p-1"
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  filterOrders(searchTerm, startDate, e.target.value, selectedStatus);
+                }}
+                className="border rounded p-1"
+              />
+              {/* Dropdown cho trạng thái */}
+              <select
+                value={selectedStatus}
+                onChange={handleStatusChange}
+                className="border rounded p-1"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="Completed">Hoạt động</option>
+                <option value="Inactive">Không hoạt động</option>
+                <option value="Pending">Đang chờ</option>
+              </select>
+            </div>
           </div>
           <div className="flex gap-2">
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <FileText className="w-5 h-5" />
             </button>
-            <button onClick={exportToExcel} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
+            <button 
+              className="p-2 text-green-500 hover:bg-green-50 rounded-lg"
+              onClick={exportToExcel}
+            >
               <Table className="w-5 h-5" />
             </button>
             <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
@@ -178,10 +208,10 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
         </div>
 
         {/* Table */}
-        <UserTable USERS_DATA={filteredUsers} />
+        <PurchaseOrderTable PURCHASE_ORDERS_DATA={filteredOrders} />
       </div>
     </div>
   );
 };
 
-export default UserListPage;
+export default PurchaseOrderListPage;
