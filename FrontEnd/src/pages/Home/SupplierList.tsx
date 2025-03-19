@@ -1,13 +1,8 @@
-import React, { useState } from 'react'; 
-// import { FileText, Table, Printer, FileSpreadsheet } from 'lucide-react';
+import React, { useState } from 'react';
 import { FileText, Table, Printer } from 'lucide-react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import * as XLSX from 'xlsx';
 import SupplierTable from '../../components/Supplier/SupplierTable'; 
-
-interface SupplierListPageProps {
-  handleChangePage: (page: string) => void;
-}
 
 interface Supplier {
   supplierId: number;
@@ -16,6 +11,7 @@ interface Supplier {
   phone: string;
   createdBy: string;
   createdDate: string; 
+  status: string; // New field for status
 }
 
 const SUPPLIERS_DATA: Supplier[] = [
@@ -25,7 +21,8 @@ const SUPPLIERS_DATA: Supplier[] = [
     address: "123 Supplier St",
     phone: "123-456-7890",
     createdBy: "Admin",
-    createdDate: "2023-01-01T00:00:00Z"
+    createdDate: "2023-01-01T00:00:00Z",
+    status: "Active" // New status field
   },
   {
     supplierId: 2,
@@ -33,22 +30,35 @@ const SUPPLIERS_DATA: Supplier[] = [
     address: "456 Supplier Ave",
     phone: "234-567-8901",
     createdBy: "Admin",
-    createdDate: "2023-01-02T00:00:00Z"
+    createdDate: "2023-01-02T00:00:00Z",
+    status: "Inactive" // New status field
   },
 ];
 
-const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage }) => {
+const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>(''); // State for selected status
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>(SUPPLIERS_DATA);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
+    filterSuppliers(value, selectedStatus);
+  };
 
-    const filtered = SUPPLIERS_DATA.filter(supplier =>
-      supplier.name.toLowerCase().includes(value.toLowerCase())
-    );
+  const filterSuppliers = (searchTerm: string, status: string) => {
+    const filtered = SUPPLIERS_DATA.filter(supplier => {
+      const matchesName = supplier.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = !status || supplier.status === status; 
+      return matchesName && matchesStatus;
+    });
     setFilteredSuppliers(filtered);
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const status = e.target.value;
+    setSelectedStatus(status);
+    filterSuppliers(searchTerm, status);
   };
 
   const exportToExcel = () => {
@@ -83,7 +93,7 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Tìm kiếm..."
                 className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -94,13 +104,22 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
                 </svg>
               </span>
             </div>
+            {/* Dropdown for status */}
+            <select
+              value={selectedStatus}
+              onChange={handleStatusChange}
+              className="border rounded p-1"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="Active">Hoạt động</option>
+              <option value="Inactive">Không hoạt động</option>
+            </select>
           </div>
           <div className="flex gap-2">
-            
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <FileText className="w-5 h-5" />
             </button>
-            <button  onClick={exportToExcel} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
+            <button onClick={exportToExcel} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
               <Table className="w-5 h-5" />
             </button>
             <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">

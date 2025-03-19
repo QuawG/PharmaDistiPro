@@ -84,7 +84,7 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
 
   return (
     <div className="p-6 mt-16 overflow-auto w-full bg-gray-100">
-      <h1 className="text-xl font-semibold text-gray-900">Thêm mới lô hàng</h1>
+      <h1 className="text-xl font-semibold text-gray-900">Tạo mới lô hàng</h1>
 
       <div className="bg-white rounded-lg shadow p-5">
         {error && <p className="text-red-500">{error}</p>}

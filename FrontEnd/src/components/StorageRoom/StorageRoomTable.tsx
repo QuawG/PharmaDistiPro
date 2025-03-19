@@ -12,69 +12,71 @@ import {
 } from '@tanstack/react-table';
 import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
 import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import UserDetailsModal from './UserDetail'; 
-import UpdateUserDetailsModal from './UpdateUserDetail'; 
-import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
+import StorageRoomDetailsModal from './StorageRoomDetail'; 
+import UpdateStorageRoomDetailsModal from './UpdateStorageRoomDetail'; 
+import UpdateConfirm from '../Confirm/UpdateConfirm'; 
 
-interface User {
-  id: number;
-  avatar: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  role: string;
-  employeeCode: string;
-  createdBy: string;
-  createdDate: string; 
-  status: string; // Thêm thuộc tính status
+interface StorageRoom {
+  id: number; // ID
+  code: string; // Mã kho
+  name: string; // Tên kho
+  status: string; // Trạng thái
 }
 
-interface UserTableProps {
-  USERS_DATA: User[];
+interface StorageRoomTableProps {
+  STORAGE_ROOMS_DATA: StorageRoom[];
 }
 
-const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
+const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ STORAGE_ROOMS_DATA }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<StorageRoom | null>(null);
   const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
-
-  const handleSave = (updatedUser: User) => {
-    console.log('User updated:', updatedUser);
-    // Cập nhật danh sách người dùng nếu cần
-  };
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
-    // Logic xóa người dùng
+    // Thực hiện xóa kho ở đây
+  };
+
+  const handleSave = (updatedRoom: StorageRoom) => {
+    console.log('Room saved:', updatedRoom);
+    // Cập nhật danh sách kho nếu cần
+  };
+
+  const handleViewDetail = (room: StorageRoom) => {
+    setSelectedRoom(room);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEdit = (room: StorageRoom) => {
+    setSelectedRoom(room);
+    setIsEditModalOpen(true); 
   };
 
   const handleStatusChange = (index: number, newStatus: string) => {
-    setSelectedUser(USERS_DATA[index]); // Lưu người dùng được chọn
-    setNewStatus(newStatus); // Lưu trạng thái mới
+    setSelectedRoom(STORAGE_ROOMS_DATA[index]); 
+    setNewStatus(newStatus); 
     setIsConfirmModalOpen(true); // Mở modal xác nhận
   };
 
   const confirmStatusChange = () => {
-    // Cập nhật trạng thái người dùng ở đây
-    const updatedUsers = [...USERS_DATA];
-    const index = updatedUsers.findIndex(user => user.id === selectedUser?.id);
+    // Cập nhật trạng thái kho ở đây
+    const updatedRooms = [...STORAGE_ROOMS_DATA];
+    const index = updatedRooms.findIndex(room => room.id === selectedRoom?.id);
     if (index !== -1) {
-      updatedUsers[index].status = newStatus;
-      // Cập nhật lại dữ liệu người dùng nếu cần
+      updatedRooms[index].status = newStatus;
+      // Cập nhật lại dữ liệu kho nếu cần
     }
     setIsConfirmModalOpen(false);
   };
 
-  const columns: ColumnDef<User>[] = [
+  const columns: ColumnDef<StorageRoom>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -95,33 +97,21 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
       ),
       enableSorting: false,
     },
-    {
-      id: 'avatar',
-      header: 'Ảnh đại diện',
-      cell: ({ row }) => (
-        <img src={row.original.avatar} alt={`${row.original.firstName} ${row.original.lastName}`} className="w-28 h-20" />
-      ),
-      enableSorting: false,
-    },
-    { accessorKey: 'firstName', header: 'Tên riêng' },
-    { accessorKey: 'lastName', header: 'Tên họ' },
-    { accessorKey: 'email', header: 'Email' },
-    { 
-      accessorKey: 'role', // Thêm cột role
-      header: 'Vai trò', // Tiêu đề cột
-    },
+    { accessorKey: 'id', header: 'ID Kho' },
+    { accessorKey: 'code', header: 'Mã Kho' },
+    { accessorKey: 'name', header: 'Tên Kho' },
     {
       id: 'status',
       header: 'Trạng thái',
       cell: ({ row }) => (
         <select
-          value={row.original.status}
+          value={row.original.status} // Đảm bảo giá trị này được liên kết với trạng thái của kho
           onChange={(e) => handleStatusChange(row.index, e.target.value)}
           className="border rounded p-1"
         >
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-          <option value="pending">Đang chờ</option>
+          <option value="Hoạt động">Hoạt động</option>
+          <option value="Không hoạt động">Không hoạt động</option>
+          <option value="Đang chờ">Đang chờ</option>
         </select>
       ),
     },
@@ -130,13 +120,25 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
       header: 'Tính năng',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button className="cursor-pointer p-1 hover:bg-gray-50 rounded text-blue-500" onClick={() => handleView(row.original)}>
+          <button
+            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
+            onClick={() => handleViewDetail(row.original)}
+          >
             <Eye className="w-4 h-4" />
           </button>
-          <button className="cursor-pointer p-1 hover:bg-blue-50 rounded text-green-500" onClick={() => handleEdit(row.original)}>
+          <button
+            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
+            onClick={() => handleEdit(row.original)}
+          >
             <Pencil className="w-4 h-4" />
           </button>
-          <button className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500" onClick={() => setIsDeleteModalOpen(true)}>
+          <button
+            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
+            onClick={() => {
+              setSelectedRoom(row.original);
+              setIsDeleteModalOpen(true);
+            }}
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -145,18 +147,8 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
     },
   ];
 
-  const handleEdit = (user: User) => {
-    setSelectedUser(user);
-    setIsEditModalOpen(true);
-  };
-
-  const handleView = (user: User) => {
-    setSelectedUser(user);
-    setIsUserDetailModalOpen(true); // Mở modal chi tiết
-  };
-
   const table = useReactTable({
-    data: USERS_DATA,
+    data: STORAGE_ROOMS_DATA,
     columns,
     state: {
       sorting,
@@ -277,15 +269,15 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
       />
-      <UserDetailsModal 
-        isOpen={isUserDetailModalOpen} 
-        onClose={() => setIsUserDetailModalOpen(false)}
-        user={selectedUser} 
+      <StorageRoomDetailsModal 
+        isOpen={isViewModalOpen} 
+        onClose={() => setIsViewModalOpen(false)} 
+        room={selectedRoom} 
       />
-      <UpdateUserDetailsModal 
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        user={selectedUser} 
+      <UpdateStorageRoomDetailsModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        room={selectedRoom} 
         onSave={handleSave} 
       />
       
@@ -300,4 +292,4 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
   );
 };
 
-export default UserTable;
+export default StorageRoomTable;

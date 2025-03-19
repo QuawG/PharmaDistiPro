@@ -5,17 +5,17 @@ import * as XLSX from 'xlsx';
 import PurchaseOrderTable from '../../components/PurchaseOrder/PurchaseOrderTable';
 
 interface PurchaseOrder {
-    purchaseOrderId: number;
-    purchaseOrderCode: string;
-    supplierName: string;
-    date: string;
-    goodsIssueDate: string;
-    totalAmount: number;
-    createdBy: string;
-    createdDate: string;
-    status: string;
-    deliveryFee: number;
-    address: string;
+  purchaseOrderId: number;
+  purchaseOrderCode: string;
+  supplierName: string;
+  date: string;
+  goodsIssueDate: string;
+  totalAmount: number;
+  createdBy: string;
+  createdDate: string;
+  status: string; // Thêm thuộc tính status
+  deliveryFee: number;
+  address: string;
 }
 
 interface PurchaseOrderListPageProps {
@@ -27,11 +27,11 @@ const PURCHASE_ORDERS_DATA: PurchaseOrder[] = [
     purchaseOrderId: 1,
     purchaseOrderCode: "PO-001",
     supplierName: "Supplier A",
-    date: "2023-01-10",
-    goodsIssueDate: "2023-01-15",
+    date: "2025-01-10",
+    goodsIssueDate: "2025-01-15",
     totalAmount: 1500,
     createdBy: "Admin",
-    createdDate: "2023-01-10T00:00:00Z",
+    createdDate: "2025-01-10T00:00:00Z",
     status: "Completed",
     deliveryFee: 50,
     address: "123 Main St",
@@ -40,12 +40,38 @@ const PURCHASE_ORDERS_DATA: PurchaseOrder[] = [
     purchaseOrderId: 2,
     purchaseOrderCode: "PO-002",
     supplierName: "Supplier B",
-    date: "2023-01-11",
-    goodsIssueDate: "2023-01-16",
+    date: "2025-01-11",
+    goodsIssueDate: "2025-01-16",
     totalAmount: 2000,
     createdBy: "Admin",
-    createdDate: "2023-01-11T00:00:00Z",
+    createdDate: "2025-01-11T00:00:00Z",
     status: "Pending",
+    deliveryFee: 75,
+    address: "456 Elm St",
+  },
+  {
+    purchaseOrderId: 3,
+    purchaseOrderCode: "PO-003",
+    supplierName: "Supplier B",
+    date: "2025-02-14",
+    goodsIssueDate: "2025-02-16",
+    totalAmount: 2000,
+    createdBy: "Admin",
+    createdDate: "2025-01-14T00:00:00Z",
+    status: "Pending",
+    deliveryFee: 75,
+    address: "456 Elm St",
+  },
+  {
+    purchaseOrderId: 4,
+    purchaseOrderCode: "PO-004",
+    supplierName: "Supplier C",
+    date: "2025-03-14",
+    goodsIssueDate: "2025-03-16",
+    totalAmount: 2000,
+    createdBy: "Admin",
+    createdDate: "2025-03-14T00:00:00Z",
+    status: "Completed",
     deliveryFee: 75,
     address: "456 Elm St",
   }
@@ -53,16 +79,38 @@ const PURCHASE_ORDERS_DATA: PurchaseOrder[] = [
 
 const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>(''); // Thêm trạng thái được chọn
   const [filteredOrders, setFilteredOrders] = useState<PurchaseOrder[]>(PURCHASE_ORDERS_DATA);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    const filtered = PURCHASE_ORDERS_DATA.filter(order =>
-      order.purchaseOrderCode.toLowerCase().includes(value.toLowerCase()) ||
-      order.supplierName.toLowerCase().includes(value.toLowerCase())
-    );
+    filterOrders(value, startDate, endDate, selectedStatus);
+  };
+
+  const filterOrders = (searchTerm: string, startDate: string, endDate: string, status: string) => {
+    const filtered = PURCHASE_ORDERS_DATA.filter(order => {
+      const matchesCode = order.purchaseOrderCode.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSupplier = order.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const orderDate = new Date(order.date);
+      const isWithinDateRange =
+        (!startDate && !endDate) ||
+        (orderDate >= new Date(startDate) && orderDate <= new Date(endDate));
+
+      const matchesStatus = !status || order.status === status; // Kiểm tra trạng thái
+
+      return (matchesCode || matchesSupplier) && isWithinDateRange && matchesStatus;
+    });
     setFilteredOrders(filtered);
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const status = e.target.value;
+    setSelectedStatus(status);
+    filterOrders(searchTerm, startDate, endDate, status);
   };
 
   // 📤 Xuất danh sách đơn hàng ra Excel
@@ -84,7 +132,7 @@ const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleCha
           <p className="text-sm text-gray-500">Quản lý đơn đặt hàng</p>
         </div>
         <button 
-          onClick={() => handleChangePage('Tạo đơn đặt hàng (PO)')}
+          onClick={() => handleChangePage('Tạo đơn đặt hàng(PO)')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
           <PlusIcon className='w-5 h-5 font-bold'/> Tạo đơn đặt hàng mới
         </button>
@@ -111,6 +159,37 @@ const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleCha
                 </svg>
               </span>
             </div>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  filterOrders(searchTerm, e.target.value, endDate, selectedStatus);
+                }}
+                className="border rounded p-1"
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  filterOrders(searchTerm, startDate, e.target.value, selectedStatus);
+                }}
+                className="border rounded p-1"
+              />
+              {/* Dropdown cho trạng thái */}
+              <select
+                value={selectedStatus}
+                onChange={handleStatusChange}
+                className="border rounded p-1"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="Completed">Hoạt động</option>
+                <option value="Inactive">Không hoạt động</option>
+                <option value="Pending">Đang chờ</option>
+              </select>
+            </div>
           </div>
           <div className="flex gap-2">
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
@@ -118,7 +197,7 @@ const PurchaseOrderListPage: React.FC<PurchaseOrderListPageProps> = ({ handleCha
             </button>
             <button 
               className="p-2 text-green-500 hover:bg-green-50 rounded-lg"
-              onClick={exportToExcel} // ⬅️ Gọi hàm xuất Excel khi nhấn vào nút này
+              onClick={exportToExcel}
             >
               <Table className="w-5 h-5" />
             </button>

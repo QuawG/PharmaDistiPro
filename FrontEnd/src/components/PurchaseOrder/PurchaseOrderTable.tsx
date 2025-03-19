@@ -114,13 +114,13 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS
       header: 'Trạng thái',
       cell: ({ row }) => (
         <select
-          value={row.original.status}
+          value={row.original.status} // Đảm bảo giá trị này được liên kết với trạng thái của đơn hàng
           onChange={(e) => handleStatusChange(row.index, e.target.value)}
           className="border rounded p-1"
         >
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-          <option value="pending">Đang chờ</option>
+          <option value="Completed">Hoàn thành</option>
+          <option value="Pending">Đang chờ</option>
+          <option value="Cancelled">Đã hủy</option>
         </select>
       ),
     },

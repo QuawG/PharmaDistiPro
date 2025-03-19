@@ -12,7 +12,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     status: "active",
     description: "",
     image: null as File | null,
-    VAT: "", // Thêm trường VAT
+    VAT: "", // Tạo trường VAT
   });
   
 
@@ -47,7 +47,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     if (!validateForm()) return;
 
     console.log("Form Data:", formData);
-    alert("Add Successfully"); // Thông báo khi thêm sản phẩm thành công
+    alert("Add Successfully"); // Thông báo khi Tạo sản phẩm thành công
     handleChangePage("Danh sách sản phẩm"); // Chuyển về danh sách sản phẩm
   };
 
@@ -55,7 +55,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Thêm sản phẩm</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Tạo sản phẩm</h1>
         <p className="text-sm text-gray-500">Tạo sản phẩm mới</p>
       </div>
 
@@ -184,32 +184,29 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
                       d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
                       strokeWidth={2}
                       strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                    >
-                      <span>Chọn file</span>
-                      <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} />
-                    </label>
-                    <p className="pl-1">hoặc kéo thả</p>
-                  </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF tới 10MB</p>
-                </>
-              )}
+                      strokeLinejoin="round"/>
+                      </svg>
+                      <div className="flex text-sm text-gray-600">
+                        <label
+                          htmlFor="file-upload"
+                          className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                        >
+                          <span>Chọn file</span>
+                          <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} />
+                        </label>
+                        <p className="pl-1">hoặc kéo thả</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF tới 10MB</p>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-
-
-        {/* Buttons */}
+             {/* Buttons */}
         <div className="flex gap-4">
           <button type="submit" className="px-9 py-3.5 bg-amber-500 text-white rounded-sm font-bold text-sm">Lưu</button>
           <button type="button" onClick={() => handleChangePage("Danh sách sản phẩm")} className="px-9 py-3.5 bg-gray-500 text-white rounded-sm font-bold text-sm">Hủy</button>
-        </div>
+          </div>
       </form>
     </div>
   );
