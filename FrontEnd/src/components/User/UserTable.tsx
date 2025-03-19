@@ -106,6 +106,10 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
     { accessorKey: 'firstName', header: 'Tên riêng' },
     { accessorKey: 'lastName', header: 'Tên họ' },
     { accessorKey: 'email', header: 'Email' },
+    { 
+      accessorKey: 'role', // Thêm cột role
+      header: 'Vai trò', // Tiêu đề cột
+    },
     {
       id: 'status',
       header: 'Trạng thái',
