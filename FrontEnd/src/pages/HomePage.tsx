@@ -18,6 +18,7 @@ import UpdateProduct from "../components/Product/UpdateProduct";
 import LotListPage from "./Home/LotList";
 import ReceivedNoteListPage from "./Home/ReceivedNoteList";
 import AddLot from "../components/Lot/AddLot"; // Import trang AddLot
+import MyComponent from "./Dashboard/Dashboard/Dashboard";
 import { useState } from "react";
 
 const HomePage = () => {
@@ -37,6 +38,7 @@ const HomePage = () => {
       <Sidebar activeSidebar={activePage} handleChangePage={handleChangePage} />
       <div className="flex-grow">
         <Navbar />
+        {activePage === 'Dashboard' && <MyComponent />}
         {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}
         {activePage === "Chỉnh sửa sản phẩm" && selectedProductId !== null && (
           <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
