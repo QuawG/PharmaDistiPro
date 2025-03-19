@@ -1,6 +1,6 @@
 ﻿namespace PharmaDistiPro.DTO.Products
 {
-    public class ProductOrdersDetailDto
+    public class ProductLotAndOrdersDetailDto
     {
         public int ProductId { get; set; }
         public string? ProductCode { get; set; }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using PharmaDistiPro.DTO.IssueNote;
+using PharmaDistiPro.DTO.IssueNoteDetails;
 using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
@@ -170,7 +171,7 @@ namespace PharmaDistiPro.Services.Impl
                     {
                         if (remainingQuantity <= 0) break; // Đã đủ số lượng, thoát vòng lặp
 
-                        int takeQuantity = Math.Min(productLot.Quantit?.Value, remainingQuantity); // Lấy tối đa có thể từ lô này
+                        int takeQuantity = Math.Min(productLot.Quantity.Value, remainingQuantity); // Lấy tối đa có thể từ lô này
                         remainingQuantity -= takeQuantity; // Cập nhật số lượng còn lại
 
                         var issueNoteDetail = new IssueNoteDetail
@@ -249,6 +250,65 @@ namespace PharmaDistiPro.Services.Impl
                 response.Success = true;
                 response.Data = _mapper.Map<IEnumerable<IssueNoteDto>>(issueNotes);
                 return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.InnerException?.Message ?? ex.Message;
+                return response;
+            }
+        }
+
+        public async Task<Response<IEnumerable<IssueNoteDetailDto>>> GetIssueNoteDetailByIssueNoteId(int issueNoteId)
+        {
+            var response = new Response<IEnumerable<IssueNoteDetailDto>>();
+            try
+            {
+                var issueNoteDetails = await _issueNoteDetailsRepository.GetByConditionAsync(x => x.IssueNoteId == issueNoteId,
+                    includes: new string[] { "ProductLot", "ProductLot.Product" });
+
+                if (!issueNoteDetails.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Không có dữ liệu";
+                }
+                else
+                {
+                    response.Success = true;
+                    response.Data = _mapper.Map<IEnumerable<IssueNoteDetailDto>>(issueNoteDetails);  
+                }
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.InnerException?.Message ?? ex.Message;
+                return response;
+            }
+        }
+
+        public async Task<Response<IEnumerable<IssueNoteDetailDto>>> GetIssueNoteDetailsList()
+        {
+            var response = new Response<IEnumerable<IssueNoteDetailDto>>();
+            try
+            {
+                var issueNoteDetails = await _issueNoteDetailsRepository
+                    .GetByConditionAsync(
+                        x => true,
+                        includes: new string[] { "ProductLot", "ProductLot.Product" } // Ghi đúng đường dẫn quan hệ
+                    );
+                if (!issueNoteDetails.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Không có dữ liệu";
+                }
+                else
+                {
+                    response.Success = true;
+                    response.Data = _mapper.Map<IEnumerable<IssueNoteDetailDto>>(issueNoteDetails);
+                }
+                return response;
+
             }
             catch (Exception ex)
             {

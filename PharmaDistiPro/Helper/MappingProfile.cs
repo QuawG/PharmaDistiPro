@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using PharmaDistiPro.DTO.Categorys;
 using PharmaDistiPro.DTO.IssueNote;
+using PharmaDistiPro.DTO.IssueNoteDetails;
 using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.OrdersDetails;
 using PharmaDistiPro.DTO.Products;
@@ -33,7 +34,6 @@ namespace PharmaDistiPro.Helper
             CreateMap<UnitDTO, Unit>();
             #endregion
 
-
             #region Category
             CreateMap<Category, CategoryDTO>();
             CreateMap<CategoryDTO, Category>();
@@ -54,20 +54,28 @@ namespace PharmaDistiPro.Helper
             #endregion
 
             #region Product
-            CreateMap<Product, ProductOrdersDetailDto>();
-            CreateMap<ProductOrdersDetailDto, ProductOrdersDetailDto>();
+            CreateMap<Product, ProductLotAndOrdersDetailDto>();
+            CreateMap<ProductLotAndOrdersDetailDto, ProductLotAndOrdersDetailDto>();
+            #endregion
+
+            #region productlot
+            CreateMap<ProductLot, ProductLotIssueNoteDetailsDto>() .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+                .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product));
+
+            CreateMap<ProductLotIssueNoteDetailsDto, ProductLot>();
             #endregion
 
             #region Order
             CreateMap<Order, OrderDto>()
-    .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.CustomerId)) // Lấy đúng ID khách hàng
-    .ForMember(dest => dest.Customer, opt => opt.MapFrom(src => src.Customer)) // Chỉ lấy Customer nếu thỏa điều kiện
+                // lấy thông tin người mua hàng
+                .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.CustomerId)) // Lấy đúng ID khách hàng
+                .ForMember(dest => dest.Customer, opt => opt.MapFrom(src => src.Customer)) // Chỉ lấy Customer nếu thỏa điều kiện
 
-    .ForMember(dest => dest.ConfirmedBy, opt => opt.MapFrom(src => src.ConfirmedBy)) // Người tạo đơn hàng
-    .ForMember(dest => dest.ConfirmBy, opt => opt.MapFrom(src => src.ConfirmedByNavigation)); // Người xác nhận đơn hàng
+                // Lấy thông tin người tạo đơn hàng
+                .ForMember(dest => dest.ConfirmedBy, opt => opt.MapFrom(src => src.ConfirmedBy)) // Người tạo đơn hàng
+                .ForMember(dest => dest.ConfirmBy, opt => opt.MapFrom(src => src.ConfirmedByNavigation)); // Người xác nhận đơn hàng
 
             CreateMap<OrderDto, Order>();
-
             CreateMap<OrdersDetail, OrdersDetailDto>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductId : (int?)null))
                 .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product));  // No need for _mapper.Map<ProductOrdersDetailDto>()
@@ -75,20 +83,19 @@ namespace PharmaDistiPro.Helper
             CreateMap<OrdersDetailDto, OrdersDetail>()
                 .ForMember(dest => dest.Product, opt => opt.Ignore());
 
-            CreateMap<Order, OrderRequestDto>();
 
+            CreateMap<Order, OrderRequestDto>();
             CreateMap<OrderRequestDto, Models.Order>()
-         .ForMember(dest => dest.OrdersDetails, opt => opt.Ignore()); // Tránh lặp mapping
+                .ForMember(dest => dest.OrdersDetails, opt => opt.Ignore()); // Tránh lặp mapping
 
             CreateMap<OrdersDetail, OrdersDetailsRequestDto>();
-
             CreateMap<OrdersDetailsRequestDto, OrdersDetail>()
-    .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => src.OrderId));
+                 .ForMember(dest => dest.OrderId, opt => opt.MapFrom(src => src.OrderId));
 
             #endregion
 
             #region issue note
-            CreateMap<IssueNote, IssueNoteRequestDto>(); 
+            CreateMap<IssueNote, IssueNoteRequestDto>();
             CreateMap<IssueNoteRequestDto, IssueNote>();
 
             CreateMap<IssueNoteRequestDto, IssueNoteDetail>();
@@ -100,7 +107,13 @@ namespace PharmaDistiPro.Helper
             CreateMap<IssueNoteDto, IssueNote>();
             CreateMap<IssueNote, IssueNoteDto>();
 
+            CreateMap<IssueNoteDetail, IssueNoteDetailDto>()
+                .ForMember(dest => dest.ProductLotId, opt => opt.MapFrom(src => src.ProductLotId))
+                .ForMember(dest => dest.ProductLot, opt => opt.MapFrom(src => src.ProductLot));
+
+            CreateMap<IssueNoteDetailDto, IssueNoteDetail>();
             #endregion
+
         }
     }
 }

@@ -57,5 +57,28 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+
+        [HttpGet("GetIssueNoteDetailByIssueNoteId/{issueNoteId}")]
+        public async Task<IActionResult> GetIssueNoteDetailByIssueNoteId(int issueNoteId)
+        {
+            var response = await _issueNoteService.GetIssueNoteDetailByIssueNoteId(issueNoteId);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+
+        [HttpGet("GetIssueNoteDetailsList")]
+        public async Task<IActionResult> GetIssueNoteDetailsList()
+        {
+            var response = await _issueNoteService.GetIssueNoteDetailsList();
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+
     }
 }
