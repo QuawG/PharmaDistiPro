@@ -10,8 +10,8 @@ import CustomerListPage from "./Home/CustomerList";
 import UserListPage from "./Home/UserList"; // Import UserListPage
 import UserAdd from "../components/User/AddUser"; // Import UserAdd
 import SupplierListPage from "./Home/SupplierList"; // Import SupplierListPage
-import SupplierAdd from "../components/Supplier/AddSupplier"; // Import SupplierAdd
-import PurchaseOrderListPage from "./Home/PurchaseOrderList"; // Import PurchaseOrderListPage
+import SupplierAdd from "../components/Supplier/AddSupplier"; 
+import PurchaseOrderListPage from "./Home/PurchaseOrderList"; 
 import PurchaseOrderAdd from "../components/PurchaseOrder/AddPurchaseOrder"; // Import PurchaseOrderAdd
 import Navbar from "../components/global/Navbar";
 import UpdateProduct from "../components/Product/UpdateProduct";
