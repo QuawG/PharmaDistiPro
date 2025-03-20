@@ -102,8 +102,30 @@ namespace PharmaDistiPro.Controllers
             var response = await _orderService.ConfirmOrder(orderId);
             if (!response.Success)
             {
-                return NotFound(new { response.Message });
+                return BadRequest(new { response.Message });
             }
+            return Ok(response);
+        }
+
+        // api get orders revenue list
+        [HttpGet("GetOrdersRevenueList")]
+        public async Task<IActionResult> GetOrdersRevenueList(DateTime? dateCreatedFrom, DateTime? dateCreatedTo)
+        {
+            var response = await _orderService.GetOrdersRevenueList(dateCreatedFrom, dateCreatedTo);
+
+            if (!response.Success) return BadRequest(new { response.Message });
+
+            return Ok(response);
+        }
+
+        // api get orders detail order by quantity product
+        [HttpGet("GetAllOrderDetails")]
+        public async Task<IActionResult> GetAllOrderDetails(DateTime? dateFrom, DateTime? dateTo, int? topProduct)
+        {
+            var response = await _orderService.GetAllOrderDetails(dateFrom, dateTo, topProduct);
+
+            if (!response.Success) return BadRequest(new { response.Message });
+
             return Ok(response);
         }
 

@@ -1,4 +1,6 @@
-﻿using PharmaDistiPro.Models;
+﻿using PharmaDistiPro.DTO.Orders;
+using PharmaDistiPro.Models;
+using System.Text.Json.Serialization;
 
 namespace PharmaDistiPro.DTO.Users
 {
@@ -22,7 +24,6 @@ namespace PharmaDistiPro.DTO.Users
         public DateTime? CreatedDate { get; set; }
 
         public string? RoleName { get; set; }
-
 
     }
 }

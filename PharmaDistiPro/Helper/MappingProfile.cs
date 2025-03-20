@@ -42,6 +42,7 @@ namespace PharmaDistiPro.Helper
             #region User
             CreateMap<User, UserDTO>()
             .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.RoleName));
+            
 
             CreateMap<UserDTO, User>()
             .ForMember(dest => dest.Role, opt => opt.Ignore());

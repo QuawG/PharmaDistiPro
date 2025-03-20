@@ -93,5 +93,14 @@ namespace PharmaDistiPro.Controllers
             if (!response.Success) return BadRequest(new { response.Message });
             return Ok(response);
         }
+
+        //api get top customer revenue list
+        [HttpGet("GetTopCustomerRevenueList")]
+        public async Task<IActionResult> GetTopCustomerRevenueList(int? topCustomer)
+        {
+            var response = await _userService.GetTopCustomerRevenueList(topCustomer);
+            if (!response.Success) return BadRequest(new { response.Message });
+            return Ok(response);
+        }
     }
 }

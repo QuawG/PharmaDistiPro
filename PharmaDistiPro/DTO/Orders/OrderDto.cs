@@ -1,4 +1,5 @@
 ﻿using PharmaDistiPro.DTO.Users;
+using System.Text.Json.Serialization;
 
 namespace PharmaDistiPro.DTO.Orders
 {

@@ -7,6 +7,7 @@ using PharmaDistiPro.Models;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using PharmaDistiPro.Helper;
+using PharmaDistiPro.Common.Enums;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -23,6 +24,7 @@ namespace PharmaDistiPro.Services.Impl
             _mapper = mapper;
             _cloudinary = cloudinary;
         }
+        #region User and Customer Management
 
         //Get all customers
         public async Task<Response<IEnumerable<UserDTO>>> GetCustomerList()
@@ -30,12 +32,13 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<IEnumerable<UserDTO>>();
             try
             {
-                var users = await _userRepository.GetByConditionAsync(u => u.RoleId == 5, includes: new string[] { "Role"});
+                var users = await _userRepository.GetByConditionAsync(u => u.RoleId == 5, includes: new string[] { "Role" });
                 if (users.Count() == 0)
                 {
                     response.Message = "Không có dữ liệu";
                     response.Success = false;
-                } else
+                }
+                else
                 {
                     response.Data = _mapper.Map<IEnumerable<UserDTO>>(users);
                     response.Success = true;
@@ -58,7 +61,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 //check if customer exists
-                var user = await _userRepository.GetSingleByConditionAsync(x=> x.UserId == userId, includes: new string[] { "Role" });
+                var user = await _userRepository.GetSingleByConditionAsync(x => x.UserId == userId, includes: new string[] { "Role" });
                 if (user == null)
                 {
                     response.Success = false;
@@ -117,11 +120,11 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 // Kiểm tra xem user đã tồn tại chưa 
-                var existingUser = await _userRepository.GetSingleByConditionAsync(x=> x.Email.Equals(userInputRequest.Email) || x.UserName.Equals(userInputRequest.UserName));
+                var existingUser = await _userRepository.GetSingleByConditionAsync(x => x.Email.Equals(userInputRequest.Email) || x.UserName.Equals(userInputRequest.UserName));
 
                 //dem so user trong he thong
                 var countUserList = _userRepository.GetAllAsync().Result.Count();
-                
+
 
                 if (existingUser != null)
                 {
@@ -133,7 +136,7 @@ namespace PharmaDistiPro.Services.Impl
                 // Upload avatar lên Cloudinary nếu cần
                 if (userInputRequest.RoleId != 5)
                 {
-                    if (  userInputRequest.Avatar != null)
+                    if (userInputRequest.Avatar != null)
                     {
                         var uploadParams = new ImageUploadParams()
                         {
@@ -143,13 +146,13 @@ namespace PharmaDistiPro.Services.Impl
 
                         var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                         imageUrl = uploadResult.SecureUri.ToString();
-                    }     
+                    }
                     // update employeecode
                     userInputRequest.EmployeeCode = ConstantStringHelper.EmployeeCode + countUserList;
-                } 
+                }
 
 
-                
+
                 // Map dữ liệu từ DTO sang Entity
                 var newUser = _mapper.Map<User>(userInputRequest);
                 newUser.Avatar = imageUrl;
@@ -222,7 +225,7 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
-               
+
                 //Chi update avatar cho nguoi dung khong phai customer
                 if (userUpdateRequest.RoleId == 5) userUpdateRequest.Avatar = null;
 
@@ -230,7 +233,7 @@ namespace PharmaDistiPro.Services.Impl
                 _mapper.Map(userUpdateRequest, userToUpdate);
 
                 // Kiểm tra và upload avatar nếu có thay đổi
-                if (userUpdateRequest.Avatar != null )  
+                if (userUpdateRequest.Avatar != null)
                 {
                     var uploadParams = new ImageUploadParams()
                     {
@@ -241,8 +244,8 @@ namespace PharmaDistiPro.Services.Impl
                     var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                     imageUrl = uploadResult.SecureUri.ToString();
                     userToUpdate.Avatar = imageUrl;
-                } 
-           
+                }
+
                 await _userRepository.UpdateAsync(userToUpdate);
                 await _userRepository.SaveAsync();
 
@@ -260,5 +263,52 @@ namespace PharmaDistiPro.Services.Impl
 
             return response;
         }
+
+        // Get top customer by revenue
+        public async Task<Response<IEnumerable<UserDTO>>> GetTopCustomerRevenueList(int? topCustomer)
+        {
+            var response = new Response<IEnumerable<UserDTO>>();
+            try
+            {
+                var topCustomerList = await _userRepository.GetByConditionAsync(
+                            u => u.RoleId == 5 && u.OrderCustomers.Any(),
+                            includes: new string[] { "Role", "OrderCustomers" });
+
+                var topCustomers = topCustomerList
+                        .Select(u => new
+                        {
+                            User = u,
+                            TotalRevenue = u.OrderCustomers
+                            .Where(o => o.Status == 5) // Chỉ lấy đơn hàng đã hoàn thành
+                            .Sum(o => o.TotalAmount) // Tính tổng doanh thu
+                        })
+                            .OrderByDescending(x => x.TotalRevenue) // Sắp xếp giảm dần theo doanh thu
+                            .Take(topCustomer ?? 5) // Lấy số khách hàng theo yêu cầu (mặc định là 5)
+                            .Select(x => _mapper.Map<UserDTO>(x.User)) // Chuyển đổi sang DTO
+                            .ToList();
+
+                // Nếu không có dữ liệu, trả về thông báo
+                if (!topCustomers.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Không có dữ liệu.";
+                    return response;
+                }
+
+                // Trả về danh sách khách hàng
+                response.Data = topCustomers;
+                response.Success = true;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                return response;
+            }
+        }
+
+        #endregion
     }
 }

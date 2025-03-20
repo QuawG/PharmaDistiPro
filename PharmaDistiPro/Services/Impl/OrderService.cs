@@ -176,7 +176,6 @@ namespace PharmaDistiPro.Services.Impl
         }
 
         //Update trang thai order
-
         public async Task<Response<OrderDto>> UpdateOrderStatus(int orderId, int status)
         {
             var response = new Response<OrderDto>();
@@ -272,7 +271,101 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
+        // get order revenue
+        public async Task<Response<IEnumerable<OrderDto>>> GetOrdersRevenueList(DateTime? dateCreatedFrom, DateTime? dateCreatedTo)
+        {
+            var response = new Response<IEnumerable<OrderDto>>();
+            try
+            {
+                IEnumerable<Order> ordersList = await _orderRepository.GetByConditionAsync(
+                 x => x.Status == (int)Common.Enums.OrderStatus.HOAN_THANH &&
+                (!dateCreatedFrom.HasValue || x.CreatedDate >= dateCreatedFrom.Value) &&
+                (!dateCreatedTo.HasValue || x.CreatedDate <= dateCreatedTo.Value),
+                includes: new string[] { "ConfirmedByNavigation", "Customer" });
 
+                ordersList = ordersList.OrderByDescending(o => o.OrderId);
+
+                if (!ordersList.Any())
+                {
+                    return new Response<IEnumerable<OrderDto>>
+                    {
+                        Success = false,
+                        Message = "Không có dữ liệu"
+
+                    };
+                }
+
+                response.Data = _mapper.Map<IEnumerable<OrderDto>>(ordersList);
+                response.Success = true;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new Response<IEnumerable<OrderDto>>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+        }
+
+        // get all order details to order by product quantity
+        public async Task<Response<IEnumerable<OrdersDetailDto>>> GetAllOrderDetails(DateTime? dateFrom, DateTime? dateTo, int? topProduct)
+        {
+            var response = new Response<IEnumerable<OrdersDetailDto>>();
+            try
+            {
+                IEnumerable<OrdersDetail> ordersDetails = await _ordersDetailRepository.GetByConditionAsync( x=> 
+                x.Order.Status == (int)Common.Enums.OrderStatus.HOAN_THANH &&
+                    (!dateFrom.HasValue || x.Order.CreatedDate >= dateFrom.Value) &&
+                (!dateTo.HasValue || x.Order.CreatedDate <= dateTo.Value),
+                    includes: new string[] { "Product", "Order" });
+
+                // Nhóm theo ProductId, tính tổng Quantity và sắp xếp giảm dần
+                var groupedOrders = ordersDetails
+                    .GroupBy(o => o.ProductId)
+                    .Select(g => new
+                    {
+                        ProductId = g.Key,
+                        TotalQuantity = g.Sum(o => o.Quantity),
+                        Orders = g.ToList()
+                    })
+                    .OrderByDescending(g => g.TotalQuantity)
+                    .ToList(); // Chuyển thành danh sách để tránh lỗi khi gọi Take()
+
+                // Nếu topProduct có giá trị, chỉ lấy topProduct sản phẩm
+                if (topProduct.HasValue)
+                {
+                    groupedOrders = groupedOrders.Take(topProduct.Value).ToList(); // Đảm bảo kiểu dữ liệu nhất quán
+                }
+
+                // Trả lại danh sách OrdersDetail theo thứ tự đã sắp xếp
+                var resultOrders = groupedOrders
+                    .SelectMany(g => g.Orders)
+                    .ToList();
+
+                if (!resultOrders.Any())
+                {
+                    return new Response<IEnumerable<OrdersDetailDto>>
+                    {
+                        Success = false,
+                        Message = "Không có dữ liệu"
+                    };
+                }
+
+                response.Data = _mapper.Map<IEnumerable<OrdersDetailDto>>(resultOrders);
+                response.Success = true;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new Response<IEnumerable<OrdersDetailDto>>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+        }
 
     }
 }
