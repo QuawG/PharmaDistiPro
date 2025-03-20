@@ -32,6 +32,18 @@ namespace PharmaDistiPro.Controllers
             return Ok(result);
         }
 
+
+        [HttpGet("subcategory")]
+        public async Task<IActionResult> GetSubCategory()
+        {
+            var result = await _categoryService.GetAllSubCategoriesAsync();
+            if (!result.Success)
+            {
+                return NotFound(result.Message);
+            }
+            return Ok(result);
+        }
+
         // 2. Tạo mới category
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryInputRequest request)
