@@ -10,6 +10,7 @@ using AutoMapper;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using System.Security.Principal;
+using System.Text.Json.Serialization;
 
 namespace PharmaDistiPro
 {
@@ -25,7 +26,11 @@ namespace PharmaDistiPro
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-
+            builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; // Bỏ qua vòng lặp
+    });
             // ket noi database
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
