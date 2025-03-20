@@ -147,6 +147,16 @@
   },
   {
     "ContainingType": "PharmaDistiPro.Controllers.CategoryController",
+    "Method": "GetSubCategory",
+    "RelativePath": "api/Category/subcategory",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.CategoryController",
     "Method": "GetCategoryTree",
     "RelativePath": "api/Category/tree",
     "HttpMethod": "GET",
