@@ -10,6 +10,7 @@ namespace PharmaDistiPro.DTO.OrdersDetails
         public int? ProductId { get; set; }
         public int? Quantity { get; set; }
 
+        public int? TotalQuantity { get; set; }
         public virtual ProductLotAndOrdersDetailDto? Product { get; set; }
     }
 }

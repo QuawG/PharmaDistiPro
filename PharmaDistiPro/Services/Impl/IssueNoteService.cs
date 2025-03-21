@@ -5,6 +5,7 @@ using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
+using System.Linq;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -33,6 +34,7 @@ namespace PharmaDistiPro.Services.Impl
             _userRepository = userRepository;
         }
 
+        #region IssueNote
         public async Task<Response<IssueNoteDto>> CancelIssueNote(int issueNoteId)
         {
             var response = new Response<IssueNoteDto>();
@@ -119,8 +121,6 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Không tìm thấy đơn hàng";
                     return response;
                 }
-                
-                order.Status = (int)Common.Enums.OrderStatus.XUAT_KHO;
                 await _orderRepository.UpdateAsync(order);
 
                 #endregion
@@ -130,7 +130,7 @@ namespace PharmaDistiPro.Services.Impl
                 issueNoteRequestDto.IssueNoteCode = ConstantStringHelper.IssueNoteCode + (issueNoteCount + 1);
                 issueNoteRequestDto.CreatedDate = DateTime.Now;
                 issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
-                issueNoteRequestDto.Status = (int)Common.Enums.IssueNotesStatus.DA_XUAT;
+                issueNoteRequestDto.Status = (int)Common.Enums.IssueNotesStatus.DANG_XU_LY;
                 issueNoteRequestDto.CustomerId = order.CustomerId;
                 issueNoteRequestDto.TotalAmount = order.TotalAmount;
                 issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
@@ -213,28 +213,33 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
-        public async Task<Response<IEnumerable<IssueNoteDto>>> GetIssueNoteByWarehouseId(int userId)
+        public async Task<Response<IEnumerable<IssueNoteDto>>> GetIssueNoteByWarehouseId(int userId, int[]? status)
         {
-           var response = new Response<IEnumerable<IssueNoteDto>>();
+            var response = new Response<IEnumerable<IssueNoteDto>>();
             try
             {
-                var issueNotes = await _issueNoteRepository.GetByConditionAsync(x => x.CreatedBy == userId);
+                // Ensure status is not null before checking Contains
+                var issueNotes = await _issueNoteRepository.GetByConditionAsync(
+                    x => x.CreatedBy == userId && (status == null || status.Contains(x.Status ?? -1)));
+
                 if (!issueNotes.Any())
                 {
                     response.Success = false;
                     response.Message = "Không có dữ liệu";
+                    return response;
                 }
+
                 response.Success = true;
                 response.Data = _mapper.Map<IEnumerable<IssueNoteDto>>(issueNotes);
-                return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = ex.InnerException?.Message ?? ex.Message;
-                return response;
             }
+            return response;
         }
+
 
         public async Task<Response<IEnumerable<IssueNoteDto>>> GetIssueNoteList()
         {
@@ -258,6 +263,41 @@ namespace PharmaDistiPro.Services.Impl
                 return response;
             }
         }
+
+        public async Task<Response<IssueNoteDto>> UpdateIssueNoteStatus(int issueNoteId, int status)
+        {
+            var response = new Response<IssueNoteDto>();
+            try
+            {
+                var issueNote = await _issueNoteRepository.GetSingleByConditionAsync(x => x.Id == issueNoteId);
+                if (issueNote == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy phiếu xuất kho";
+                    return response;
+                } 
+                // update issue status
+                issueNote.Status = status;
+                issueNote.UpdatedStatusDate = DateTime.Now;
+
+                await _issueNoteRepository.UpdateAsync(issueNote);
+                await _issueNoteRepository.SaveAsync();
+
+                response.Success = true;
+                response.Data = _mapper.Map<IssueNoteDto>(issueNote);
+                return response;
+
+            }catch(Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.InnerException?.Message ?? ex.Message;
+                return response;
+            }
+        }
+
+        #endregion
+
+        #region IssueNoteDetail
 
         public async Task<Response<IEnumerable<IssueNoteDetailDto>>> GetIssueNoteDetailByIssueNoteId(int issueNoteId)
         {
@@ -317,5 +357,6 @@ namespace PharmaDistiPro.Services.Impl
                 return response;
             }
         }
+        #endregion
     }
 }

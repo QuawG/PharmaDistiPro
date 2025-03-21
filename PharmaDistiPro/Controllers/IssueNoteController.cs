@@ -14,6 +14,9 @@ namespace PharmaDistiPro.Controllers
             _issueNoteService = issueNoteService;
         }
 
+        #region issue note
+
+        // api create issue note
         [HttpPost("CreateIssueNote/{orderId}")]
         public async Task<IActionResult> CreateIssueNote(int orderId)
         {
@@ -25,6 +28,7 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        // api cancel issue note
         [HttpPut("CancelIssuteNot/{issueNoteId}")]
         public async Task<IActionResult> CancelIssueNote(int issueNoteId)
         {
@@ -36,6 +40,7 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        // api get issue note list
         [HttpGet("GetIssueNoteList")]
         public async Task<IActionResult> GetIssueNoteList()
         {
@@ -46,10 +51,12 @@ namespace PharmaDistiPro.Controllers
             }
             return Ok(response);
         }
+
+        // api get issue note by warehouse id
         [HttpGet("GetIssueNoteListByWarehouse/{userId}")]
-        public async Task<IActionResult> GetIssueNoteListByWarehouse(int userId)
+        public async Task<IActionResult> GetIssueNoteListByWarehouse(int userId, [FromQuery] int[]? status)
         {
-            var response = await _issueNoteService.GetIssueNoteByWarehouseId(userId);
+            var response = await _issueNoteService.GetIssueNoteByWarehouseId(userId, status);
             if (!response.Success)
             {
                 return NotFound(new { response.Message });
@@ -57,7 +64,22 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        // api update issue note status
+        [HttpPut("UpdateIssueNoteStatus/{issueNoteId}/{status}")]
+        public async Task<IActionResult> UpdateIssueNoteStatus(int issueNoteId, int status)
+        {
+            var response = await _issueNoteService.UpdateIssueNoteStatus(issueNoteId, status);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
 
+        #endregion
+
+        #region issue note details
+        // api get issue note detail by issue note id
         [HttpGet("GetIssueNoteDetailByIssueNoteId/{issueNoteId}")]
         public async Task<IActionResult> GetIssueNoteDetailByIssueNoteId(int issueNoteId)
         {
@@ -69,6 +91,7 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        // api get issue note detail list
         [HttpGet("GetIssueNoteDetailsList")]
         public async Task<IActionResult> GetIssueNoteDetailsList()
         {
@@ -79,6 +102,7 @@ namespace PharmaDistiPro.Controllers
             }
             return Ok(response);
         }
+        #endregion
 
     }
 }

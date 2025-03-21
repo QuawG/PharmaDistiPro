@@ -6,6 +6,8 @@ using PharmaDistiPro.Common.Enums;
 using PharmaDistiPro.DTO.IssueNote;
 using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.OrdersDetails;
+using PharmaDistiPro.DTO.Products;
+using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
@@ -34,6 +36,7 @@ namespace PharmaDistiPro.Services.Impl
             _userRepository = userRepository;
         }
 
+        #region order
         // get order cua customer
         public async Task<Response<IEnumerable<OrderDto>>> GetOrderByCustomerId(int customerId)
         {
@@ -62,35 +65,7 @@ namespace PharmaDistiPro.Services.Impl
 
         }
 
-        //get order detail theo orderId
-        public async Task<Response<IEnumerable<OrdersDetailDto>>> GetOrderDetailByOrderId(int orderId)
-        {
-            var response = new Response<IEnumerable<OrdersDetailDto>>();
-            try
-            {
-                var ordersDetails = await _ordersDetailRepository.GetByConditionAsync(o => o.OrderId == orderId, includes: new string[] { "Product" });
-                ordersDetails = ordersDetails.OrderByDescending(o => o.OrderDetailId);
 
-                var orderDto = _mapper.Map<IEnumerable<OrdersDetailDto>>(ordersDetails);
-                if (!ordersDetails.Any())
-                {
-                    response.Success = false;
-                    response.Message = "Không có dữ liệu";
-                }
-                else
-                {
-                    response.Data = orderDto;
-                    response.Success = true;
-                }
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.Message = ex.Message;
-                return response;
-            }
-        }
 
         // get all order trong he thong
         public async Task<Response<IEnumerable<OrderDto>>> GetAllOrders(int[] status, DateTime? dateCreatedFrom, DateTime? dateCreatedTo)
@@ -99,7 +74,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 IEnumerable<Models.Order> ordersList = await _orderRepository.GetByConditionAsync(
-                 x => (!status.Any() || status.Contains(x.Status ?? -1)) &&
+                 x => (!status.Any() || status.Contains(x.Status ?? 1)) &&
                 (!dateCreatedFrom.HasValue || x.CreatedDate >= dateCreatedFrom.Value) &&
                 (!dateCreatedTo.HasValue || x.CreatedDate <= dateCreatedTo.Value),
                 includes: new string[] { "ConfirmedByNavigation", "Customer" });
@@ -309,13 +284,16 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
+        #endregion
+
+        #region order details
         // get all order details to order by product quantity
         public async Task<Response<IEnumerable<OrdersDetailDto>>> GetAllOrderDetails(DateTime? dateFrom, DateTime? dateTo, int? topProduct)
         {
             var response = new Response<IEnumerable<OrdersDetailDto>>();
             try
             {
-                IEnumerable<OrdersDetail> ordersDetails = await _ordersDetailRepository.GetByConditionAsync( x=> 
+                IEnumerable<OrdersDetail> ordersDetails = await _ordersDetailRepository.GetByConditionAsync(x =>
                 x.Order.Status == (int)Common.Enums.OrderStatus.HOAN_THANH &&
                     (!dateFrom.HasValue || x.Order.CreatedDate >= dateFrom.Value) &&
                 (!dateTo.HasValue || x.Order.CreatedDate <= dateTo.Value),
@@ -339,10 +317,13 @@ namespace PharmaDistiPro.Services.Impl
                     groupedOrders = groupedOrders.Take(topProduct.Value).ToList(); // Đảm bảo kiểu dữ liệu nhất quán
                 }
 
-                // Trả lại danh sách OrdersDetail theo thứ tự đã sắp xếp
                 var resultOrders = groupedOrders
-                    .SelectMany(g => g.Orders)
-                    .ToList();
+                    .Select(g => new OrdersDetailDto
+                    {
+                        ProductId = g.ProductId,
+                        TotalQuantity = g.TotalQuantity,
+                        Product = _mapper.Map<ProductLotAndOrdersDetailDto>(g.Orders.First().Product) // Lấy thông tin sản phẩm từ danh sách orders
+                    }).ToList();
 
                 if (!resultOrders.Any())
                 {
@@ -366,6 +347,99 @@ namespace PharmaDistiPro.Services.Impl
                 };
             }
         }
+
+        //get order detail theo orderId
+        public async Task<Response<IEnumerable<OrdersDetailDto>>> GetOrderDetailByOrderId(int orderId)
+        {
+            var response = new Response<IEnumerable<OrdersDetailDto>>();
+            try
+            {
+                var ordersDetails = await _ordersDetailRepository.GetByConditionAsync(o => o.OrderId == orderId, includes: new string[] { "Product" });
+                ordersDetails = ordersDetails.OrderByDescending(o => o.OrderDetailId);
+
+                var orderDto = _mapper.Map<IEnumerable<OrdersDetailDto>>(ordersDetails);
+                if (!ordersDetails.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Không có dữ liệu";
+                }
+                else
+                {
+                    response.Data = orderDto;
+                    response.Success = true;
+                }
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                return response;
+            }
+        }
+        #endregion
+
+        #region Customer revenue
+        //List top customer revenue
+        public async Task<Response<IEnumerable<OrderDto>>> GetTopCustomerRevenue(int? topCustomer)
+        {
+            var response = new Response<IEnumerable<OrderDto>>();
+
+            try
+            {
+                var orders = await _orderRepository.GetByConditionAsync(
+                    x => x.Status == (int)Common.Enums.OrderStatus.HOAN_THANH,
+                    includes: new string[] { "Customer", "ConfirmedByNavigation" });
+
+                if (!orders.Any())
+                {
+                    return new Response<IEnumerable<OrderDto>>
+                    {
+                        Success = false,
+                        Message = "Không có dữ liệu"
+                    };
+                }
+
+                var groupedOrders = orders
+                    .GroupBy(x => x.CustomerId)
+                    .Select(g => new
+                    {
+                        CustomerId = g.Key,
+                        TotalRevenue = g.Sum(x => x.TotalAmount),
+                        Customer = g.ToList()
+                    })
+                    .OrderByDescending(g => g.TotalRevenue)
+                    .Take(topCustomer ?? 5) // Lấy số lượng khách hàng theo tham số hoặc mặc định là 5
+                    .ToList();
+
+
+                // Chuyển đổi sang DTO (có thể bạn muốn map danh sách Orders chứ không phải cả nhóm)
+                var resultOrders = groupedOrders
+                   .Select(g => new OrderDto
+                   {
+                       CustomerId = g.CustomerId,
+                       TotalRevenue = g.TotalRevenue,
+                       Customer = _mapper.Map<UserDTO>(g.Customer.First().Customer) // Lấy thông tin sản phẩm từ danh sách orders
+                   }).ToList();
+                response.Success = true;
+                response.Data = resultOrders;
+            }
+            catch (Exception ex)
+            {
+                return new Response<IEnumerable<OrderDto>>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+
+            return response;
+        }
+
+        #endregion
+
+
+
 
     }
 }

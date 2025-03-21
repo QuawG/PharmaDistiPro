@@ -7,7 +7,5 @@
         public const string EmployeeCode = "EMP_";
 
         public const string IssueNoteCode = "ISN_";
-
-        public const string IssueNotesDetailsCode = "ISND_";
     }
 }

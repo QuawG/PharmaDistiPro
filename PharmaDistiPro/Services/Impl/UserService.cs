@@ -263,52 +263,6 @@ namespace PharmaDistiPro.Services.Impl
 
             return response;
         }
-
-        // Get top customer by revenue
-        public async Task<Response<IEnumerable<UserDTO>>> GetTopCustomerRevenueList(int? topCustomer)
-        {
-            var response = new Response<IEnumerable<UserDTO>>();
-            try
-            {
-                var topCustomerList = await _userRepository.GetByConditionAsync(
-                            u => u.RoleId == 5 && u.OrderCustomers.Any(),
-                            includes: new string[] { "Role", "OrderCustomers" });
-
-                var topCustomers = topCustomerList
-                        .Select(u => new
-                        {
-                            User = u,
-                            TotalRevenue = u.OrderCustomers
-                            .Where(o => o.Status == 5) // Chỉ lấy đơn hàng đã hoàn thành
-                            .Sum(o => o.TotalAmount) // Tính tổng doanh thu
-                        })
-                            .OrderByDescending(x => x.TotalRevenue) // Sắp xếp giảm dần theo doanh thu
-                            .Take(topCustomer ?? 5) // Lấy số khách hàng theo yêu cầu (mặc định là 5)
-                            .Select(x => _mapper.Map<UserDTO>(x.User)) // Chuyển đổi sang DTO
-                            .ToList();
-
-                // Nếu không có dữ liệu, trả về thông báo
-                if (!topCustomers.Any())
-                {
-                    response.Success = false;
-                    response.Message = "Không có dữ liệu.";
-                    return response;
-                }
-
-                // Trả về danh sách khách hàng
-                response.Data = topCustomers;
-                response.Success = true;
-                return response;
-
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.Message = ex.Message;
-                return response;
-            }
-        }
-
         #endregion
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.OrdersDetails;
+using PharmaDistiPro.Services;
 using PharmaDistiPro.Services.Interface;
 
 namespace PharmaDistiPro.Controllers
@@ -16,24 +17,13 @@ namespace PharmaDistiPro.Controllers
             _orderService = orderService;
         }
 
+        #region Orders
+
         //Api get order by customer id
         [HttpGet("GetOrderByCustomerId/{customerId}")]
         public async Task<IActionResult> GetOrderByCustomerId(int customerId)
         {
             var response = await _orderService.GetOrderByCustomerId(customerId);
-            if (!response.Success)
-            {
-                return NotFound(new { response.Message });
-            }
-            return Ok(response);
-        }
-
-
-        // api get order details cua order
-        [HttpGet("GetOrdersDetailByOrderId/{orderId}")]
-        public async Task<IActionResult> GetOrdersDetailByOrderId(int orderId)
-        {
-            var response = await _orderService.GetOrderDetailByOrderId(orderId);
             if (!response.Success)
             {
                 return NotFound(new { response.Message });
@@ -118,6 +108,10 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        #endregion
+
+        #region order details
+
         // api get orders detail order by quantity product
         [HttpGet("GetAllOrderDetails")]
         public async Task<IActionResult> GetAllOrderDetails(DateTime? dateFrom, DateTime? dateTo, int? topProduct)
@@ -128,6 +122,36 @@ namespace PharmaDistiPro.Controllers
 
             return Ok(response);
         }
+
+
+        // api get order details cua order
+        [HttpGet("GetOrdersDetailByOrderId/{orderId}")]
+        public async Task<IActionResult> GetOrdersDetailByOrderId(int orderId)
+        {
+            var response = await _orderService.GetOrderDetailByOrderId(orderId);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+
+        #endregion
+        #region Customer revenue
+        //List top customer revenue
+
+        [HttpGet("GetTopCustomerRevenue")]
+        public async Task<IActionResult> GetTopCustomerRevenue(int? topCustomer)
+        {
+            var response = await _orderService.GetTopCustomerRevenue(topCustomer);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+        #endregion
+
 
 
     }

@@ -1,6 +1,7 @@
 ﻿using PharmaDistiPro.DTO.IssueNote;
 using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.OrdersDetails;
+using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Models;
 
 namespace PharmaDistiPro.Services.Interface
@@ -8,7 +9,6 @@ namespace PharmaDistiPro.Services.Interface
     public interface IOrderService
     {
         #region orders
-
         //List all orders
         Task<Response<IEnumerable<OrderDto>>> GetAllOrders(int[] status, DateTime? dateCreatedFrom, DateTime? dateCreatedTo);
 
@@ -26,17 +26,23 @@ namespace PharmaDistiPro.Services.Interface
         //List all orders revenue
         Task<Response<IEnumerable<OrderDto>>> GetOrdersRevenueList(DateTime? dateCreatedFrom, DateTime? dateCreatedTo);
 
+        //List order cua customer
+        Task<Response<IEnumerable<OrderDto>>> GetOrderByCustomerId(int customerId);
+
         #endregion
 
         #region order details
-        //List order cua customer
-        Task<Response<IEnumerable<OrderDto>>> GetOrderByCustomerId(int customerId);
 
         //List ra orderDetail theo orderId
         Task<Response<IEnumerable<OrdersDetailDto>>> GetOrderDetailByOrderId(int orderId);
 
         // list full order details
         Task<Response<IEnumerable<OrdersDetailDto>>> GetAllOrderDetails(DateTime? dateFrom, DateTime? dateTo, int? topProduct);
+        #endregion
+
+        #region Customer revenue
+        //List top customer revenue
+        Task<Response<IEnumerable<OrderDto>>> GetTopCustomerRevenue(int? topCustomer);
         #endregion
 
     }
