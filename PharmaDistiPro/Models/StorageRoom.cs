@@ -8,7 +8,7 @@ namespace PharmaDistiPro.Models
         public StorageRoom()
         {
             NoteChecks = new HashSet<NoteCheck>();
-            ProductStorageRooms = new HashSet<ProductStorageRoom>();
+            ProductLots = new HashSet<ProductLot>();
         }
 
         public int StorageRoomId { get; set; }
@@ -23,6 +23,6 @@ namespace PharmaDistiPro.Models
 
         public virtual User? CreatedByNavigation { get; set; }
         public virtual ICollection<NoteCheck> NoteChecks { get; set; }
-        public virtual ICollection<ProductStorageRoom> ProductStorageRooms { get; set; }
+        public virtual ICollection<ProductLot> ProductLots { get; set; }
     }
 }

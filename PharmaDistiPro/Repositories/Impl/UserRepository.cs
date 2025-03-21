@@ -19,23 +19,25 @@ namespace PharmaDistiPro.Repositories.Impl
 
         public async Task<User?> GetWarehouseManagerToConfirm()
         {
-            var warehouseWithoutIssueNotes = await _context.Users
-                .Where(x => x.RoleId == 2 && !x.IssueNoteCreatedByNavigations.Any()) // Chỉ lấy warehouse chưa có phiếu xuất kho
-                .FirstOrDefaultAsync(); // Lấy warehouse đầu tiên nếu có
-
-            if (warehouseWithoutIssueNotes != null)
-            {
-                return warehouseWithoutIssueNotes; // Nếu có warehouse chưa có phiếu xuất kho thì trả về nó
-            }
-
-            // Nếu tất cả warehouse đều có phiếu xuất kho, tìm warehouse có ít phiếu nhất
-            var warehouseWithMinIssueNotes = await _context.Users
-                .Where(x => x.RoleId == 2)
-                .OrderBy(x => x.IssueNoteCreatedByNavigations.Count) // Sắp xếp theo số lượng phiếu xuất kho tăng dần
-                .ThenBy(x => x.UserId) // Nếu số lượng bằng nhau, lấy warehouse có UserId nhỏ nhất
+            // Lấy warehouse chưa có order nào, ưu tiên warehouse có UserId nhỏ nhất
+            var warehouseWithoutOrders = await _context.Users
+                .Where(x => x.RoleId == 2 && !x.OrderAssignToNavigations.Any() && x.Status==true) // Warehouse chưa có order nào
+                .OrderBy(x => x.UserId) // Sắp xếp theo UserId
                 .FirstOrDefaultAsync();
 
-            return warehouseWithMinIssueNotes;
+            if (warehouseWithoutOrders != null)
+            {
+                return warehouseWithoutOrders; // Nếu có warehouse chưa có order, trả về nó
+            }
+
+            // Nếu tất cả warehouse đã có order, tìm warehouse có ít order nhất, nếu bằng nhau thì lấy warehouse có UserId nhỏ nhất
+            var warehouseWithMinOrders = await _context.Users
+                .Where(x => x.RoleId == 2)
+                .OrderBy(x => x.OrderAssignToNavigations.Count) // Sắp xếp theo số lượng order tăng dần
+                .ThenBy(x => x.UserId) // Nếu số lượng order bằng nhau, lấy warehouse có UserId nhỏ nhất
+                .FirstOrDefaultAsync();
+
+            return warehouseWithMinOrders;
         }
     }
 }

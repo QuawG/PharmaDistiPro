@@ -229,6 +229,11 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 order.Status = (int)Common.Enums.OrderStatus.DA_DUYET;
                 order.UpdatedStatusDate = DateTime.Now;
+
+                //assign cho warehouse manager
+                var warehouseManager = await _userRepository.GetWarehouseManagerToConfirm();
+                order.AssignTo = warehouseManager.UserId;
+
                 await _orderRepository.UpdateAsync(order); // Lưu trạng thái mới của đơn hàng trước
                 await _orderRepository.SaveAsync();
                 #endregion
@@ -281,6 +286,38 @@ namespace PharmaDistiPro.Services.Impl
                     Success = false,
                     Message = ex.Message
                 };
+            }
+        }
+
+        // get order cua warehouse de tao issue note
+        public async Task<Response<IEnumerable<OrderDto>>> GetOrderToCreateIssueNoteList(int warehouseId)
+        {
+            var response = new Response<IEnumerable<OrderDto>>();
+            try
+            {
+                var orders = await _orderRepository.GetByConditionAsync(o => o.AssignTo == warehouseId && o.Status == (int)Common.Enums.OrderStatus.DA_DUYET,
+                    includes: new string[] { "ConfirmedByNavigation", "Customer" });
+
+                orders = orders.OrderByDescending(o => o.OrderId).ToList();
+                if (!orders.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Không có dữ liệu";
+                }
+                else
+                {
+                    response.Data = _mapper.Map<IEnumerable<OrderDto>>(orders);
+                    response.Success = true;
+                    return response;
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                return response;
             }
         }
 

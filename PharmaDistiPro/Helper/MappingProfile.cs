@@ -74,7 +74,13 @@ namespace PharmaDistiPro.Helper
 
                 // Lấy thông tin người tạo đơn hàng
                 .ForMember(dest => dest.ConfirmedBy, opt => opt.MapFrom(src => src.ConfirmedBy)) // Người tạo đơn hàng
-                .ForMember(dest => dest.ConfirmBy, opt => opt.MapFrom(src => src.ConfirmedByNavigation)); // Người xác nhận đơn hàng
+                .ForMember(dest => dest.ConfirmBy, opt => opt.MapFrom(src => src.ConfirmedByNavigation))// Người xác nhận đơn hàng
+
+                // Lấy thông tin của warehouse được giao
+                .ForMember(dest => dest.AssignTo, opt => opt.MapFrom(src => src.AssignTo))
+                .ForMember(dest => dest.AssignToNavigation, opt => opt.MapFrom(src => src.AssignToNavigation)); 
+
+                
 
             CreateMap<OrderDto, Order>();
             CreateMap<OrdersDetail, OrdersDetailDto>()

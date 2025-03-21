@@ -121,22 +121,24 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Không tìm thấy đơn hàng";
                     return response;
                 }
+                order.Status = (int)Common.Enums.OrderStatus.XUAT_KHO;
+                order.UpdatedStatusDate = DateTime.Now;
                 await _orderRepository.UpdateAsync(order);
 
                 #endregion
                 #region IssueNote
+
+                //mapping order => issue note
                 int issueNoteCount = await _issueNoteRepository.CountAsync(x => true);
                 issueNoteRequestDto.OrderId = orderId;
                 issueNoteRequestDto.IssueNoteCode = ConstantStringHelper.IssueNoteCode + (issueNoteCount + 1);
                 issueNoteRequestDto.CreatedDate = DateTime.Now;
                 issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
-                issueNoteRequestDto.Status = (int)Common.Enums.IssueNotesStatus.DANG_XU_LY;
+                issueNoteRequestDto.Status = (int)Common.Enums.IssueNotesStatus.DA_XUAT;
                 issueNoteRequestDto.CustomerId = order.CustomerId;
                 issueNoteRequestDto.TotalAmount = order.TotalAmount;
                 issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
-                User? warehouseManager = await _userRepository.GetWarehouseManagerToConfirm();
-
-                issueNoteRequestDto.CreatedBy = warehouseManager.UserId;
+                issueNoteRequestDto.CreatedBy = order.AssignTo;
 
                 var issueNote = _mapper.Map<IssueNote>(issueNoteRequestDto);
                 await _issueNoteRepository.InsertAsync(issueNote);
@@ -220,7 +222,7 @@ namespace PharmaDistiPro.Services.Impl
             {
                 // Ensure status is not null before checking Contains
                 var issueNotes = await _issueNoteRepository.GetByConditionAsync(
-                    x => x.CreatedBy == userId && (status == null || status.Contains(x.Status ?? -1)));
+                    x => x.CreatedBy == userId && (!status.Any() || status.Contains(x.Status ?? 2)));
 
                 if (!issueNotes.Any())
                 {

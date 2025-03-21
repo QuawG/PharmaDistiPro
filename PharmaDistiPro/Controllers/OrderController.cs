@@ -85,6 +85,18 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        // api get order to create issue note
+        [HttpGet("GetOrderToCreateIssueNoteList/{warehouseId}")]
+        public async Task<IActionResult> GetOrderToCreateIssueNoteList(int warehouseId)
+        {
+            var response = await _orderService.GetOrderToCreateIssueNoteList(warehouseId);
+            if (!response.Success)
+            {
+                return NotFound(new { response.Message });
+            }
+            return Ok(response);
+        }
+
         //api confirm order
         [HttpPut("ConfirmOrder/{orderId}")]
         public async Task<IActionResult> ConfirmOrder(int orderId)

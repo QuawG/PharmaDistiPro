@@ -28,7 +28,6 @@ namespace PharmaDistiPro.Models
         public virtual DbSet<OrdersDetail> OrdersDetails { get; set; } = null!;
         public virtual DbSet<Product> Products { get; set; } = null!;
         public virtual DbSet<ProductLot> ProductLots { get; set; } = null!;
-        public virtual DbSet<ProductStorageRoom> ProductStorageRooms { get; set; } = null!;
         public virtual DbSet<PurchaseOrder> PurchaseOrders { get; set; } = null!;
         public virtual DbSet<PurchaseOrdersDetail> PurchaseOrdersDetails { get; set; } = null!;
         public virtual DbSet<ReceivedNote> ReceivedNotes { get; set; } = null!;
@@ -170,6 +169,11 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.UpdatedStatusDate).HasColumnType("date");
 
+                entity.HasOne(d => d.AssignToNavigation)
+                    .WithMany(p => p.OrderAssignToNavigations)
+                    .HasForeignKey(d => d.AssignTo)
+                    .HasConstraintName("FK_Orders_Users2");
+
                 entity.HasOne(d => d.ConfirmedByNavigation)
                     .WithMany(p => p.OrderConfirmedByNavigations)
                     .HasForeignKey(d => d.ConfirmedBy)
@@ -239,19 +243,11 @@ namespace PharmaDistiPro.Models
                     .WithMany(p => p.ProductLots)
                     .HasForeignKey(d => d.ProductId)
                     .HasConstraintName("FK_ProductLot_Products");
-            });
-
-            modelBuilder.Entity<ProductStorageRoom>(entity =>
-            {
-                entity.HasOne(d => d.ProductLot)
-                    .WithMany(p => p.ProductStorageRooms)
-                    .HasForeignKey(d => d.ProductLotId)
-                    .HasConstraintName("FK_ProductStorageRooms_ProductLot");
 
                 entity.HasOne(d => d.StorageRoom)
-                    .WithMany(p => p.ProductStorageRooms)
+                    .WithMany(p => p.ProductLots)
                     .HasForeignKey(d => d.StorageRoomId)
-                    .HasConstraintName("FK_ProductStorageRooms_StorageRooms");
+                    .HasConstraintName("FK_ProductLot_StorageRooms");
             });
 
             modelBuilder.Entity<PurchaseOrder>(entity =>

@@ -29,6 +29,9 @@ namespace PharmaDistiPro.Services.Interface
         //List order cua customer
         Task<Response<IEnumerable<OrderDto>>> GetOrderByCustomerId(int customerId);
 
+        // List order cua warehouse để create issue note
+        Task<Response<IEnumerable<OrderDto>>> GetOrderToCreateIssueNoteList(int warehouseId);
+
         #endregion
 
         #region order details

@@ -22,7 +22,9 @@ namespace PharmaDistiPro.Models
         public string? Address { get; set; }
         public int? ConfirmedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
+        public int? AssignTo { get; set; }
 
+        public virtual User? AssignToNavigation { get; set; }
         public virtual User? ConfirmedByNavigation { get; set; }
         public virtual User? Customer { get; set; }
         public virtual ICollection<IssueNote> IssueNotes { get; set; }
