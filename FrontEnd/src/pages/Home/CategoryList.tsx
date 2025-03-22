@@ -38,13 +38,13 @@ const CategoryList: React.FC<CategoryListPageProps> = ({ handleChangePage }) => 
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Danh mục chính</h1>
-          <p className="text-sm text-gray-500">Quản lý danh mục chính</p>
+          <h1 className="text-xl font-semibold text-gray-900">Danh mục hệ thống</h1>
+          <p className="text-sm text-gray-500">Quản lý danh mục hệ thống</p>
         </div>
         <button
-          onClick={() => handleChangePage('Tạo danh mục chính')}
+          onClick={() => handleChangePage('Tạo danh mục hệ thống')}
           className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold' /> Tạo danh mục chính mới
+          <PlusIcon className='w-5 h-5 font-bold' /> Tạo danh mục mới
         </button>
       </div>
 

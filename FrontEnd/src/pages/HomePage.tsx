@@ -21,6 +21,9 @@ import AddLot from "../components/Lot/AddLot"; // Import trang AddLot
 import MyComponent from "./Dashboard/Dashboard/Dashboard";
 import StorageRoomListPage from "./Home/StorageRoom"; // Import trang danh sách kho
 import StorageRoomAdd from "../components/StorageRoom/AddStorageRoom"; 
+import AddReceivedNote from "../components/ReceivedNote/AddReceivedNote"; 
+import OrderListPage from "./Home/OrderList"; // Import OrderListPage
+import NewOrder from "../components/Order/NewOrder";
 import { useState } from "react";
 
 const HomePage = () => {
@@ -33,6 +36,12 @@ const HomePage = () => {
       setSelectedProductId(productId);
     }
   };
+
+  const handleAddNote = () => {
+    // Khi thêm thành công, quay lại danh sách phiếu nhập
+    setActivePage("Danh sách phiếu nhập");
+  };
+  
 
   return (
     <div className="w-screen h-screen flex">
@@ -59,9 +68,12 @@ const HomePage = () => {
         {activePage === 'Tạo đơn đặt hàng(PO)' && <PurchaseOrderAdd />}
         {activePage === "Danh sách lô hàng" && <LotListPage handleChangePage={setActivePage} />}
         {activePage === "Tạo lô hàng" && <AddLot handleChangePage={setActivePage} />}
-        {activePage === "Danh sách phiếu nhập" && <ReceivedNoteListPage  />}
+        {activePage === "Danh sách phiếu nhập" && <ReceivedNoteListPage  handleChangePage={handleChangePage} />}
+        {activePage === "Tạo phiếu nhập kho" && <AddReceivedNote handleChangePage={handleChangePage}  handleAddNote={handleAddNote}/>}
         {activePage === 'Danh sách kho' && <StorageRoomListPage handleChangePage={handleChangePage} />}
         {activePage === 'Tạo kho mới' && <StorageRoomAdd/>}
+        {activePage === 'Danh sách đơn hàng' && <OrderListPage handleChangePage={handleChangePage} />}
+        {activePage === 'Tạo đơn hàng' && <NewOrder />}
       </div>
     </div>
   );

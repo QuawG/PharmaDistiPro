@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Trash, FileText, Edit, SortAsc, SortDesc } from "lucide-react";
+import { Table, Modal, Input, Button, Dropdown, Menu } from "antd";
+import { MoreOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 interface Lot {
   id: number;
@@ -20,51 +21,42 @@ interface LotTableProps {
 
 const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
   const [lots, setLots] = useState<Lot[]>([]);
-  const [sortField, setSortField] = useState<keyof Lot | "RemainingDays" | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
-    console.log("Dữ liệu lô hàng:", ITEM_DATA); // Kiểm tra dữ liệu đầu vào
     setLots(ITEM_DATA);
   }, [ITEM_DATA]);
+
   // Tính số ngày còn hạn
   const calculateRemainingDays = (expiredDate: string) => {
     const today = new Date();
     return Math.floor((new Date(expiredDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  // Sắp xếp dữ liệu
-  const handleSort = (field: keyof Lot | "RemainingDays") => {
-    const newSortOrder = sortField === field && sortOrder === "asc" ? "desc" : "asc";
-    setSortField(field);
-    setSortOrder(newSortOrder);
-
-    const sortedData = [...lots].sort((a, b) => {
-      let valA: number | string, valB: number | string;
-
-      if (field === "RemainingDays") {
-        valA = calculateRemainingDays(a.ExpiredDate);
-        valB = calculateRemainingDays(b.ExpiredDate);
-      } else {
-        valA = typeof a[field] === "boolean" ? Number(a[field]) : (a[field] as number | string);
-        valB = typeof b[field] === "boolean" ? Number(b[field]) : (b[field] as number | string);
-      }
-
-      if (valA < valB) return newSortOrder === "asc" ? -1 : 1;
-      if (valA > valB) return newSortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-
-
-    setLots(sortedData);
-  };
-
   // Xóa lô hàng
   const handleDelete = (id: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa lô hàng này không?")) {
-      setLots(lots.filter((lot) => lot.id !== id));
+    Modal.confirm({
+      title: "Xác nhận xóa",
+      content: "Bạn có chắc chắn muốn xóa lô hàng này không?",
+      okText: "Xóa",
+      okType: "danger",
+      cancelText: "Hủy",
+      onOk: () => setLots(lots.filter((lot) => lot.id !== id)),
+    });
+  };
+
+  // Mở modal chỉnh sửa
+  const handleEdit = (lot: Lot) => {
+    setSelectedLot(lot);
+    setIsEditModalOpen(true);
+  };
+
+  // Lưu thay đổi
+  const handleSave = () => {
+    if (selectedLot) {
+      setLots(lots.map((lot) => (lot.id === selectedLot.id ? selectedLot : lot)));
+      setIsEditModalOpen(false);
     }
   };
 
@@ -77,110 +69,84 @@ const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
     });
   };
 
-  // Xem thông tin chi tiết
-  const handleView = (lot: Lot) => {
-    setSelectedLot(lot);
-    setIsModalOpen(true);
-  };
+  const columns = [
+    { title: "Mã lô", dataIndex: "LotCode", key: "LotCode" },
+    { title: "Tên sản phẩm", dataIndex: "ProductName", key: "ProductName" },
+    { title: "Ngày SX", dataIndex: "ManufacturedDate", key: "ManufacturedDate", render: formatDate },
+    { title: "HSD", dataIndex: "ExpiredDate", key: "ExpiredDate", render: formatDate },
+    { title: "Tồn kho", dataIndex: "Quantity", key: "Quantity" },
+    {
+      title: "Số ngày còn hạn",
+      key: "RemainingDays",
+      render: (text: string, record: Lot) => `${calculateRemainingDays(record.ExpiredDate)} ngày`,
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "Status",
+      key: "Status",
+      render: (status: string) => {
+        let color = "blue";
+        if (status === "Còn hàng") color = "green";
+        else if (status === "Đã hết hàng") color = "red";
+        else if (status === "Đã hết hạn") color = "gray";
+        else if (status === "Tạm ngưng bán") color = "yellow";
+        return <span className={`text-${color}-500`}>{status}</span>;
+      },
+    },
+    {
+      title: "Thao tác",
+      key: "actions",
+      render: (text: string, record: Lot) => (
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item key="edit" onClick={() => handleEdit(record)}>
+                <EditOutlined /> Chỉnh sửa
+              </Menu.Item>
+              <Menu.Item key="delete" onClick={() => handleDelete(record.id)} danger>
+                <DeleteOutlined /> Xóa
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={["click"]}
+        >
+          <Button shape="circle" icon={<MoreOutlined />} />
+        </Dropdown>
+      ),
+    },
+  ];
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-50">
-            {["LotCode", "ProductName", "ManufacturedDate", "ExpiredDate", "Quantity", "RemainingDays", "Status", "Actions"].map((field) => (
-              <th key={field} className="px-4 py-3 text-left text-sm font-bold">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSort(field as keyof Lot | "RemainingDays")}>
-                  {field === "LotCode" && "Mã lô"}
-                  {field === "ProductName" && "Tên sản phẩm"}
-                  {field === "ManufacturedDate" && "Ngày SX"}
-                  {field === "ExpiredDate" && "HSD"}
-                  {field === "Quantity" && "Tồn kho"}
-                  {field === "RemainingDays" && "Số ngày còn hạn"}
-                  {field === "Status" && "Trạng thái"}
-                  {field === "Actions" && "Thao tác"}
-                  {sortField === field && (sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />)}
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {lots.length === 0 ? (
-            <tr>
-              <td colSpan={8} className="text-center px-4 py-3 text-sm">Không có dữ liệu</td>
-            </tr>
-          ) : (
-            lots.map((lot) => (
-              <tr key={lot.id} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm">{lot.LotCode}</td>
-                <td className="px-4 py-3 text-sm">{lot.ProductName}</td>
-                <td className="px-4 py-3 text-sm">{formatDate(lot.ManufacturedDate)}</td>
-                <td className="px-4 py-3 text-sm">{formatDate(lot.ExpiredDate)}</td>
-                <td className="px-4 py-3 text-sm">{lot.Quantity}</td>
-                <td className="px-4 py-3 text-sm">
-                  {calculateRemainingDays(lot.ExpiredDate)} ngày
-                </td>
-                <td className="px-4 py-3 text-sm">
-                
-                  <span
-                    className={
-                      lot.Status === "Còn hàng"
-                        ? "text-green-500"
-                        : lot.Status === "Đã hết hàng"
-                          ? "text-red-500"
-                          : lot.Status === "Đã hết hạn"
-                            ? "text-gray-500"
-                            : lot.Status === "Tạm ngưng bán"
-                              ? "text-yellow-500"
-                              : "text-blue-500"
-                    }
-                  >
-                    {lot.Status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm flex space-x-2">
-                  <button className="p-1 text-blue-600 hover:bg-gray-200 rounded" onClick={() => handleView(lot)}>
-                    <FileText className="w-5 h-5" />
-                  </button>
-                  <button className="p-1 text-green-600 hover:bg-gray-200 rounded">
-                    <Edit className="w-5 h-5" />
-                  </button>
-                  <button className="p-1 text-red-600 hover:bg-gray-200 rounded" onClick={() => handleDelete(lot.id)}>
-                    <Trash className="w-5 h-5" />
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+    <div className="bg-white rounded-lg shadow">
+      <Table columns={columns} dataSource={lots} rowKey="id" />
 
-      {/* Modal Xem Chi Tiết */}
-      {isModalOpen && selectedLot && (
-        <div className="fixed inset-0 bg-gray-700 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-1/3 relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setIsModalOpen(false)}>
-              ✖️
-            </button>
-            <h2 className="text-xl font-semibold text-center mb-4">Thông tin lô hàng</h2>
-            <div className="grid gap-3">
-              <div>
-                <label className="block text-gray-600">Mã lô</label>
-                <input type="text" value={selectedLot.LotCode} disabled className="border border-gray-300 rounded-lg px-3 py-1 w-full" />
-              </div>
-              <div>
-                <label className="block text-gray-600">Tên sản phẩm</label>
-                <input type="text" value={selectedLot.ProductName} disabled className="border border-gray-300 rounded-lg px-3 py-1 w-full" />
-              </div>
-              <div>
-                <label className="block text-gray-600">Giá nhập</label>
-                <input type="number" value={selectedLot.SupplyPrice} disabled className="border border-gray-300 rounded-lg px-3 py-1 w-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal chỉnh sửa */}
+      <Modal
+        title="Chỉnh sửa lô hàng"
+        visible={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        onOk={handleSave}
+        width={800}
+      >
+        {selectedLot && (
+          <>
+            <label>Mã lô</label>
+            <Input value={selectedLot.LotCode} onChange={(e) => setSelectedLot({ ...selectedLot, LotCode: e.target.value })} />
+
+            <label className="mt-2">Tên sản phẩm</label>
+            <Input value={selectedLot.ProductName} onChange={(e) => setSelectedLot({ ...selectedLot, ProductName: e.target.value })} />
+
+            <label className="mt-2">Giá nhập</label>
+            <Input type="number" value={selectedLot.SupplyPrice} onChange={(e) => setSelectedLot({ ...selectedLot, SupplyPrice: Number(e.target.value) })} />
+
+            <label className="mt-2">Tồn kho</label>
+            <Input type="number" value={selectedLot.Quantity} onChange={(e) => setSelectedLot({ ...selectedLot, Quantity: Number(e.target.value) })} />
+
+            <label className="mt-2">Trạng thái</label>
+            <Input value={selectedLot.Status} onChange={(e) => setSelectedLot({ ...selectedLot, Status: e.target.value })} />
+          </>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Menu, Dropdown, Button } from "antd";
-import { MoreOutlined, DeleteOutlined, EditOutlined ,UnorderedListOutlined} from "@ant-design/icons";
+import { Menu, Dropdown, Button, Table, Modal, Input } from "antd";
+import { MoreOutlined, DeleteOutlined, EditOutlined, UnorderedListOutlined } from "@ant-design/icons";
 
 interface ReceivedNote {
     ReceiveNoteId: number;
@@ -24,174 +24,129 @@ interface ReceivedNoteDetail {
     Unit: string;
     ActualReceived: number;
     SupplyPrice: number;
+    StorageRoomName: string;
 }
 
 interface ReceivedNoteTableProps {
     notes: ReceivedNote[];
     onDelete: (id: number) => void;
+    onUpdate: (updatedNote: ReceivedNote) => void;
 }
 
-const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({ notes, onDelete }) => {
+const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({ notes, onDelete, onUpdate }) => {
     const [selectedNote, setSelectedNote] = useState<ReceivedNote | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    // Mở modal chỉnh sửa
     const openEditModal = (note: ReceivedNote) => {
         setSelectedNote(note);
+        setIsEditModalOpen(true);
     };
 
-    // Đóng modal
     const closeEditModal = () => {
         setSelectedNote(null);
+        setIsEditModalOpen(false);
     };
 
-    // Xóa phiếu nhập kho
-    const handleDeleteNote = (id: number) => {
-        const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa phiếu?");
-        if (confirmDelete) {
-            onDelete(id);
-            setTimeout(() => alert("Bạn đã xóa thành công phiếu!"), 200);
-        }
-    };
-
-    const handleDeleteDetail = (detailId: number) => {
-        const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?");
-        if (confirmDelete && selectedNote) {
-            setSelectedNote({
+    const handleQuantityChange = (detailId: number, newQuantity: number) => {
+        if (selectedNote) {
+            const updatedNote = {
                 ...selectedNote,
-                Details: selectedNote.Details.filter(detail => detail.ReceiveNoteDetailId !== detailId),
-            });
-            setTimeout(() => alert("Bạn đã xóa thành công sản phẩm!"), 200);
+                Details: selectedNote.Details.map(detail =>
+                    detail.ReceiveNoteDetailId === detailId
+                        ? { ...detail, ActualReceived: newQuantity }
+                        : detail
+                ),
+            };
+            setSelectedNote(updatedNote);
         }
     };
+
+    const handleSave = () => {
+        if (selectedNote) {
+            onUpdate(selectedNote);
+            closeEditModal();
+        }
+    };
+
+    const handleDeleteNote = (id: number) => {
+        Modal.confirm({
+            title: "Xác nhận xóa",
+            content: "Bạn có chắc chắn muốn xóa phiếu?",
+            okText: "Xóa",
+            okType: "danger",
+            cancelText: "Hủy",
+            onOk: () => onDelete(id),
+        });
+    };
+
+    const columns = [
+        { title: "Mã Phiếu", dataIndex: "ReceiveNotesCode", key: "ReceiveNotesCode" },
+        { title: "Trạng Thái", dataIndex: "Status", key: "Status" },
+        { title: "Người Giao Hàng", dataIndex: "DeliveryPerson", key: "DeliveryPerson" },
+        { title: "Số Sản Phẩm", dataIndex: "Details", key: "Details", render: (details: ReceivedNoteDetail[]) => details.length },
+        { title: "Số lượng", key: "TotalQuantity", render: (_: any, record: ReceivedNote) => record.Details.reduce((total, detail) => total + detail.ActualReceived, 0) },
+        { title: "Tổng Tiền", dataIndex: "TotalAmount", key: "TotalAmount", render: (amount: number) => `${amount.toLocaleString()} VND` },
+        { title: "Ngày Tạo", dataIndex: "CreatedDate", key: "CreatedDate" },
+        {
+            title: <UnorderedListOutlined />,
+            key: "actions",
+            render: (_: any, record: ReceivedNote) => (
+                <Dropdown
+                    overlay={
+                        <Menu>
+                            <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
+                                Xem & Sửa Phiếu
+                            </Menu.Item>
+                            <Menu.Item key="delete" icon={<DeleteOutlined />} danger onClick={() => handleDeleteNote(record.ReceiveNoteId)}>
+                                Xóa Phiếu
+                            </Menu.Item>
+                        </Menu>
+                    }
+                    trigger={["click"]}
+                >
+                    <Button shape="circle" icon={<MoreOutlined />} />
+                </Dropdown>
+            ),
+        },
+    ];
 
     return (
-        <div>
-            {/* Bảng danh sách phiếu nhập kho */}
-            <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                    <tr className="bg-gray-200">
-                        <th className="border border-gray-300 px-4 py-2">Mã Phiếu</th>
-                        <th className="border border-gray-300 px-4 py-2">Trạng Thái</th>
-                        <th className="border border-gray-300 px-4 py-2">Người Giao Hàng</th>
-                        <th className="border border-gray-300 px-4 py-2">Số Sản Phẩm</th>
-                        <th className="border border-gray-300 px-4 py-2">Số lượng</th>
-                        <th className="border border-gray-300 px-4 py-2">Tổng Tiền</th>
-                        <th className="border border-gray-300 px-4 py-2">Ngày Tạo</th>
-                        <th className="border border-gray-300 px-4 py-2"><UnorderedListOutlined></UnorderedListOutlined></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {notes.map((note) => (
-                        <tr key={note.ReceiveNoteId} className="hover:bg-gray-100">
-                            <td className="border border-gray-300 px-4 py-2">{note.ReceiveNotesCode}</td>
-                            <td className="border border-gray-300 px-4 py-2">{note.Status}</td>
-                            <td className="border border-gray-300 px-4 py-2">{note.DeliveryPerson}</td>
-                            <td className="border border-gray-300 px-4 py-2">{note.Details.length}</td>
-                            <td className="border border-gray-300 px-4 py-2">
-    {note.Details.reduce((total, detail) => total + detail.ActualReceived, 0)}
-</td>
-                            <td className="border border-gray-300 px-4 py-2">{note.TotalAmount.toLocaleString()} VND</td>
-                            <td className="border border-gray-300 px-4 py-2">{note.CreatedDate}</td>
-                            <td className="border border-gray-300 px-4 py-2 relative">
-                                {/* Menu hành động */}
-                                <Dropdown
-                                    overlay={
-                                        <Menu>
-                                            <Menu.Item
-                                                key="edit"
-                                                icon={<EditOutlined />}
-                                                onClick={() => openEditModal(note)}
-                                            >
-                                                Xem & Sửa Phiếu
-                                            </Menu.Item>
-                                            <Menu.Item
-                                                key="delete"
-                                                icon={<DeleteOutlined />}
-                                                danger
-                                                onClick={() => handleDeleteNote(note.ReceiveNoteId)}
-                                            >
-                                                Xóa Phiếu
-                                            </Menu.Item>
-                                        </Menu>
-                                    }
-                                    trigger={['click']}
-                                >
-                                    <Button icon={<MoreOutlined />} />
-                                </Dropdown>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="bg-white rounded-lg shadow">
+            <Table columns={columns} dataSource={notes} rowKey="ReceiveNoteId" />
 
-            {/* Modal chỉnh sửa */}
             {selectedNote && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
-                    <div className="bg-white shadow-lg p-5 rounded-lg w-1/2 border border-gray-300">
-                        <div className="flex justify-between">
-                            <h2 className="text-lg font-bold">Chỉnh Sửa Phiếu: {selectedNote.ReceiveNotesCode}</h2>
-                            <Button icon={<DeleteOutlined />} onClick={closeEditModal} />
-                        </div>
-
-                        {/* Bảng chỉnh sửa chi tiết sản phẩm */}
-                        <table className="w-full mt-4 border-collapse border border-gray-300">
-                            <thead>
-                                <tr className="bg-gray-200">
-                                    <th className="border px-4 py-2">Tên Sản Phẩm</th>
-                                    <th className="border px-4 py-2">Số Lượng</th>
-                                    <th className="border px-4 py-2">Số lô</th>
-                                    <th className="border px-4 py-2">DVT</th>
-                                    <th className="border px-4 py-2">Giá Nhập</th>
-                                    <th className="border px-4 py-2">Thành tiền</th>
-                                    
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {selectedNote.Details.map((detail) => (
-                                    <tr key={detail.ReceiveNoteDetailId}>
-                                        <td className="border px-4 py-2">{detail.ProductName}</td>
-                                        <td className="border px-4 py-2">
-                                            <input
-                                                type="number"
-                                                className="border px-2 py-1 w-20"
-                                                value={detail.ActualReceived}
-                                                onChange={(e) =>
-                                                    setSelectedNote({
-                                                        ...selectedNote,
-                                                        Details: selectedNote.Details.map(d =>
-                                                            d.ReceiveNoteDetailId === detail.ReceiveNoteDetailId
-                                                                ? { ...d, ActualReceived: Number(e.target.value) }
-                                                                : d
-                                                        ),
-                                                    })
-                                                }
-                                            />
-                                        </td>
-                                        <td className="border px-4 py-2">{detail.LotCode}</td>
-                                        <td className="border px-4 py-2">{detail.Unit}</td>
-                                        <td className="border px-4 py-2">{detail.SupplyPrice}</td>
-                                        <td className="border px-4 py-2">
-                                            {(detail.ActualReceived * detail.SupplyPrice).toLocaleString()} VND
-                                        </td>
-                                        <td className="border px-4 py-2 text-center">
-                <Button
-                    icon={<DeleteOutlined />}
-                    danger
-                    onClick={() => handleDeleteDetail(detail.ReceiveNoteDetailId)}
-                />
-            </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {/* Nút lưu và hủy */}
-                        <div className="flex justify-end mt-4">
-                            <Button onClick={closeEditModal} className="mr-2">Hủy</Button>
-                            <Button type="primary">Lưu</Button>
-                        </div>
-                    </div>
-                </div>
+                <Modal
+                    title={`Chỉnh Sửa Phiếu: ${selectedNote.ReceiveNotesCode}`}
+                    visible={isEditModalOpen}
+                    onCancel={closeEditModal}
+                    onOk={handleSave}
+                    width={800}
+                >
+                    <Table
+                        columns={[
+                            { title: "Tên Sản Phẩm", dataIndex: "ProductName", key: "ProductName" },
+                            {
+                                title: "Số Lượng",
+                                dataIndex: "ActualReceived",
+                                key: "ActualReceived",
+                                render: (text: number, record: ReceivedNoteDetail) => (
+                                    <Input
+                                        type="number"
+                                        value={text}
+                                        onChange={(e) => handleQuantityChange(record.ReceiveNoteDetailId, Number(e.target.value))}
+                                    />
+                                ),
+                            },
+                            { title: "Số lô", dataIndex: "LotCode", key: "LotCode" },
+                            { title: "DVT", dataIndex: "Unit", key: "Unit" },
+                            { title: "Giá Nhập", dataIndex: "SupplyPrice", key: "SupplyPrice" },
+                            { title: "Thành tiền", key: "TotalPrice", render: (_: any, record: ReceivedNoteDetail) => `${(record.ActualReceived * record.SupplyPrice).toLocaleString()} VND` },
+                            { title: "Tên kho", dataIndex: "StorageRoomName", key: "StorageRoomName" },
+                        ]}
+                        dataSource={selectedNote.Details}
+                        rowKey="ReceiveNoteDetailId"
+                    />
+                </Modal>
             )}
         </div>
     );

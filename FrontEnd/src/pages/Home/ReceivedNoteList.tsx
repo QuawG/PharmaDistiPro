@@ -3,8 +3,12 @@ import { FileText, Table, Printer } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ReceivedNoteTable from "../../components/ReceivedNote/ReceivedNoteTable";
+import { PlusIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
 
+interface ReceivedNoteListPageProps {
+    handleChangePage: (page: string, ReceiveNoteId?: number) => void;
+  }
 interface ReceivedNote {
     ReceiveNoteId: number;
     ReceiveNotesCode: string;
@@ -27,6 +31,7 @@ interface ReceivedNoteDetail {
     Unit: string;
     ActualReceived: number;
     SupplyPrice: number;
+    StorageRoomName: string;
 }
 
 // Dữ liệu mẫu
@@ -41,8 +46,8 @@ const SAMPLE_RECEIVED_NOTES: ReceivedNote[] = [
         CreatedBy: "HieuLD",
         CreatedDate: "15-03-2025",
         Details: [
-            { ReceiveNoteDetailId: 1, NoteNumber: 100, ProductLotId: 1, ProductName: "Vương Niệu Đan", ProductCode: "SP01", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 50, SupplyPrice: 50000 },
-            { ReceiveNoteDetailId: 2, NoteNumber: 30, ProductLotId: 2, ProductName: "Khương Thảo Đan", ProductCode: "SP02", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 30, SupplyPrice: 30000 },
+            { ReceiveNoteDetailId: 1, NoteNumber: 100, ProductLotId: 1, ProductName: "Vương Niệu Đan", ProductCode: "SP01", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 50, SupplyPrice: 50000 ,StorageRoomName: "Kho A"},
+            { ReceiveNoteDetailId: 2, NoteNumber: 30, ProductLotId: 2, ProductName: "Khương Thảo Đan", ProductCode: "SP02", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 30, SupplyPrice: 30000 , StorageRoomName: "Kho B"},
         ],
     },
     {
@@ -55,13 +60,14 @@ const SAMPLE_RECEIVED_NOTES: ReceivedNote[] = [
         CreatedBy: "HieuLD",
         CreatedDate: "15-03-2025",
         Details: [
-            { ReceiveNoteDetailId: 1, NoteNumber: 100, ProductLotId: 1, ProductName: "Vương Niệu Đan", ProductCode: "SP01", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 50, SupplyPrice: 50000 },
+            { ReceiveNoteDetailId: 1, NoteNumber: 100, ProductLotId: 1, ProductName: "Vương Niệu Đan", ProductCode: "SP01", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 50, SupplyPrice: 50000, StorageRoomName: "Kho C" },
             
         ],
     },
 ];
 
-const ReceivedNoteListPage: React.FC = () => {
+
+const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChangePage }) => {
     const [searchCode, setSearchCode] = useState("");
     const [status, setStatus] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -156,10 +162,19 @@ const ReceivedNoteListPage: React.FC = () => {
     const handleDelete = (id: number) => {
         setFilteredNotes((prev) => prev.filter((note) => note.ReceiveNoteId !== id));
     };
+    const handleUpdateNote = (updatedNote: ReceivedNote) => {
+        setFilteredNotes((prev) =>
+            prev.map((note) =>
+                note.ReceiveNoteId === updatedNote.ReceiveNoteId ? updatedNote : note
+            )
+        );
+    };
 
+    
     return (
         <div className="p-6 mt-16 overflow-auto w-full bg-gray-100">
             <h1 className="text-xl font-semibold text-gray-900">Danh sách phiếu nhập kho</h1>
+            
 
             {/* Bộ lọc */}
             <div className="bg-white rounded-lg shadow p-5 mt-5">
@@ -174,6 +189,12 @@ const ReceivedNoteListPage: React.FC = () => {
                     <input type="date" className="border px-3 py-1 w-40" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     <button onClick={handleFilter} className="bg-orange-500 text-white px-4 py-1 rounded-lg">Lọc</button>
                     <button onClick={handleClearFilter} className="bg-orange-500 text-white px-4 py-1 rounded-lg">Xóa bộ lọc</button>
+                    <button
+                              onClick={() => handleChangePage("Tạo phiếu nhập kho")}
+                              className="bg-orange-500 text-white px-4 py-1 rounded-lg"
+                            >
+                             +Tạo phiếu mới
+                            </button>
                     <div className="flex gap-2">
                         <button onClick={exportToTextFile} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                             <FileText className="w-5 h-5" />
@@ -190,7 +211,7 @@ const ReceivedNoteListPage: React.FC = () => {
 
             {/* Component bảng */}
             <div ref={printRef} className="bg-white rounded-lg shadow p-5 mt-5">
-    <ReceivedNoteTable notes={filteredNotes} onDelete={handleDelete} />
+    <ReceivedNoteTable notes={filteredNotes} onDelete={handleDelete}  onUpdate={handleUpdateNote} />
 </div>
         </div>
     );
