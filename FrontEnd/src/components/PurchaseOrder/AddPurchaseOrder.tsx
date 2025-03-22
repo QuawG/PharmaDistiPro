@@ -13,7 +13,7 @@ interface Supplier {
     tax: number; 
 }
 
-export default function AddPurchaseOrder() {
+const PurchaseOrderModal: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
@@ -23,6 +23,7 @@ export default function AddPurchaseOrder() {
         { id: 3, name: "Sản phẩm C" },
     ]);
     const [quantity, setQuantity] = useState<number>(1);
+    const [errorMessage, setErrorMessage] = useState<string>(""); // State for error messages
 
     const suppliers: Supplier[] = [
         { id: 1, name: "Nhà cung cấp 1", price: 100, tax: 10 },
@@ -49,8 +50,9 @@ export default function AddPurchaseOrder() {
             ]);
             setSearchTerm("");
             setQuantity(1);
+            setErrorMessage(""); // Clear error message
         } else {
-            alert("Vui lòng chọn nhà cung cấp trước!");
+            setErrorMessage("Vui lòng chọn nhà cung cấp trước!"); // Set error message
         }
     };
 
@@ -58,20 +60,18 @@ export default function AddPurchaseOrder() {
         const supplierId = parseInt(e.target.value);
         const supplier = suppliers.find(s => s.id === supplierId) || null;
         setSelectedSupplier(supplier);
+        setErrorMessage(""); // Clear error message when supplier is selected
     };
 
     const incrementQuantity = () => setQuantity(prev => prev + 1);
     const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
-    // Function to delete a product from the selected products list
     const handleDeleteProduct = (id: number) => {
         setSelectedProducts(prev => prev.filter(product => product.id !== id));
     };
 
-    // Calculate total amount
     const totalAmount = selectedProducts.reduce((sum, product) => sum + product.totalPrice, 0);
 
-    // Function to format numbers to VNĐ
     const formatCurrency = (amount: number) => {
         return amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
     };
@@ -82,6 +82,9 @@ export default function AddPurchaseOrder() {
                 <h1 className="text-xl font-semibold text-gray-900">Tạo đơn đặt hàng (PO)</h1>
                 <p className="text-sm text-gray-500">Tạo đơn đặt hàng mới</p>
             </div>
+
+            {/* Error Message */}
+            {errorMessage && <div className="mb-4 text-red-600">{errorMessage}</div>}
 
             {/* Chọn nhà cung cấp */}
             <div className="mb-4">
@@ -265,4 +268,6 @@ export default function AddPurchaseOrder() {
             </div>
         </div>
     );
-}
+};
+
+export default PurchaseOrderModal;

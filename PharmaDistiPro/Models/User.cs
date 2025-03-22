@@ -8,12 +8,13 @@ namespace PharmaDistiPro.Models
         public User()
         {
             Categories = new HashSet<Category>();
-            IssueNotes = new HashSet<IssueNote>();
-            Logs = new HashSet<Log>();
-            Orders = new HashSet<Order>();
+            IssueNoteCreatedByNavigations = new HashSet<IssueNote>();
+            IssueNoteCustomers = new HashSet<IssueNote>();
+            IventoryActivities = new HashSet<IventoryActivity>();
+            OrderConfirmedByNavigations = new HashSet<Order>();
+            OrderCustomers = new HashSet<Order>();
             Products = new HashSet<Product>();
             PurchaseOrders = new HashSet<PurchaseOrder>();
-            ReceiveNoteDetails = new HashSet<ReceiveNoteDetail>();
             StorageRooms = new HashSet<StorageRoom>();
             Suppliers = new HashSet<Supplier>();
             Units = new HashSet<Unit>();
@@ -42,12 +43,13 @@ namespace PharmaDistiPro.Models
 
         public virtual Role? Role { get; set; }
         public virtual ICollection<Category> Categories { get; set; }
-        public virtual ICollection<IssueNote> IssueNotes { get; set; }
-        public virtual ICollection<Log> Logs { get; set; }
-        public virtual ICollection<Order> Orders { get; set; }
+        public virtual ICollection<IssueNote> IssueNoteCreatedByNavigations { get; set; }
+        public virtual ICollection<IssueNote> IssueNoteCustomers { get; set; }
+        public virtual ICollection<IventoryActivity> IventoryActivities { get; set; }
+        public virtual ICollection<Order> OrderConfirmedByNavigations { get; set; }
+        public virtual ICollection<Order> OrderCustomers { get; set; }
         public virtual ICollection<Product> Products { get; set; }
         public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; }
-        public virtual ICollection<ReceiveNoteDetail> ReceiveNoteDetails { get; set; }
         public virtual ICollection<StorageRoom> StorageRooms { get; set; }
         public virtual ICollection<Supplier> Suppliers { get; set; }
         public virtual ICollection<Unit> Units { get; set; }

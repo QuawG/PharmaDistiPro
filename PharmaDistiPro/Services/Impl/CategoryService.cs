@@ -79,6 +79,48 @@ namespace PharmaDistiPro.Services.Impl
             return rootCategories;
         }
 
+        public async Task<Response<IEnumerable<CategoryDTO>>> GetAllSubCategoriesAsync()
+        {
+            var response = new Response<IEnumerable<CategoryDTO>>();
+
+            try
+            {
+                // Lấy tất cả danh mục từ repository
+                var categories = await _categoryRepository.GetAllAsync();
+
+                if (!categories.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Không có dữ liệu danh mục.";
+                    return response;
+                }
+
+                // Lọc các danh mục có CategoryMainId không null
+                var subCategories = categories.Where(c => c.CategoryMainId != null);
+
+                if (!subCategories.Any())
+                {
+                    response.Success = false;
+                    response.Message = "Không có danh mục con nào.";
+                    return response;
+                }
+
+                // Chuyển sang DTO
+                var subCategoryDTOs = _mapper.Map<IEnumerable<CategoryDTO>>(subCategories);
+
+                response.Success = true;
+                response.Message = "Lấy danh sách tất cả danh mục con thành công.";
+                response.Data = subCategoryDTOs;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Lỗi: {ex.Message}";
+            }
+
+            return response;
+        }
+
         // Filter by name
         public async Task<Response<IEnumerable<CategoryDTO>>> FilterCategoriesAsync(string? searchTerm)
         {
