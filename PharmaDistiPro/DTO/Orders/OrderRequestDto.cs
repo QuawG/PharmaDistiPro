@@ -4,7 +4,6 @@ namespace PharmaDistiPro.DTO.Orders
 {
     public class OrderRequestDto
     {
-
         public int OrderId { get; set; }
         public string? OrderCode { get; set; }
         public int? CustomerId { get; set; }

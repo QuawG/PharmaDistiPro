@@ -10,7 +10,7 @@ namespace PharmaDistiPro.Models
             IssueNoteDetails = new HashSet<IssueNoteDetail>();
         }
 
-        public int Id { get; set; }
+        public int IssueNoteId { get; set; }
         public string? IssueNoteCode { get; set; }
         public int? OrderId { get; set; }
         public int? CustomerId { get; set; }

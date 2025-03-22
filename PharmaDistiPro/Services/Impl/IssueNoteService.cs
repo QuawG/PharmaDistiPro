@@ -178,7 +178,7 @@ namespace PharmaDistiPro.Services.Impl
 
                         var issueNoteDetail = new IssueNoteDetail
                         {
-                            IssueNoteId = issueNote.Id,// Liên kết với issueNotDetail
+                            IssueNoteId = issueNote.IssueNoteId,// Liên kết với issueNotDetail
                             ProductLotId = productLot.ProductLotId,
                             Quantity = takeQuantity // Cập nhật số lượng xuất kho từ lô này
                         };
@@ -271,7 +271,7 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<IssueNoteDto>();
             try
             {
-                var issueNote = await _issueNoteRepository.GetSingleByConditionAsync(x => x.Id == issueNoteId);
+                var issueNote = await _issueNoteRepository.GetSingleByConditionAsync(x => x.IssueNoteId == issueNoteId);
                 if (issueNote == null)
                 {
                     response.Success = false;

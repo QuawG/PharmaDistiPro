@@ -22,6 +22,6 @@ namespace PharmaDistiPro.DTO.IssueNoteDetails
         public double? SupplyPrice { get; set; }
         public int? Quantity { get; set; }
         public int? Status { get; set; }
-        public virtual ProductLotAndOrdersDetailDto? Product { get; set; }
+        public virtual ProductOrderDto? Product { get; set; }
     }
 }

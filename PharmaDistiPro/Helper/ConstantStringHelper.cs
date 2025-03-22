@@ -7,5 +7,7 @@
         public const string EmployeeCode = "EMP_";
 
         public const string IssueNoteCode = "ISN_";
+
+        public const string PurchaseOrderCode = "PORD_";
     }
 }

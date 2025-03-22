@@ -1,16 +1,15 @@
 ﻿using PharmaDistiPro.DTO.Products;
 using PharmaDistiPro.Models;
 
-namespace PharmaDistiPro.DTO.OrdersDetails
+namespace PharmaDistiPro.DTO.PurchaseOrdersDetails
 {
-    public class OrdersDetailDto
+    public class PurchaseOrdersDetailDto
     {
-        public int OrderDetailId { get; set; }
-        public int? OrderId { get; set; }
+        public int PurchaseOrderDetailId { get; set; }
+        public int? PurchaseOrderId { get; set; }
         public int? ProductId { get; set; }
         public int? Quantity { get; set; }
 
-        public int? TotalQuantity { get; set; }
         public virtual ProductOrderDto? Product { get; set; }
     }
 }

@@ -65,8 +65,6 @@ namespace PharmaDistiPro.Services.Impl
 
         }
 
-
-
         // get all order trong he thong
         public async Task<Response<IEnumerable<OrderDto>>> GetAllOrders(int[] status, DateTime? dateCreatedFrom, DateTime? dateCreatedTo)
         {
@@ -359,7 +357,7 @@ namespace PharmaDistiPro.Services.Impl
                     {
                         ProductId = g.ProductId,
                         TotalQuantity = g.TotalQuantity,
-                        Product = _mapper.Map<ProductLotAndOrdersDetailDto>(g.Orders.First().Product) // Lấy thông tin sản phẩm từ danh sách orders
+                        Product = _mapper.Map<ProductOrderDto>(g.Orders.First().Product) // Lấy thông tin sản phẩm từ danh sách orders
                     }).ToList();
 
                 if (!resultOrders.Any())

@@ -5,6 +5,8 @@ using PharmaDistiPro.DTO.IssueNoteDetails;
 using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.OrdersDetails;
 using PharmaDistiPro.DTO.Products;
+using PharmaDistiPro.DTO.PurchaseOrders;
+using PharmaDistiPro.DTO.PurchaseOrdersDetails;
 using PharmaDistiPro.DTO.StorageRooms;
 using PharmaDistiPro.DTO.Suppliers;
 using PharmaDistiPro.DTO.Units;
@@ -17,11 +19,12 @@ namespace PharmaDistiPro.Helper
     {
         public MappingProfile()
         {
-
-
             #region Supplier
             CreateMap<Supplier, SupplierDTO>();
             CreateMap<SupplierDTO, Supplier>();
+
+            CreateMap<Supplier, SupplierOrderDto>();
+            CreateMap<SupplierOrderDto, Supplier>();
             #endregion
 
             #region StorageRoom
@@ -55,8 +58,8 @@ namespace PharmaDistiPro.Helper
             #endregion
 
             #region Product
-            CreateMap<Product, ProductLotAndOrdersDetailDto>();
-            CreateMap<ProductLotAndOrdersDetailDto, ProductLotAndOrdersDetailDto>();
+            CreateMap<Product, ProductOrderDto>();
+            CreateMap<ProductOrderDto, Product>();
             #endregion
 
             #region productlot
@@ -79,10 +82,8 @@ namespace PharmaDistiPro.Helper
                 // Lấy thông tin của warehouse được giao
                 .ForMember(dest => dest.AssignTo, opt => opt.MapFrom(src => src.AssignTo))
                 .ForMember(dest => dest.AssignToNavigation, opt => opt.MapFrom(src => src.AssignToNavigation)); 
-
-                
-
             CreateMap<OrderDto, Order>();
+
             CreateMap<OrdersDetail, OrdersDetailDto>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductId : (int?)null))
                 .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product));  // No need for _mapper.Map<ProductOrdersDetailDto>()
@@ -121,6 +122,31 @@ namespace PharmaDistiPro.Helper
             CreateMap<IssueNoteDetailDto, IssueNoteDetail>();
             #endregion
 
+            #region purchase order
+            CreateMap<PurchaseOrder, PurchaseOrdersDto>()
+                .ForMember(dest => dest.CreatedBy , opt => opt.MapFrom(src => src.CreatedBy))
+                .ForMember(dest => dest.CreatedByNavigation, opt => opt.MapFrom(src => src.CreatedByNavigation))
+
+                .ForMember(dest => dest.SupplierId, opt => opt.MapFrom(src => src.SupplierId))
+                .ForMember(dest => dest.Supplier, opt => opt.MapFrom(src => src.Supplier));
+            CreateMap<PurchaseOrdersDto, PurchaseOrder>();
+
+            CreateMap<PurchaseOrdersDetail, PurchaseOrdersDetailDto>()
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.Product != null ? src.Product.ProductId : (int?)null))
+                .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product));  // No need for _mapper.Map<ProductOrdersDetailDto>()
+
+            CreateMap<PurchaseOrdersDetailDto, PurchaseOrdersDetail>()
+                .ForMember(dest => dest.Product, opt => opt.Ignore());
+
+
+            CreateMap<PurchaseOrder, PurchaseOrdersRequestDto>();
+            CreateMap<PurchaseOrdersRequestDto, PurchaseOrder>()
+                .ForMember(dest => dest.PurchaseOrdersDetails, opt => opt.Ignore()); // Tránh lặp mapping
+
+            CreateMap<PurchaseOrdersDetail, PurchaseOrdersDetailsRequestDto>();
+            CreateMap<PurchaseOrdersDetailsRequestDto, PurchaseOrdersDetail>()
+                 .ForMember(dest => dest.PurchaseOrderId, opt => opt.MapFrom(src => src.PurchaseOrderId));
+            #endregion
         }
     }
 }

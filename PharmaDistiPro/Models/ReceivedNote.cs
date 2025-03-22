@@ -5,7 +5,12 @@ namespace PharmaDistiPro.Models
 {
     public partial class ReceivedNote
     {
-        public int? ReceiveNoteId { get; set; }
+        public ReceivedNote()
+        {
+            ReceivedNoteDetails = new HashSet<ReceivedNoteDetail>();
+        }
+
+        public int ReceiveNoteId { get; set; }
         public string? ReceiveNotesCode { get; set; }
         public int? PurchaseOrderId { get; set; }
         public int? Status { get; set; }
@@ -15,6 +20,6 @@ namespace PharmaDistiPro.Models
 
         public virtual User? CreatedByNavigation { get; set; }
         public virtual PurchaseOrder? PurchaseOrder { get; set; }
-        public virtual ReceivedNoteDetail? ReceiveNote { get; set; }
+        public virtual ICollection<ReceivedNoteDetail> ReceivedNoteDetails { get; set; }
     }
 }

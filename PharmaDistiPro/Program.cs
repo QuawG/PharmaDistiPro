@@ -62,6 +62,8 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<IProductLotRepository, ProductLotRepository>();
             builder.Services.AddScoped<IIssueNoteRepository, IssueNoteRepository>();
             builder.Services.AddScoped<IIssueNoteDetailsRepository, IssueNoteDetailsRepository>();
+            builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
+            builder.Services.AddScoped<IPurchaseOrdersDetailRepository, PurchaseOrdersDetailRepository>();
 
             #endregion
 
@@ -74,6 +76,7 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddScoped<IIssueNoteService, IssueNoteService>();
+            builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 
             #endregion
 

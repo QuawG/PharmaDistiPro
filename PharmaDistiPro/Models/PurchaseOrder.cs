@@ -8,6 +8,7 @@ namespace PharmaDistiPro.Models
         public PurchaseOrder()
         {
             PurchaseOrdersDetails = new HashSet<PurchaseOrdersDetail>();
+            ReceivedNotes = new HashSet<ReceivedNote>();
         }
 
         public int PurchaseOrderId { get; set; }
@@ -20,10 +21,11 @@ namespace PharmaDistiPro.Models
         public double? DeliveryFee { get; set; }
         public string? Address { get; set; }
         public int? CreatedBy { get; set; }
-        public string? CreateDate { get; set; }
+        public DateTime? CreateDate { get; set; }
 
         public virtual User? CreatedByNavigation { get; set; }
         public virtual Supplier? Supplier { get; set; }
         public virtual ICollection<PurchaseOrdersDetail> PurchaseOrdersDetails { get; set; }
+        public virtual ICollection<ReceivedNote> ReceivedNotes { get; set; }
     }
 }
