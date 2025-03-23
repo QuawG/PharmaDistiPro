@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Modal, Button, Input, Avatar, Typography, Row, Col } from "antd";
+import { XCircle } from "lucide-react";
+
+const { Title, Text } = Typography;
 
 export default function UserDetail({
   isOpen,
@@ -31,147 +34,91 @@ export default function UserDetail({
   if (!mounted) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ease-in-out bg-black/30 backdrop-blur-sm ${
-        visible ? "opacity-100" : "opacity-0"
-      }`}
-      onClick={onClose}
+    <Modal
+      visible={visible}
+      onCancel={onClose}
+      footer={null}
+      width="90%"
+      centered
+      className="user-detail-modal"
+      closeIcon={<XCircle size={24} />}
     >
-      <div
-        className={`relative w-full max-w-[90vw] max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-xl transition-all duration-300 ease-out transform ${
-          visible ? "translate-y-0 scale-100 opacity-100" : "-translate-y-8 scale-95 opacity-0"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-10"
-        >
-          <X size={20} />
-        </button>
+      <div className="p-6">
+        <div className="mb-6">
+          <Title level={4}>Thông tin người dùng</Title>
+          <Text type="secondary">Xem thông tin người dùng ở dưới đây</Text>
+        </div>
 
-        <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Thông tin người dùng</h1>
-            <p className="text-sm text-gray-500">Xem thông tin người dùng ở dưới đây</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border-[1px] border-gray-300 rounded-lg p-4">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={12}>
+            <div className="p-4 border rounded-lg">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tên riêng</label>
-                <input
-                  type="text"
-                  value={user?.firstName || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Tên riêng</Text>
+                <Input className="mt-1" value={user?.firstName || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tên họ</label>
-                <input
-                  type="text"
-                  value={user?.lastName || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Tên họ</Text>
+                <Input className="mt-1" value={user?.lastName || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email"
-                  value={user?.email || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Email</Text>
+                <Input className="mt-1" value={user?.email || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                <input
-                  type="text"
-                  value={user?.phone || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Số điện thoại</Text>
+                <Input className="mt-1" value={user?.phone || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                <input
-                  type="text"
-                  value={user?.address || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Địa chỉ</Text>
+                <Input className="mt-1" value={user?.address || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Vai trò</label>
-                <input
-                  type="text"
-                  value={user?.role || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Vai trò</Text>
+                <Input className="mt-1" value={user?.role || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Mã số nhân viên</label>
-                <input
-                  type="text"
-                  value={user?.employeeCode || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Mã số nhân viên</Text>
+                <Input className="mt-1" value={user?.employeeCode || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
-                <input
-                  type="text"
-                  value={user?.status || "N/A"}
-                  readOnly
-                  className="mt-1 border rounded p-2 w-full bg-gray-100"
-                />
+                <Text strong>Trạng thái</Text>
+                <Input className="mt-1" value={user?.status || "N/A"} disabled />
               </div>
             </div>
+          </Col>
 
-            {/* User Avatar */}
-            <div className="flex flex-col items-center justify-center border-[1px] border-gray-300 rounded-lg p-4">
-              <img
+          <Col xs={24} lg={12} className="flex flex-col items-center justify-center">
+            <div className="p-4 border rounded-lg text-center">
+              <Avatar
+                size={417}
                 src={user?.avatar || "https://via.placeholder.com/150"}
                 alt="User Avatar"
-                className="w-32 h-32 rounded-full border border-gray-300"
+                className="border border-gray-300 mb-2"
               />
-              <div className="mt-2 text-center text-sm text-gray-600">
-                {user?.firstName || "Unknown"} {user?.lastName || ""}
+              <div className="mt-2">
+                <Text strong>{user?.firstName || "Unknown"} {user?.lastName || ""}</Text>
               </div>
             </div>
-          </div>
+          </Col>
+        </Row>
 
-          <div className="mt-4">
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
-              <input
-                type="text"
-                value={user?.createdBy || "N/A"}
-                readOnly
-                className="mt-1 border rounded p-2 w-full bg-gray-100"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
-              <input
-                type="text"
-                value={user?.createdDate || "N/A"}
-                readOnly
-                className="mt-1 border rounded p-2 w-full bg-gray-100"
-              />
-            </div>
+        <div className="mt-4">
+          <div className="mb-4">
+            <Text strong>Tạo bởi</Text>
+            <Input className="mt-1" value={user?.createdBy || "N/A"} disabled />
           </div>
-
-          <div className="flex justify-end mt-4">
-            <button type="button" onClick={onClose} className="border rounded p-2">Đóng</button>
+          <div className="mb-4">
+            <Text strong>Thời điểm tạo</Text>
+            <Input className="mt-1" value={user?.createdDate || "N/A"} disabled />
           </div>
         </div>
+
+        <div className="flex justify-end mt-4">
+          <Button type="default" onClick={onClose}>
+            Đóng
+          </Button>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

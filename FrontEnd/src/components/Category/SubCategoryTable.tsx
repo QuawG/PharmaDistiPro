@@ -1,16 +1,6 @@
 import React, { useState } from "react";
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  SortingState,
-} from "@tanstack/react-table";
-import { Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
-import DeleteConfirmation from "../Confirm/DeleteConfirm";
+import { MoreOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { Dropdown, Menu, Table, Button, Modal, Image } from "antd";
 import UpdateSubCategory from "../Category/UpdateSubCategory";
 
 interface SubCategory {
@@ -28,143 +18,101 @@ interface SubCategoryTableProps {
 }
 
 const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA }) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [subCategories, setSubCategories] = useState<SubCategory[]>(SUBCATEGORY_DATA);
-  
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>(SUBCATEGORY_DATA);
 
-  const handleDelete = () => {
-    console.log("Deleting subcategory:", selectedSubCategory);
-    setIsDeleteModalOpen(false);
+  const showDeleteConfirm = (subCategory: SubCategory) => {
+    Modal.confirm({
+      title: "Xác nhận xóa",
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc chắn muốn xóa danh mục phụ "${subCategory.name}" không?`,
+      okText: "Xóa",
+      okType: "danger",
+      cancelText: "Hủy",
+      onOk() {
+        setSubCategories(subCategories.filter(sub => sub.id !== subCategory.id));
+      },
+    });
   };
 
-  const handleUpdateSubCategory = (updatedSubCategory: SubCategory) => {
-    setSubCategories(prev => prev.map(sub => sub.id === updatedSubCategory.id ? updatedSubCategory : sub));
-    // setIsEditModalOpen(false);
-    // setAlertMessage("Cập nhật danh mục thành công!");
-    // setTimeout(() => setAlertMessage(null), 3000);
-  };
-
-  const columns: ColumnDef<SubCategory>[] = [
+  const columns = [
     {
-      accessorKey: "name",
-      header: "Danh mục phụ",
-      cell: ({ row }) => (
+      title: "Danh mục thuốc",
+      dataIndex: "name",
+      key: "name",
+      render: (text: string, record: SubCategory) => (
         <div className="flex items-center gap-3">
-          <img
-            src={row.original.image || "assets/img/product/noimage.png"}
-            alt={row.original.name}
-            className="w-10 h-10 rounded-lg object-cover bg-gray-100 cursor-pointer"
-            onClick={() => {
-              setSelectedSubCategory(row.original);
-              setIsEditModalOpen(true);
-            }}
+          <Image
+            src={record.image || "assets/img/product/noimage.png"}
+            alt={record.name}
+            width={40}
+            height={40}
+            className="rounded-lg object-cover bg-gray-100"
+            preview={false}
           />
-          <span className="font-medium">{row.original.name}</span>
+          <span className="font-medium">{text}</span>
         </div>
       ),
     },
-    { accessorKey: "parentCategory", header: "Danh mục chính" },
-    { accessorKey: "code", header: "Mã danh mục" },
-    { accessorKey: "description", header: "Mô tả" },
-    { accessorKey: "createdBy", header: "Người tạo" },
     {
-      id: "actions",
-      header: "Tính năng",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <button
-            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
-            onClick={() => {
-              setSelectedSubCategory(row.original);
-              setIsEditModalOpen(true);
-            }}
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
-            onClick={() => {
-              setSelectedSubCategory(row.original);
-              setIsDeleteModalOpen(true);
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+      title: "Danh mục chính",
+      dataIndex: "parentCategory",
+      key: "parentCategory",
+    },
+    {
+      title: "Mã danh mục",
+      dataIndex: "code",
+      key: "code",
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+    },
+    {
+      title: "Người tạo",
+      dataIndex: "createdBy",
+      key: "createdBy",
+    },
+    {
+      title: "Tính năng",
+      key: "actions",
+      render: (_: any, record: SubCategory) => (
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item key="edit" onClick={() => {
+                setSelectedSubCategory(record);
+                setIsEditModalOpen(true);
+              }}>
+                <EditOutlined /> Chỉnh sửa
+              </Menu.Item>
+              <Menu.Item key="delete" onClick={() => showDeleteConfirm(record)} danger>
+                <DeleteOutlined /> Xóa
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={["click"]}
+        >
+          <Button shape="circle" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
-      enableSorting: false,
     },
   ];
 
-  const table = useReactTable({
-    data: subCategories,
-    columns,
-    state: { sorting, globalFilter, pagination: { pageSize, pageIndex: 0 } },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
   return (
     <div className="bg-white">
-      {alertMessage && (
-        <div className="bg-green-100 text-green-700 p-3 rounded-md mb-4">
-          {alertMessage}
-        </div>
-      )}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-none bg-gray-50">
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-4 py-3 text-left text-[14px] font-bold">
-                    {header.isPlaceholder ? null : (
-                      <div className="flex items-center gap-2 cursor-pointer select-none"
-                        onClick={header.column.getToggleSortingHandler()}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getIsSorted() === "asc" ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-800 opacity-90">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table dataSource={subCategories} columns={columns} rowKey="id" pagination={{ pageSize: 5 }} />
 
-      <DeleteConfirmation isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleDelete} />
-      
+      {/* Popup Update SubCategory */}
       <UpdateSubCategory
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         subCategory={selectedSubCategory}
-        onSave={handleUpdateSubCategory}
+        onSave={(updatedSubCategory) => {
+          setSubCategories(subCategories.map(sub => (sub.id === updatedSubCategory.id ? updatedSubCategory : sub)));
+        }}
       />
     </div>
   );

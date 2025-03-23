@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Modal, Button, Input, Select, Form, message } from "antd";
+import { XCircle } from "lucide-react";
+
+const { Option } = Select;
 
 export default function UpdateSupplierDetail({
   isOpen,
@@ -37,124 +40,88 @@ export default function UpdateSupplierDetail({
 
   if (!mounted) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (value: any, field: string) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [field]: value,
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData) {
+  const handleSubmit = async () => {
+    try {
       onSave(formData);
-      alert('Information saved successfully!');
+      message.success("Cập nhật thông tin thành công!");
       onClose();
+    } catch (error) {
+      message.error("Vui lòng điền đầy đủ thông tin!");
     }
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ease-in-out bg-black/30 backdrop-blur-sm ${
-        visible ? "opacity-100" : "opacity-0"
-      }`}
-      onClick={onClose}
+    <Modal
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      width="80%"
+      className="supplier-detail-modal"
+      centered
+      closeIcon={<XCircle size={24} />}
     >
-      <div
-        className={`relative w-full max-w-[90vw] max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-xl transition-all duration-300 ease-out transform ${
-          visible ? "translate-y-0 scale-100 opacity-100" : "-translate-y-8 scale-95 opacity-0"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-10"
-        >
-          <X size={20} />
-        </button>
+      <div className="p-6">
+        <h1 className="text-xl font-semibold">Cập nhật thông tin nhà cung cấp</h1>
+        <p className="text-sm text-gray-500 mb-6">Cập nhật thông tin nhà cung cấp theo form bên dưới</p>
 
-        <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Cập nhật thông tin nhà cung cấp</h1>
-            <p className="text-sm text-gray-500">Cập nhật thông tin nhà cung cấp theo form bên dưới</p>
+        <Form layout="vertical" onFinish={handleSubmit}>
+          <Form.Item label="Tên nhà cung cấp" name="name" initialValue={formData?.name}>
+            <Input
+              value={formData?.name || ""}
+              onChange={(e) => handleChange(e.target.value, "name")}
+            />
+          </Form.Item>
+
+          <Form.Item label="Địa chỉ" name="address" initialValue={formData?.address}>
+            <Input
+              value={formData?.address || ""}
+              onChange={(e) => handleChange(e.target.value, "address")}
+            />
+          </Form.Item>
+
+          <Form.Item label="Số điện thoại" name="phone" initialValue={formData?.phone}>
+            <Input
+              value={formData?.phone || ""}
+              onChange={(e) => handleChange(e.target.value, "phone")}
+            />
+          </Form.Item>
+
+          <Form.Item label="Trạng thái" name="status" initialValue={formData?.status}>
+            <Select
+              value={formData?.status || ""}
+              onChange={(value) => handleChange(value, "status")}
+            >
+              <Option value="active">Hoạt động</Option>
+              <Option value="inactive">Không hoạt động</Option>
+              <Option value="pending">Đang chờ</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Tạo bởi" name="createdBy" initialValue={supplier?.createdBy}>
+            <Input value={supplier?.createdBy || "N/A"} disabled />
+          </Form.Item>
+
+          <Form.Item label="Thời điểm tạo" name="createdDate" initialValue={supplier?.createdDate}>
+            <Input value={supplier?.createdDate || "N/A"} disabled />
+          </Form.Item>
+
+          <div className="flex justify-end">
+            <Button type="default" onClick={onClose} className="mr-2">
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit">
+              Lưu
+            </Button>
           </div>
-
-          <form onSubmit={handleSubmit} className="flex flex-col items-center">
-            <div className="w-full">
-              <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tên</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData?.name || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData?.address || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData?.phone || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
-                  <select
-                    name="status"
-                    value={formData?.status || ""}
-                    onChange={handleChange}
-                    className="mt-1 border rounded p-2 w-full"
-                  >
-                    <option value="">Chọn trạng thái</option>
-                    <option value="active">Hoạt động</option>
-                    <option value="inactive">Không hoạt động</option>
-                    <option value="pending">Đang chờ</option>
-                  </select>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
-                  <input
-                    type="text"
-                    value={supplier?.createdBy || "N/A"}
-                    readOnly
-                    className="mt-1 border rounded p-2 w-full bg-gray-100"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Thời điểm tạo</label>
-                  <input
-                    type="text"
-                    value={supplier?.createdDate || "N/A"}
-                    readOnly
-                    className="mt-1 border rounded p-2 w-full bg-gray-100"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end mt-4 w-full">
-              <button type="button" onClick={onClose} className="mr-2 border rounded p-2">Hủy</button>
-              <button type="submit" className="bg-blue-500 text-white rounded p-2">Lưu</button>
-            </div>
-          </form>
-        </div>
+        </Form>
       </div>
-    </div>
+    </Modal>
   );
 }

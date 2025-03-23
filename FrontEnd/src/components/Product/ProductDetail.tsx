@@ -1,151 +1,61 @@
-import { ChevronLeft, ChevronRight, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import React from "react";
+import { Modal, Image } from "antd";
 
-export default function ProductDetailsModal({
-  isOpen,
-  onClose
-}: {
-  isOpen: boolean
-  onClose: () => void
-}) {
-  const [mounted, setMounted] = useState(false)
-  const [visible, setVisible] = useState(false)
+interface Product {
+  ProductId: number;
+  ProductCode: string;
+  ManufactureName: string;
+  ProductName: string;
+  UnitId: number;
+  CategoryId: number;
+  Description: string;
+  SellingPrice: number;
+  CreatedBy: string;
+  CreatedDate: string;
+  Status: string;
+  VAT: number;
+  StorageConditions: string;
+  Weight: number;
+  Image?: string;
+  CategoryName?: string;
+  SubCategoryName?: string;
+  UnitName?: string;
+}
 
-  useEffect(() => {
-    if (isOpen) {
-      setMounted(true)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setVisible(true)
-        })
-      })
-    } else {
-      setVisible(false)
-      const timer = setTimeout(() => setMounted(false), 300)
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen])
+interface ProductDetailProps {
+  isOpen: boolean;
+  onClose: () => void;
+  product: Product | null;
+}
 
-  if (!mounted) return null
+const ProductDetailsModal: React.FC<ProductDetailProps> = ({ isOpen, onClose, product }) => {
+  if (!product) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ease-in-out bg-black/30 backdrop-blur-sm ${
-        visible ? "opacity-100" : "opacity-0"
-      }`}
-      onClick={onClose}
+    <Modal
+      title="Chi tiết sản phẩm"
+      open={isOpen}
+      onCancel={onClose}
+      footer={null}
     >
-      <div
-        className={`relative w-full max-w-[90vw] max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-xl transition-all duration-300 ease-out transform ${
-          visible ? "translate-y-0 scale-100 opacity-100" : "-translate-y-8 scale-95 opacity-0"
-        }`}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button 
-          onClick={onClose}
-          className="absolute right-4 top-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-10"
-        >
-          <X size={20} />
-        </button>
-
-        <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-xl font-semibold text-gray-900">Chi tiết sản phẩm</h1>
-            <p className="text-sm text-gray-500">Toàn bộ thông tin về sản phẩm</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              
-
-              {/* Details Table */}
-              <div className="border-[1px] border-gray-300 rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <tbody >
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50 w-1/3">Sản phẩm</td>
-                      <td className="px-4 py-3">Macbook pro</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Danh mục</td>
-                      <td className="px-4 py-3">Computers</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Danh mục phụ</td>
-                      <td className="px-4 py-3">None</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Brand</td>
-                      <td className="px-4 py-3">None</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Đơn vị</td>
-                      <td className="px-4 py-3">Piece</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">SKU</td>
-                      <td className="px-4 py-3">PT0001</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Minimum Qty</td>
-                      <td className="px-4 py-3">5</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Số lượng</td>
-                      <td className="px-4 py-3">50</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Thuế</td>
-                      <td className="px-4 py-3">0.00 %</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Giảm giá</td>
-                      <td className="px-4 py-3">Percentage</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Giá</td>
-                      <td className="px-4 py-3">1500.00</td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Trạng thái</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Active</span>
-                      </td>
-                    </tr>
-                    <tr className="border-b-[1px] border-b-gray-300">
-                      <td className="px-4 py-3 bg-gray-50">Mô tả</td>
-                      <td className="px-4 py-3">
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                        industry's standard dummy text ever since the 1500s,
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Product Image */}
-            <div className="lg:col-span-1">
-              <div className="border-[1px] border-gray-300 rounded-lg p-4">
-                <div className="relative">
-                  <img src="https://mac24h.vn/images/detailed/94/macbook_pro_2019_gia_tot_4j3d-ch.jpg" alt="Product" className="w-full rounded-lg" />
-                  <button className="absolute left-2 top-1/2 -translate-y-1/2 p-1 bg-white rounded-full shadow-lg hover:bg-gray-50">
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-white rounded-full shadow-lg hover:bg-gray-50">
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="mt-2 text-center text-sm text-gray-600">
-                  macbookpro.jpg
-                  <span className="text-gray-400 ml-1">581kb</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col space-y-3">
+        <Image width={100} src={product.Image || "/placeholder.png"} alt={product.ProductName} />
+        
+        <p><strong>Tên:</strong> {product.ProductName}</p>
+        <p><strong>Mã:</strong> {product.ProductCode}</p>
+        <p><strong>Hãng:</strong> {product.ManufactureName}</p>
+        <p><strong>Mô tả:</strong> {product.Description}</p>
+        <p><strong>Điều kiện bảo quản:</strong> {product.StorageConditions}</p>
+        <p><strong>Trọng lượng:</strong> {product.Weight} kg</p>
+        <p><strong>Danh mục chính:</strong> {product.CategoryName || "Không có"}</p>
+        <p><strong>Danh mục thuốc:</strong> {product.SubCategoryName || "Không có"}</p>
+        <p><strong>Đơn vị:</strong> {product.UnitName || "Không xác định"}</p>
+        <p><strong>Giá:</strong> {product.SellingPrice.toLocaleString()} VND</p>
+        <p><strong>VAT:</strong> {product.VAT}%</p>
+        <p><strong>Trạng thái:</strong> {product.Status}</p>
       </div>
-    </div>
-  )
-}
+    </Modal>
+  );
+};
+
+export default ProductDetailsModal;

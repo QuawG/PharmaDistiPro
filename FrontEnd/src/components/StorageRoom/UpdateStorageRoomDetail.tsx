@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
+// Define the type for the form data
+interface StorageRoom {
+  code: string;
+  name: string;
+  status: string;
+  temperature: string;
+  humidity: string;
+  capacity: string;
+}
+
 export default function UpdateStorageRoomDetail({
   isOpen,
   onClose,
@@ -9,12 +19,12 @@ export default function UpdateStorageRoomDetail({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  room: any;
-  onSave: (updatedRoom: any) => void;
+  room: StorageRoom;
+  onSave: (updatedRoom: StorageRoom) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [formData, setFormData] = useState(room);
+  const [formData, setFormData] = useState<StorageRoom>(room); // Use the StorageRoom type for state
 
   useEffect(() => {
     if (isOpen) {
@@ -39,7 +49,7 @@ export default function UpdateStorageRoomDetail({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev: StorageRoom) => ({
       ...prev,
       [name]: value,
     }));
@@ -48,7 +58,7 @@ export default function UpdateStorageRoomDetail({
   const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const numericValue = value === "" ? "" : Math.max(0, Number(value)).toString(); // Ensure non-negative numbers
-    setFormData((prev) => ({
+    setFormData((prev: StorageRoom) => ({
       ...prev,
       [name]: numericValue,
     }));

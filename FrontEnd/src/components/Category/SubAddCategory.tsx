@@ -1,125 +1,112 @@
 import React, { useState } from "react";
+import { Form, Input, Select, Upload, Button, Typography, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ handleChangePage }) => {
-  const [categoryName, setCategoryName] = useState("");
-  const [categoryCode, setCategoryCode] = useState("");
-  const [description, setDescription] = useState("");
-  const [parentCategory, setParentCategory] = useState("");
-  const [image, setImage] = useState<File | null>(null);
+    const [form] = Form.useForm();
+    const [fileList, setFileList] = useState<any[]>([]);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Adding Sub Category:", { parentCategory, categoryName, categoryCode, description, image });
-    alert("Sub Category added successfully!");
-    handleChangePage("Danh sách danh mục phụ");
-  };
+    const handleSubmit = (values: any) => {
+        console.log("Adding Sub Category:", values);
+        message.success("Danh mục phụ đã được thêm thành công!");
+        handleChangePage("Danh sách danh mục phụ");
+    };
 
-  const handleCancel = () => {
-    setCategoryName("");
-    setCategoryCode("");
-    setDescription("");
-    setParentCategory("");
-    setImage(null);
-    handleChangePage("Danh sách danh mục phụ");
-  };
+    const handleCancel = () => {
+        form.resetFields();
+        setFileList([]);
+        setPreviewImage(null);
+        handleChangePage("Danh sách danh mục phụ");
+    };
 
-  return (
-    <div className="p-6 mt-[60px] w-full bg-[#f8f9fc]">
-      <h1 className="text-2xl font-semibold text-gray-900">Tạo danh mục thuốc</h1>
-      <p className="text-sm text-gray-500">Tạo danh mục thuốc mới</p>
+    const handleImageChange = ({ file }: any) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            setPreviewImage(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        setFileList([file]);
+    };
 
-      <div className="mt-5 bg-white shadow rounded-lg p-6">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium">Danh mục hệ thống</label>
-            <select
-              value={parentCategory}
-              onChange={(e) => setParentCategory(e.target.value)}
-              className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Chọn danh mục hệ thống</option>
-              <option value="Category">Danh mục hệ thống</option>
-            </select>
-          </div>
+    return (
+        <div className="p-6 mt-[60px] w-full bg-[#f8f9fc]">
+            <div className="w-[80%]">
+                <Title level={2} >Tạo danh mục thuốc</Title>
+                <Text type="secondary" className="block  mb-5">Tạo danh mục thuốc mới</Text>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium">Tên danh mục</label>
-            <input
-              type="text"
-              className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              required
-            />
-          </div>
+                <Form form={form} layout="vertical" onFinish={handleSubmit} className="w-full">
+                    {/* Danh mục hệ thống */}
+                    <Form.Item
+                        label="Danh mục hệ thống"
+                        name="parentCategory"
+                        rules={[{ required: true, message: "Vui lòng chọn danh mục hệ thống!" }]}
+                    >
+                        <Select placeholder="Chọn danh mục hệ thống">
+                            <Option value="Category">Danh mục hệ thống</Option>
+                        </Select>
+                    </Form.Item>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium">Mã danh mục</label>
-            <input
-              type="text"
-              className="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={categoryCode}
-              onChange={(e) => setCategoryCode(e.target.value)}
-              required
-            />
-          </div>
+                    {/* Tên danh mục */}
+                    <Form.Item
+                        label="Tên danh mục"
+                        name="categoryName"
+                        rules={[{ required: true, message: "Vui lòng nhập tên danh mục!" }]}
+                    >
+                        <Input placeholder="Nhập tên danh mục" />
+                    </Form.Item>
 
+                    {/* Mã danh mục */}
+                    <Form.Item
+                        label="Mã danh mục"
+                        name="categoryCode"
+                        rules={[{ required: true, message: "Vui lòng nhập mã danh mục!" }]}
+                    >
+                        <Input placeholder="Nhập mã danh mục" />
+                    </Form.Item>
 
-          <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">
-              Ảnh danh mục
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-              <div className="space-y-1 text-center">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <div className="flex text-sm text-gray-600">
-                  <label
-                    htmlFor="file-upload"
-                    className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                  >
-                    <span>Chọn file</span>
-                    <input id="file-upload" name="file-upload" type="file" className="sr-only" />
-                  </label>
-                  <p className="pl-1">hoặc kéo thả</p>
-                </div>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF tới 10MB</p>
-              </div>
+                    {/* Mô tả */}
+                    <Form.Item label="Mô tả" name="description">
+                        <Input.TextArea rows={4} placeholder="Nhập mô tả danh mục" />
+                    </Form.Item>
+
+                    {/* Ảnh danh mục */}
+                    <Form.Item label="Ảnh danh mục">
+                        <Upload
+                            beforeUpload={(file) => {
+                                handleImageChange({ file });
+                                return false;
+                            }}
+                            onRemove={() => {
+                                setFileList([]);
+                                setPreviewImage(null);
+                            }}
+                            showUploadList={false}
+                        >
+                            <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+                        </Upload>
+                        {previewImage && (
+                            <div className="mt-3 flex justify-center">
+                                <img src={previewImage} alt="Preview" className="w-32 h-32 object-cover rounded-lg shadow" />
+                            </div>
+                        )}
+                        <Text type="secondary">Hỗ trợ định dạng PNG, JPG, GIF (tối đa 10MB)</Text>
+                    </Form.Item>
+
+                    {/* Nút lưu & hủy */}
+                    <div className="flex gap-4">
+                        <Button type="primary" htmlType="submit">
+                            Lưu
+                        </Button>
+                        <Button onClick={handleCancel}>Hủy</Button>
+                    </div>
+                </Form>
             </div>
-          </div>
-
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              className="bg-[#FF9F43] hover:bg-orange-600 text-white px-5 py-2 rounded-md font-medium shadow-md"
-            >
-              Lưu
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-md font-medium shadow-md"
-            >
-              Hủy
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default SubAddCategory;

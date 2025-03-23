@@ -11,17 +11,24 @@ interface ProductListPageProps {
 }
 
 interface Product {
-  id: number;
+  ProductId: number;
   ProductCode: string;
-  Manufacturer: string;
+  ManufactureName: string;
   ProductName: string;
-  unit: string;
-  category: string;
-  subCategory: string;
+  UnitId: number;
+  CategoryId: number;
   Description: string;
-  status: string;
-  VAT: string;
-  image: string;
+  SellingPrice: number;
+  CreatedBy: string;
+  CreatedDate: string;
+  Status: string;
+  VAT: number;
+  StorageConditions: string;
+  Weight: number;
+  Image?: string;
+  CategoryName?: string;
+  SubCategoryName?: string;
+  UnitName?: string;
 }
 
 const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) => {
@@ -64,13 +71,15 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
   
         worksheet[`A${row}`] = { v: product.ProductName }; // Cột A: ID sản phẩm
         worksheet[`B${row}`] = { v: product.ProductCode }; // Cột B: Mã sản phẩm
-        worksheet[`C${row}`] = { v: product.category }; // Cột C: Hãng sản xuất
-        worksheet[`D${row}`] = { v: product.subCategory}; // Cột D: Tên sản phẩm
-        worksheet[`E${row}`] = { v: product.Manufacturer }; // Cột E: Đơn vị
+        worksheet[`C${row}`] = { v: product.CategoryName };
+        worksheet[`D${row}`] = { v: product.SubCategoryName }; // ✅ Nhóm danh mục con
+        worksheet[`E${row}`] = { v: product.ManufactureName }; // ✅ Hãng sản xuất
         worksheet[`F${row}`] = { v: product.Description }; // Cột F: Danh mục
-        worksheet[`G${row}`] = { v: product.unit }; // Cột G: Mô tả
+        worksheet[`G${row}`] = { v: product.UnitName }; // ✅ Đơn vị
         worksheet[`H${row}`] = { v: product.VAT }; // Cột H: Trạng thái
-        worksheet[`I${row}`] = { v: product.status }; // Cột I: Thuế VAT
+        worksheet[`I${row}`] = { v: product.Status }; // ✅ Trạng thái
+        worksheet[`J${row}`] = { v: product.SellingPrice }; // Cột J: Giá bán
+        worksheet[`K${row}`] = { v: product.Weight }; // ✅ Trọng lượng
        
       });
   

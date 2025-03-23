@@ -11,7 +11,7 @@ const menus = {
     "Đơn hàng": ["Danh sách đơn hàng", "Tạo đơn hàng"],
     "Lô hàng": ["Danh sách lô hàng", "Tạo lô hàng"],
     "Phiếu nhập kho": ["Danh sách phiếu nhập", "Tạo phiếu nhập kho"],
-    "Phiếu xuất kho": ["Danh sách phiếu xuất", "Tạo phiếu xuất"],
+    "Phiếu xuất kho": ["Danh sách phiếu xuất kho", "Tạo phiếu xuất kho"],
     "Kho" : ["Danh sách kho", "Tạo kho mới"]
 };
 

@@ -5,18 +5,31 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
   const [formData, setFormData] = useState({
     productCode: "",
     productName: "",
-    mainCategory: "",
-    subCategory: "",
-    manufacturer: "",
-    unit: "",
-    status: "active",
+    manufactureName: "",
+    categoryId: "",
+    subCategoryId: "",
+    unitName: "",
+    status: "Đang bán",
     description: "",
+    sellingPrice: "",
+    storageConditions: "",
+    weight: "",
     image: null as File | null,
-    VAT: "", // Tạo trường VAT
+    VAT: "",
   });
-  
 
-  // Xử lý thay đổi input, select và textarea
+  // Danh sách tùy chọn giả định
+  const categories = [
+    { id: "1", name: "Thuốc giảm đau" },
+    { id: "2", name: "Kháng sinh" },
+  ];
+  const subCategories = [
+    { id: "1", name: "Viên nén" },
+    { id: "2", name: "Dung dịch" },
+  ];
+  const statuses = ["Đang bán", "Ngừng bán"];
+
+  // Xử lý thay đổi input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -31,8 +44,8 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
 
   // Kiểm tra form trước khi submit
   const validateForm = () => {
-    const { productCode, productName, mainCategory, subCategory, manufacturer, unit, status, description, image } = formData;
-    if (!productCode || !productName || !mainCategory || !subCategory || !manufacturer || !unit || !status || !description || !image) {
+    const { productCode, productName, manufactureName, categoryId, subCategoryId, unitName, status, description, sellingPrice, storageConditions, weight, image, VAT } = formData;
+    if (!productCode || !productName || !manufactureName || !categoryId || !subCategoryId || !unitName || !status || !description || !sellingPrice || !storageConditions || !weight || !image|| !VAT) {
       alert("Vui lòng điền đầy đủ thông tin!");
       return false;
     }
@@ -42,123 +55,112 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
   // Xử lý submit form
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Kiểm tra form trước khi submit
     if (!validateForm()) return;
 
     console.log("Form Data:", formData);
-    alert("Add Successfully"); // Thông báo khi Tạo sản phẩm thành công
-    handleChangePage("Danh sách sản phẩm"); // Chuyển về danh sách sản phẩm
+    alert("Thêm sản phẩm thành công!");
+    handleChangePage("Danh sách sản phẩm");
   };
 
   return (
     <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-gray-900">Tạo sản phẩm</h1>
-        <p className="text-sm text-gray-500">Tạo sản phẩm mới</p>
+        <p className="text-sm text-gray-500">Nhập thông tin chi tiết của sản phẩm mới</p>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
         {/* Row 1 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Mã sản phẩm */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Mã sản phẩm</label>
-            <input type="text" name="productCode" value={formData.productCode} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Nhập mã sản phẩm" />
+            <label className="block text-sm text-gray-700">Mã sản phẩm</label>
+            <input type="text" name="productCode" value={formData.productCode} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
           </div>
 
-          {/* Tên sản phẩm */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Tên sản phẩm</label>
-            <input type="text" name="productName" value={formData.productName} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Nhập tên sản phẩm" />
+            <label className="block text-sm text-gray-700">Tên sản phẩm</label>
+            <input type="text" name="productName" value={formData.productName} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
           </div>
 
-          {/* Nhà cung cấp */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Nhà sản xuất</label>
-            <input type="text" name="manufacturer" value={formData.manufacturer} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Nhập Nhà sản xuất" />
+            <label className="block text-sm text-gray-700">Nhà sản xuất</label>
+            <input type="text" name="manufactureName" value={formData.manufactureName} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
           </div>
         </div>
 
         {/* Row 2 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Danh mục chính */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Danh mục hệ thống</label>
-            <select name="mainCategory" value={formData.mainCategory} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-              <option value="">Chọn danh mục hệ thống</option>
-              <option value="category1">Danh mục 1</option>
-              <option value="category2">Danh mục 2</option>
+            <label className="block text-sm text-gray-700">Danh mục</label>
+            <select name="categoryId" value={formData.categoryId} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
+              <option value="">Chọn danh mục</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
             </select>
           </div>
 
-          {/* Danh mục phụ */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Danh mục thuốc</label>
-            <select name="subCategory" value={formData.subCategory} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-              <option value="">Chọn danh mục thuốc</option>
-              <option value="subcategory1">Danh mục phụ 1</option>
-              <option value="subcategory2">Danh mục phụ 2</option>
+            <label className="block text-sm text-gray-700">Danh mục phụ</label>
+            <select name="subCategoryId" value={formData.subCategoryId} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
+              <option value="">Chọn danh mục phụ</option>
+              {subCategories.map((sub) => (
+                <option key={sub.id} value={sub.id}>{sub.name}</option>
+              ))}
             </select>
           </div>
 
-          {/* Đơn vị hộp */}
           <div className="space-y-1">
-            <label className="block text-[14px] mb-2 text-gray-700">Đơn vị</label>
-            <select
-              name="unit"
-              value={formData.unit}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="">Chọn đơn vị</option>
-              <option value="hop">Hộp</option>
-              <option value="tuyp">Tuýp</option>
-              <option value="chai">Chai</option>
+            <label className="block text-sm text-gray-700">Trạng thái</label>
+            <select name="status" value={formData.status} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
+              {statuses.map((st) => (
+                <option key={st} value={st}>{st}</option>
+              ))}
             </select>
           </div>
         </div>
 
         {/* Row 3 */}
-        {/* Row 3 */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-  {/* Trạng thái */}
-  <div className="space-y-1">
-    <label className="block text-[14px] mb-2 text-gray-700">Trạng thái</label>
-    <select name="status" value={formData.status} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
-      <option value="active">Hoạt động</option>
-      <option value="inactive">Không hoạt động</option>
-    </select>
-  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-700">Giá bán</label>
+            <input type="text" name="sellingPrice" value={formData.sellingPrice} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+          </div>
 
-  {/* Thuế VAT */}
-  <div className="space-y-1">
-    <label className="block text-[14px] mb-2 text-gray-700">Thuế VAT</label>
-    <input
-      type="text"
-      name="VAT"
-      value={formData.VAT || ""}
-      onChange={handleChange}
-      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-      placeholder="Nhập phần trăm thuế VAT"
-    />
-  </div>
-</div>
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-700">Trọng lượng</label>
+            <input type="text" name="weight" value={formData.weight} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+          </div>
 
-        {/* Mô tả */}
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-700">Điều kiện bảo quản</label>
+            <input type="text" name="storageConditions" value={formData.storageConditions} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-700">Đơn vị tính</label>
+            <input type="text" name="unitName" value={formData.unitName} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-700">VAT</label>
+            <input type="text" name="VAT" value={formData.VAT} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
+          </div>
+        </div>
+
+        {/* Upload ảnh */}
         <div className="space-y-1">
-          <label className="block text-[14px] mb-2 text-gray-700">Mô tả</label>
-          <textarea
-            name="description"
-            rows={4}
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Nhập mô tả sản phẩm"
-          />
-        </div>
+  <label className="block text-sm text-gray-700">Mô tả sản phẩm</label>
+  <textarea
+    name="description"
+    value={formData.description}
+    onChange={handleChange}
+    required
+    className="w-full px-3 py-2 border rounded-md"
+  />
+</div>
 
         {/* Ảnh sản phẩm */}
         <div className="space-y-1">
@@ -202,11 +204,9 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
                 </div>
               </div>
             </div>
-             {/* Buttons */}
-        <div className="flex gap-4">
-          <button type="submit" className="px-9 py-3.5 bg-amber-500 text-white rounded-sm font-bold text-sm">Lưu</button>
-          <button type="button" onClick={() => handleChangePage("Danh sách sản phẩm")} className="px-9 py-3.5 bg-gray-500 text-white rounded-sm font-bold text-sm">Hủy</button>
-          </div>
+
+
+        <button type="submit" className="px-9 py-3 bg-amber-500 text-white rounded-md font-bold text-sm">Lưu</button>
       </form>
     </div>
   );

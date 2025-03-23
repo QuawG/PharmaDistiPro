@@ -2,89 +2,89 @@ import React, { useRef,useState } from "react";
 import { FileText, Table, Printer } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import ReceivedNoteTable from "../../components/ReceivedNote/ReceivedNoteTable";
+import IssueNoteTable from "../../components/IssueNote/IssueNoteTable";
 // import { PlusIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
 
-interface ReceivedNoteListPageProps {
+interface IssueNoteListPageProps {
     handleChangePage: (page: string, ReceiveNoteId?: number) => void;
+    
   }
-interface ReceivedNote {
-    ReceiveNoteId: number;
-    ReceiveNotesCode: string;
-    PurchaseOrderId: number;
-    Status: string;
-    DeliveryPerson: string;
-    TotalAmount: number;
-    CreatedBy: string;
-    CreatedDate: string;
-    Details: ReceivedNoteDetail[];
-}
-
-interface ReceivedNoteDetail {
-    ReceiveNoteDetailId: number;
-    NoteNumber: number;
-    ProductLotId: number;
-    ProductName: string;
-    ProductCode: string;
-    LotCode: string;
-    Unit: string;
-    ActualReceived: number;
-    SupplyPrice: number;
-    StorageRoomName: string;
-}
-
-// Dữ liệu mẫu
-const SAMPLE_RECEIVED_NOTES: ReceivedNote[] = [
+// Interface cho IssueNotes
+interface IssueNote {
+    id: number;
+    issueNoteCode: string;
+    orderId: number;
+    customerId: number;
+    updatedStatusDate: Date;
+    totalAmount: number;
+    createdBy: string;
+    createdDate: Date;
+    status: string;
+    details: IssueNoteDetail[];
+  }
+  
+  // Interface cho IssueNoteDetails
+  interface IssueNoteDetail {
+    id: number;
+    issueNoteId: number;
+    productId: number;
+    quantity: number;
+  }
+  
+  // Dữ liệu mẫu
+  const SAMPLE_ISSUE_NOTES: IssueNote[] = [
     {
-        ReceiveNoteId: 5,
-        ReceiveNotesCode: "Note1",
-        PurchaseOrderId: 1,
-        Status: "Nhập",
-        DeliveryPerson: "Hiếu",
-        TotalAmount: 3400000,
-        CreatedBy: "HieuLD",
-        CreatedDate: "15-03-2025",
-        Details: [
-            { ReceiveNoteDetailId: 1, NoteNumber: 100, ProductLotId: 1, ProductName: "Vương Niệu Đan", ProductCode: "SP01", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 50, SupplyPrice: 50000 ,StorageRoomName: "Kho A"},
-            { ReceiveNoteDetailId: 2, NoteNumber: 30, ProductLotId: 2, ProductName: "Khương Thảo Đan", ProductCode: "SP02", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 30, SupplyPrice: 30000 , StorageRoomName: "Kho B"},
-        ],
+      id: 1,
+      issueNoteCode: "IN001",
+      orderId: 101,
+      customerId: 201,
+      updatedStatusDate: new Date("2025-03-15"),
+      totalAmount: 3400000,
+      createdBy: "HieuLD",
+      createdDate: new Date("2025-03-15"),
+      status: "Xuất",
+      details: [
+        { id: 1, issueNoteId: 1, productId: 1, quantity: 50 },
+        { id: 2, issueNoteId: 1, productId: 2, quantity: 30 },
+      ],
     },
     {
-        ReceiveNoteId: 1,
-        ReceiveNotesCode: "Note2",
-        PurchaseOrderId: 2,
-        Status: "Nhập",
-        DeliveryPerson: "Hiếu",
-        TotalAmount: 300000,
-        CreatedBy: "HieuLD",
-        CreatedDate: "15-03-2025",
-        Details: [
-            { ReceiveNoteDetailId: 1, NoteNumber: 100, ProductLotId: 1, ProductName: "Vương Niệu Đan", ProductCode: "SP01", LotCode: "Lo1", Unit: "Hộp", ActualReceived: 50, SupplyPrice: 50000, StorageRoomName: "Kho C" },
-            
-        ],
+      id: 2,
+      issueNoteCode: "IN002",
+      orderId: 102,
+      customerId: 202,
+      updatedStatusDate: new Date("2025-03-16"),
+      totalAmount: 300000,
+      createdBy: "HieuLD",
+      createdDate: new Date("2025-03-16"),
+      status: "Xuất",
+      details: [
+        { id: 3, issueNoteId: 2, productId: 1, quantity: 20 },
+      ],
     },
 ];
 
 
-const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChangePage }) => {
+const IssueNoteListPage: React.FC<IssueNoteListPageProps> = ({ handleChangePage }) => {
+    console.log("🔄 Render IssueNoteListPage");
     const [searchCode, setSearchCode] = useState("");
     const [status, setStatus] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [filteredNotes, setFilteredNotes] = useState(SAMPLE_RECEIVED_NOTES);
+    const [filteredNotes, setFilteredNotes] = useState(SAMPLE_ISSUE_NOTES);
 
     // Lọc dữ liệu
     const handleFilter = () => {
-        let filteredData = [...SAMPLE_RECEIVED_NOTES];
+        let filteredData = [...SAMPLE_ISSUE_NOTES];
 
         if (searchCode.trim()) {
             filteredData = filteredData.filter((note) =>
-                note.ReceiveNotesCode.toLowerCase().includes(searchCode.toLowerCase())
+                note.issueNoteCode.toLowerCase().includes(searchCode.toLowerCase())
             );
         }
         if (status) {
-            filteredData = filteredData.filter((note) => note.Status === status);
+            filteredData = filteredData.filter((note) => note.status === status);
         }
 
         const start = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : null;
@@ -97,13 +97,13 @@ const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChang
 
         if (start) {
             filteredData = filteredData.filter(
-                (note) => new Date(note.CreatedDate).setHours(0, 0, 0, 0) >= start
+                (note) => new Date(note.createdDate).setHours(0, 0, 0, 0) >= start
             );
         }
 
         if (end) {
             filteredData = filteredData.filter(
-                (note) => new Date(note.CreatedDate).setHours(0, 0, 0, 0) <= end
+                (note) => new Date(note.createdDate).setHours(0, 0, 0, 0) <= end
             );
         }
 
@@ -116,7 +116,7 @@ const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChang
         setStatus("");
         setStartDate("");
         setEndDate("");
-        setFilteredNotes(SAMPLE_RECEIVED_NOTES);
+        setFilteredNotes(SAMPLE_ISSUE_NOTES);
     };
 
     // Xuất Excel
@@ -135,9 +135,9 @@ const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChang
     const exportToTextFile = () => {
         let content = "Danh sách phiếu xuất nhập kho:\n\n";
         filteredNotes.forEach((note) => {
-            content += `Mã phiếu: ${note.ReceiveNotesCode}\n`;
-            content += `Trạng thái: ${note.Status}\n`;
-            content += `Ngày tạo: ${note.CreatedDate}\n\n`;
+            content += `Mã phiếu: ${note.issueNoteCode}\n`;
+            content += `Trạng thái: ${note.status}\n`;
+            content += `Ngày tạo: ${note.createdDate}\n\n`;
         });
 
         const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -160,12 +160,12 @@ const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChang
     
 
     const handleDelete = (id: number) => {
-        setFilteredNotes((prev) => prev.filter((note) => note.ReceiveNoteId !== id));
+        setFilteredNotes((prev) => prev.filter((note) => note.id !== id));
     };
-    const handleUpdateNote = (updatedNote: ReceivedNote) => {
+    const handleUpdateNote = (updatedNote: IssueNote) => {
         setFilteredNotes((prev) =>
             prev.map((note) =>
-                note.ReceiveNoteId === updatedNote.ReceiveNoteId ? updatedNote : note
+                note.id === updatedNote.id ? updatedNote : note
             )
         );
     };
@@ -211,10 +211,10 @@ const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChang
 
             {/* Component bảng */}
             <div ref={printRef} className="bg-white rounded-lg shadow p-5 mt-5">
-    <ReceivedNoteTable notes={filteredNotes} onDelete={handleDelete}  onUpdate={handleUpdateNote} />
+    <IssueNoteTable notes={filteredNotes} onDelete={handleDelete}  onUpdate={handleUpdateNote} />
 </div>
         </div>
     );
 };
 
-export default ReceivedNoteListPage;
+export default IssueNoteListPage;

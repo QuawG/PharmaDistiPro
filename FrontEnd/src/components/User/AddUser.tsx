@@ -1,16 +1,48 @@
 import { useState } from "react";
+import { Form, Input, Button, Select, Upload, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
 export default function AddUser() {
-    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [user, setUser] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        address: '',
+        role: '',
+        employeeId: '',
+        status: '',
+        password: '',
+        avatar: '' // Add avatar to the initial state
+    });
 
-    const handleAvatarChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setAvatarPreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setUser((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleAvatarChange = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (e.target?.result) {
+                setAvatarPreview(e.target.result as string);
+                setUser({ ...user, avatar: e.target.result as string });
+            }
+        };
+        reader.readAsDataURL(file);
+        return false; // Prevent uploading to the server
+    };
+
+    const handleSubmit = async () => {
+        try {
+            console.log("User data:", user);
+            message.success("Đã tạo người dùng thành công!");
+        } catch (error) {
+            message.error("Vui lòng điền đầy đủ thông tin!");
         }
     };
 
@@ -19,131 +51,149 @@ export default function AddUser() {
             {/* Header */}
             <div className="mb-6">
                 <h1 className="text-xl font-semibold text-gray-900">Tạo người dùng mới</h1>
-                <p className="text-sm text-gray-500">Tạo một người dùng mới theo form bên dưới</p>
+                <p className="text-sm text-gray-500">Tạo một người dùng mới</p>
             </div>
 
-            {/* Form */}
-            <div className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
-                {/* Row for Avatar */}
-                <div className="flex items-center space-x-4 mb-6">
-                    <label className="block text-[14px] text-gray-700">Avatar</label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="border border-gray-300 rounded-md"
-                    />
-                </div>
-                {avatarPreview && (
-                    <div className="mb-4">
-                        <img src={avatarPreview} alt="Avatar Preview" className="w-24 h-24 rounded-full border border-gray-300" />
+            <div className="p-5 bg-white rounded-lg shadow w-full max-w-7xl mx-auto">
+                {/* Form */}
+                <Form
+                    layout="vertical"
+                    onFinish={handleSubmit}
+                    className="space-y-6 p-5 w-full bg-white rounded-lg shadow"
+                >
+                    {/* Avatar */}
+                    <Form.Item label="Avatar" valuePropName="fileList" getValueFromEvent={handleAvatarChange}>
+                        <Upload
+                            name="avatar"
+                            showUploadList={false}
+                            beforeUpload={handleAvatarChange}
+                            accept="image/*"
+                        >
+                            {avatarPreview ? (
+                                <img src={avatarPreview} alt="Avatar Preview" className="w-24 h-24 rounded-full object-cover" />
+                            ) : (
+                                <div>
+                                    <UploadOutlined />
+                                    <div>Upload</div>
+                                </div>
+                            )}
+                        </Upload>
+                    </Form.Item>
+
+                    {/* Form Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                        <Form.Item label="Mã số nhân viên" name="employeeId" required>
+                            <Input
+                                name="employeeId"
+                                value={user.employeeId}
+                                onChange={handleChange}
+                                placeholder="Nhập mã số nhân viên"
+                            />
+                        </Form.Item>
+
+
+                        <Form.Item label="Tên riêng" name="firstName" required>
+                            <Input
+                                name="firstName"
+                                value={user.firstName}
+                                onChange={handleChange}
+                                placeholder="Nhập tên riêng"
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Tên họ" name="lastName" required>
+                            <Input
+                                name="lastName"
+                                value={user.lastName}
+                                onChange={handleChange}
+                                placeholder="Nhập tên họ"
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Email" name="email" required>
+                            <Input
+                                type="email"
+                                name="email"
+                                value={user.email}
+                                onChange={handleChange}
+                                placeholder="Nhập email"
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Số điện thoại" name="phone" required>
+                            <Input
+                                type="tel"
+                                name="phone"
+                                value={user.phone}
+                                onChange={handleChange}
+                                placeholder="Nhập số điện thoại"
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Địa chỉ" name="address" required>
+                            <Input
+                                name="address"
+                                value={user.address}
+                                onChange={handleChange}
+                                placeholder="Nhập địa chỉ"
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Vai trò" name="role" required>
+                            <Select
+                                value={user.role}
+                                onChange={(value) => setUser({ ...user, role: value })}
+                                placeholder="Chọn vai trò"
+                            >
+                                <Select.Option value="warehouse_manager">Quản lý kho</Select.Option>
+                                <Select.Option value="sales_staff">Nhân viên bán hàng</Select.Option>
+                                <Select.Option value="sales_manager">Quản lý bán hàng</Select.Option>
+                            </Select>
+                        </Form.Item>
+
+
+                        <Form.Item label="Trạng thái tài khoản" name="status" required>
+                            <Select
+                                value={user.status}
+                                onChange={(value) => setUser({ ...user, status: value })}
+                                placeholder="Chọn trạng thái tài khoản"
+                            >
+                                <Select.Option value="active">Kích hoạt</Select.Option>
+                                <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
+                            </Select>
+                        </Form.Item>
+
+                        <Form.Item label="Mật khẩu" name="password" required>
+                            <Input.Password
+                                name="password"
+                                value={user.password}
+                                onChange={handleChange}
+                                placeholder="Nhập mật khẩu"
+                            />
+                        </Form.Item>
                     </div>
-                )}
 
-                {/* Row 1 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tên riêng</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên riêng"
-                        />
+                    {/* Buttons */}
+                    <div className="flex gap-4">
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            className="px-6 py-3 bg-blue-500 text-white rounded-md font-semibold text-sm hover:bg-blue-600 focus:ring-2 focus:ring-blue-500"
+                        >
+                            Tạo
+                        </Button>
+                        <Button
+                            type="default"
+                            onClick={() => console.log('Cancel action')}
+                            className="px-6 py-3 bg-gray-500 text-white rounded-md font-semibold text-sm hover:bg-gray-600 focus:ring-2 focus:ring-gray-500"
+                        >
+                            Hủy
+                        </Button>
                     </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tên họ</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập tên họ"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Email</label>
-                        <input
-                            type="email"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập email"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Số điện thoại</label>
-                        <input
-                            type="tel"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập số điện thoại"
-                        />
-                    </div>
-                </div>
-
-                {/* Row 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập địa chỉ"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Vai trò</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập vai trò"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Mã số nhân viên</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập mã số nhân viên"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Trạng thái tài khoản</label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                            <option value="">Thiết lập trạng thái</option>
-                            <option value="active">Kích hoạt</option>
-                            <option value="inactive">Vô hiệu hóa</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Row 3 - Password Field */}
-                <div className="space-y-1">
-                    <label className="block text-[14px] mb-2 text-gray-700">Mật khẩu</label>
-                    <input
-                        type="password"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Nhập mật khẩu"
-                    />
-                </div>
-
-                {/* Row 4 */}
-                <div className="flex gap-4">
-                    <button
-                        type="submit"
-                        className="px-9 py-3.5 bg-amber-500 text-white rounded-sm font-bold text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                        Lưu
-                    </button>
-                    <button
-                        type="button"
-                        className="px-9 py-3.5 bg-gray-500 text-white rounded-sm font-bold text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                    >
-                        Hủy
-                    </button>
-                </div>
+                </Form>
             </div>
+
         </div>
     );
 }

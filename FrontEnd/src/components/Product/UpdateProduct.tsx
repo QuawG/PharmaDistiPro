@@ -1,203 +1,133 @@
-  import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Form, Input, InputNumber, Select, Upload, Button, Card, message, Row, Col } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
-  interface UpdateProductProps {
-    productId: number;
-    handleChangePage: (page: string) => void;
-  }
+interface UpdateProductProps {
+  productId: number;
+  handleChangePage: (page: string) => void;
+}
 
-  const UpdateProduct: React.FC<UpdateProductProps> = ({ productId, handleChangePage }) => {
-    const [product, setProduct] = useState<any>(null);
-    const [editedProduct, setEditedProduct] = useState<any>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+const { Option } = Select;
 
-    useEffect(() => {
-      import("../data/product").then((module) => {
-        const PRODUCTS_DATA = module.PRODUCTS_DATA;
-        const foundProduct = PRODUCTS_DATA.find((p) => p.id === productId);
-        setProduct(foundProduct || null);
-        setEditedProduct(foundProduct ? { ...foundProduct } : null);
-        setImagePreview(foundProduct?.image || null);
-      });
-    }, [productId]);
+const UpdateProduct: React.FC<UpdateProductProps> = ({ productId, handleChangePage }) => {
+  const [form] = Form.useForm();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-    if (!product) {
-      return <div className="p-6">Sản phẩm không tồn tại.</div>;
-    }
-
-    // Xử lý thay đổi dữ liệu
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setEditedProduct((prev: any) => ({
-        ...prev,
-        [name]: value,
-      }));
-    };
-
-    // Xử lý thay đổi ảnh sản phẩm
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const imageUrl = URL.createObjectURL(file);
-        setImagePreview(imageUrl);
-        setEditedProduct((prev: any) => ({
-          ...prev,
-          image: imageUrl, // Có thể thay bằng logic upload ảnh thực tế
-        }));
+  useEffect(() => {
+    import("../data/product").then((module) => {
+      const PRODUCTS_DATA = module.PRODUCTS_DATA;
+      const foundProduct = PRODUCTS_DATA.find((p) => p.ProductId === productId);
+      if (foundProduct) {
+        form.setFieldsValue(foundProduct);
+        setImagePreview(foundProduct.Image || null);
       }
-    };
+    });
+  }, [productId, form]);
 
-    // Lưu dữ liệu
-    const handleSave = () => {
-      console.log("Dữ liệu đã chỉnh sửa:", editedProduct);
-      alert("Sản phẩm đã được cập nhật!");
-    };
+  const handleImageChange = (info: any) => {
+    const file = info.fileList[0]?.originFileObj;
+    if (file) {
+      const isImage = file.type.startsWith("image/");
+      if (!isImage) {
+        message.error("Chỉ được chọn tệp hình ảnh (JPG, PNG, JPEG)");
+        return;
+      }
 
-    return (
-      <div className="pt-[70px] px-4">
-        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
-          <h1 className="text-2xl font-semibold mb-4">Chỉnh sửa sản phẩm</h1>
+      // Giải phóng URL cũ (nếu có)
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
 
-          {/* Mã sản phẩm và Tên sản phẩm */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Mã sản phẩm</label>
-              <input type="text" className="mt-1 p-2 w-full border rounded-md" value={editedProduct.ProductCode} readOnly />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Tên sản phẩm</label>
-              <input 
-                type="text" 
-                className="mt-1 p-2 w-full border rounded-md" 
-                name="ProductName"
-                value={editedProduct.ProductName}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          {/* Nhà cung cấp và Đơn vị */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Nhà sản xuất</label>
-              <input 
-                type="text" 
-                className="mt-1 p-2 w-full border rounded-md" 
-                name="Manufacturer"
-                value={editedProduct.Manufacturer}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Đơn vị</label>
-              <select 
-                className="mt-1 p-2 w-full border rounded-md" 
-                name="unit"
-                value={editedProduct.unit} 
-                onChange={handleChange}
-              >
-                <option value="Hộp">Hộp</option>
-                <option value="Tuýp">Tuýp</option>
-                <option value="Chai">Chai</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Danh mục và Danh mục phụ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Danh mục</label>
-              <select 
-                className="mt-1 p-2 w-full border rounded-md" 
-                name="category"
-                value={editedProduct.category} 
-                onChange={handleChange}
-              >
-                <option value="Danh mục 1">Danh mục 1</option>
-                <option value="Danh mục 2">Danh mục 2</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Danh mục phụ</label>
-              <select 
-                className="mt-1 p-2 w-full border rounded-md"
-                name="subCategory"
-                value={editedProduct.subCategory}
-                onChange={handleChange}
-              >
-                <option value="Danh mục phụ 1">Danh mục phụ 1</option>
-                <option value="Danh mục phụ 2">Danh mục phụ 2</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Mô tả sản phẩm */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Mô tả</label>
-            <textarea 
-              className="mt-1 p-2 w-full border rounded-md" 
-              rows={3} 
-              name="Description"
-              value={editedProduct.Description} 
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Thuế VAT và Trạng thái */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Thuế VAT</label>
-              <input 
-                type="text" 
-                className="mt-1 p-2 w-full border rounded-md" 
-                name="VAT"
-                value={editedProduct.VAT} 
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
-              <select 
-                className="mt-1 p-2 w-full border rounded-md"
-                name="status"
-                value={editedProduct.status} 
-                onChange={handleChange}
-              >
-                <option value="Hoạt động">Hoạt động</option>
-                <option value="Không hoạt động">Không hoạt động</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Ảnh sản phẩm */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Ảnh sản phẩm</label>
-            {imagePreview && <img src={imagePreview} alt="Product" className="mt-2 w-40 h-40 object-cover rounded-md" />}
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="mt-2 p-2 border rounded-md w-full" 
-              onChange={handleImageChange}
-            />
-          </div>
-
-          {/* Nút hành động */}
-          <div className="mt-6 flex gap-4">
-            <button 
-              className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              onClick={handleSave}
-            >
-              Lưu
-            </button>
-            <button 
-              className="bg-gray-500 text-white px-4 py-2 rounded-md" 
-              onClick={() => handleChangePage("Danh sách sản phẩm")}
-            >
-              Hủy
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+      // Cập nhật ảnh mới ngay lập tức
+      const imageUrl = URL.createObjectURL(file);
+      setImagePreview(imageUrl);
+    }
   };
 
-  export default UpdateProduct;
+  const handleSave = (values: any) => {
+    console.log("Dữ liệu đã chỉnh sửa:", values);
+    message.success("Sản phẩm đã được cập nhật!");
+    handleChangePage("Danh sách sản phẩm");
+  };
+
+  return (
+    <div className="p-6 flex justify-center">
+      <Card title="Chỉnh sửa sản phẩm" className="w-full max-w-4xl">
+        <Form form={form} layout="vertical" onFinish={handleSave}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Mã sản phẩm" name="ProductCode">
+                <Input disabled />
+              </Form.Item>
+              <Form.Item label="Tên sản phẩm" name="ProductName" rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm" }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item label="Nhà cung cấp" name="ManufactureName">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Đơn vị" name="UnitName">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Danh mục chính" name="CategoryName">
+                <Input />
+              </Form.Item>
+              <Form.Item label="Danh mục phụ" name="SubCategoryName">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Giá bán" name="SellingPrice" rules={[{ required: true, message: "Vui lòng nhập giá bán" }]}>
+                <InputNumber className="w-full" min={0} addonAfter="VND" />
+              </Form.Item>
+              <Form.Item label="Thuế VAT" name="VAT">
+                <InputNumber className="w-full" min={0} max={100} addonAfter="%" />
+              </Form.Item>
+              <Form.Item label="Trọng lượng" name="Weight">
+                <InputNumber className="w-full" min={0} step={0.1} addonAfter="kg" />
+              </Form.Item>
+              <Form.Item label="Trạng thái" name="Status">
+                <Select>
+                  <Option value="Đang bán">Đang bán</Option>
+                  <Option value="Ngừng bán">Ngừng bán</Option>
+                </Select>
+              </Form.Item>
+              
+            </Col>
+          </Row>
+
+          <Form.Item label="Mô tả" name="Description">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item label="Điều kiện bảo quản" name="StorageConditions">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+
+          {/* Ảnh sản phẩm */}
+          <Form.Item label="Ảnh sản phẩm">
+            {imagePreview && <img src={imagePreview} alt="Product" className="mb-2 w-40 h-40 object-cover rounded-md" />}
+            <Upload
+              name="Image"
+              listType="picture"
+              showUploadList={false}
+              beforeUpload={() => false} // Ngăn upload lên server
+              onChange={handleImageChange}
+            >
+              <Button icon={<UploadOutlined />}>Chọn ảnh mới</Button>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item>
+            <div className="flex  gap-4">
+              <Button type="primary" htmlType="submit">Lưu</Button>
+              <Button onClick={() => handleChangePage("Danh sách sản phẩm")} danger>Hủy</Button>
+            </div>
+          </Form.Item>
+
+          
+        </Form>
+      </Card>
+    </div>
+  );
+};
+
+export default UpdateProduct;

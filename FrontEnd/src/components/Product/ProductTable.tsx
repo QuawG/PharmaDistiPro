@@ -1,31 +1,27 @@
-import React, { useState } from "react";
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  SortingState,
-  RowSelectionState,
-} from "@tanstack/react-table";
-import { Eye, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
-import DeleteConfirmation from "../Confirm/DeleteConfirm";
+import React, { useState, useEffect } from "react";
+import { Table, Select, Button, Modal, Image, Input } from "antd";
+import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import ProductDetailsModal from "./ProductDetail";
 
 interface Product {
-  id: number;
+  ProductId: number;
   ProductCode: string;
-  Manufacturer: string;
+  ManufactureName: string;
   ProductName: string;
-  unit: string;
-  category: string;
-  subCategory: string;
+  UnitId: number;
+  CategoryId: number;
   Description: string;
-  status: string;
-  VAT: string;
-  image: string;
+  SellingPrice: number;
+  CreatedBy: string;
+  CreatedDate: string;
+  Status: string;
+  VAT: number;
+  StorageConditions: string;
+  Weight: number;
+  Image?: string;
+  CategoryName?: string;
+  SubCategoryName?: string;
+  UnitName?: string;
 }
 
 interface ProductTableProps {
@@ -34,192 +30,210 @@ interface ProductTableProps {
 }
 
 const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChangePage }) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [products, setProducts] = useState<Product[]>(PRODUCTS_DATA);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [minPrice, setMinPrice] = useState<number | string>("");
+  const [maxPrice, setMaxPrice] = useState<number | string>("");
 
-  const handleDelete = () => {
-    setIsDeleteModalOpen(false);
+  // Filter products based on filter criteria
+
+  const uniqueCategories = Array.from(new Set(PRODUCTS_DATA.map(product => product.SubCategoryName)));
+  const filterProducts = () => {
+    let filteredProducts = [...PRODUCTS_DATA];
+
+    if (searchTerm.trim()) {
+      filteredProducts = filteredProducts.filter((product) =>
+        product.ProductName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (categoryFilter) {
+      filteredProducts = filteredProducts.filter((product) => product.SubCategoryName === categoryFilter);
+    }
+
+    if (statusFilter) {
+      filteredProducts = filteredProducts.filter((product) => product.Status === statusFilter);
+    }
+
+    if (minPrice !== "" && !isNaN(Number(minPrice))) {
+      filteredProducts = filteredProducts.filter((product) => product.SellingPrice >= Number(minPrice));
+    }
+
+    if (maxPrice !== "" && !isNaN(Number(maxPrice))) {
+      filteredProducts = filteredProducts.filter((product) => product.SellingPrice <= Number(maxPrice));
+    }
+
+    setProducts(filteredProducts);
   };
 
-  const columns: ColumnDef<Product>[] = [
+  // Effect to apply filters when filter criteria changes
+  useEffect(() => {
+    filterProducts();
+  }, [searchTerm, categoryFilter, statusFilter, minPrice, maxPrice]);
+
+  const handleStatusChange = (productId: number, newStatus: string) => {
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.ProductId === productId ? { ...product, Status: newStatus } : product
+      )
+    );
+  };
+
+  const handleDelete = () => {
+    if (selectedProduct) {
+      setProducts((prevProducts) =>
+        prevProducts.filter((product) => product.ProductId !== selectedProduct.ProductId)
+      );
+      setIsDeleteModalOpen(false);
+      setSelectedProduct(null);
+    }
+  };
+
+  const columns = [
     {
-      accessorKey: "ProductName",
-      header: "Tên sản phẩm",
-      cell: ({ row }) => (
+      title: "Tên sản phẩm",
+      dataIndex: "ProductName",
+      key: "ProductName",
+      render: (text: string, record: Product) => (
         <div className="flex items-center gap-3">
-          <img
-            src={row.original.image}
-            alt={row.original.ProductName}
-            className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-          />
-          <span className="font-medium">{row.original.ProductName}</span>
+          <Image width={40} height={40} src={record.Image || "/placeholder.png"} alt={text} />
+          <span>{text || "N/A"}</span>
         </div>
       ),
     },
     {
-      accessorKey: "ProductCode",
-      header: "Mã sản phẩm",
+      title: "Mã sản phẩm",
+      dataIndex: "ProductCode",
+      key: "ProductCode",
     },
     {
-      accessorKey: "subCategory",
-      header: "Danh mục thuốc",
+      title: "Danh mục thuốc",
+      dataIndex: "SubCategoryName",
+      key: "SubCategoryName",
+      render: (text: string) => text || "Không có",
     },
     {
-      accessorKey: "Manufacturer",
-      header: "Nhà cung cấp",
+      title: "Đơn vị",
+      dataIndex: "UnitName",
+      key: "UnitName",
+      render: (text: string) => text || "Không xác định",
     },
     {
-      accessorKey: "unit",
-      header: "Đơn vị",
+      title: "Giá bán",
+      dataIndex: "SellingPrice",
+      key: "SellingPrice",
+      render: (price: number) => `${price.toLocaleString()} VND`,
     },
     {
-      accessorKey: "VAT",
-      header: "Thuế VAT",
+      title: "Thuế VAT",
+      dataIndex: "VAT",
+      key: "VAT",
+      render: (vat: number) => `${vat}%`,
     },
     {
-      accessorKey: "status",
-      header: "Trạng thái",
+      title: "Trạng thái",
+      dataIndex: "Status",
+      key: "Status",
+      render: (status: string, record: Product) => (
+        <Select
+          value={status}
+          onChange={(value) => handleStatusChange(record.ProductId, value)}
+          style={{ width: 120 }}
+        >
+          <Select.Option value="Đang bán">Đang bán</Select.Option>
+          <Select.Option value="Ngừng bán">Ngừng bán</Select.Option>
+        </Select>
+      ),
     },
     {
-      accessorKey: "actions",
-      header: "Hành động",
-      cell: ({ row }) => (
+      title: "Hành động",
+      key: "actions",
+      render: (_: any, record: Product) => (
         <div className="flex space-x-2">
-          <button
-            className="p-1 text-blue-600 hover:bg-gray-200 rounded"
-            onClick={() => {
-              setSelectedProduct(row.original);
-              setIsOpen(true);
-            }}
-          >
-            <Eye className="w-5 h-5" />
-          </button>
-          <button
-            className="p-1 text-green-600 hover:bg-gray-200 rounded"
-            onClick={() => handleChangePage("Chỉnh sửa sản phẩm", row.original.id)}
-          >
-            <Pencil className="w-5 h-5" />
-          </button>
-
-          <button
-            className="p-1 text-red-600 hover:bg-gray-200 rounded"
-            onClick={() => {
-              setSelectedProduct(row.original);
-              setIsDeleteModalOpen(true);
-            }}
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
+          <Button icon={<EyeOutlined />} onClick={() => { setSelectedProduct(record); setIsOpen(true); }} />
+          <Button icon={<EditOutlined />} onClick={() => handleChangePage("Chỉnh sửa sản phẩm", record.ProductId)} />
+          <Button danger icon={<DeleteOutlined />} onClick={() => { setSelectedProduct(record); setIsDeleteModalOpen(true); }} />
         </div>
       ),
     },
   ];
 
-  const table = useReactTable({
-    data: PRODUCTS_DATA,
-    columns,
-    state: {
-      sorting,
-      rowSelection,
-      globalFilter,
-      pagination,
-    },
-    onPaginationChange: setPagination,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      {/* Thanh tìm kiếm */}
-
-
-      {/* Bảng dữ liệu */}
-      <table className="w-full border-collapse">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="bg-gray-50">
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="px-4 py-3 text-left text-sm font-bold">
-                  <div className="flex items-center gap-2" onClick={header.column.getToggleSortingHandler()}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === "asc" ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : header.column.getIsSorted() === "desc" ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : null} 
-                  </div>
-                </th>
-              ))}
-            </tr>
+      <div className="flex gap-4 mb-4">
+        <Input
+          placeholder="Tìm kiếm theo tên sản phẩm"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: 200 }}
+        />
+         <Select
+          placeholder="Chọn danh mục"
+          value={categoryFilter}
+          onChange={(value) => setCategoryFilter(value)}
+          style={{ width: 200 }}
+        >
+          <Select.Option value="">Tất cả danh mục</Select.Option>
+          {uniqueCategories.map((subCategory) => (
+            <Select.Option key={subCategory} value={subCategory}>
+              {subCategory}
+            </Select.Option>
           ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b border-gray-200 hover:bg-gray-50">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-3 text-sm">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Phân trang */}
-      <div className="flex items-center justify-between px-4 py-3 border-t">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Hiển thị</span>
-          <select
-            value={pagination.pageSize}
-            onChange={(e) => setPagination((prev) => ({ ...prev, pageSize: Number(e.target.value) }))}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {[10, 20, 30, 40, 50].map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <span className="text-sm text-gray-600">mục</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            className="px-3 py-1 text-sm rounded bg-gray-200"
-            onClick={() => setPagination((prev) => ({ ...prev, pageIndex: Math.max(prev.pageIndex - 1, 0) }))}
-            disabled={pagination.pageIndex === 0}
-          >
-            Trước
-          </button>
-          <span className="text-sm">
-            Trang {pagination.pageIndex + 1} / {table.getPageCount()}
-          </span>
-          <button
-            className="px-3 py-1 text-sm rounded bg-gray-200"
-            onClick={() => setPagination((prev) => ({ ...prev, pageIndex: Math.min(prev.pageIndex + 1, table.getPageCount() - 1) }))}
-            disabled={pagination.pageIndex >= table.getPageCount() - 1}
-          >
-            Tiếp
-          </button>
-        </div>
+        </Select>
+        <Select
+          placeholder="Chọn trạng thái"
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value)}
+          style={{ width: 200 }}
+        >
+          <Select.Option value="">Tất cả trạng thái</Select.Option>
+          <Select.Option value="Đang bán">Đang bán</Select.Option>
+          <Select.Option value="Ngừng bán">Ngừng bán</Select.Option>
+        </Select>
+        <Input
+          type="number"
+          placeholder="Giá tối thiểu"
+          value={minPrice}
+          onChange={(e) => setMinPrice(e.target.value)}
+          style={{ width: 150 }}
+        />
+        
+        <Input
+          type="number"
+          placeholder="Giá tối đa"
+          value={maxPrice}
+          onChange={(e) => setMaxPrice(e.target.value)}
+          style={{ width: 150 }}
+        />
       </div>
 
-      {/* Modals */}
-      <DeleteConfirmation isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleDelete} />
-      <ProductDetailsModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <Table columns={columns} dataSource={products} rowKey="ProductId" />
+
+      {/* Modal xác nhận xóa */}
+      <Modal
+        title="Xác nhận xóa"
+        open={isDeleteModalOpen}
+        onOk={handleDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        okText="Xóa"
+        cancelText="Hủy"
+      >
+        <p>Bạn có chắc chắn muốn xóa sản phẩm này không?</p>
+      </Modal>
+
+      {/* Modal chi tiết sản phẩm */}
+      <ProductDetailsModal
+        isOpen={isOpen} 
+        onClose={() => setIsOpen(false)} 
+        product={selectedProduct} // Truyền selectedProduct vào đây
+      />
     </div>
   );
 };

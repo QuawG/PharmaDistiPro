@@ -25,7 +25,7 @@ interface CustomerListPageProps {
 }
 
 const CUSTOMERS_DATA: Customer[] = [
-  { id: 1, firstName: "Alice", employeeCode: "KH001", avatar: "https://via.placeholder.com/150",
+  { id: 1, firstName: "Alice", employeeCode: "KH001", avatar: "https://mekongasean.vn/stores/news_dataimages/mekongaseanvn/092023/11/09/long-chau-3570.jpg",
     email: "alice@example.com", phone: "321-654-0987", address: "789 Oak St", age: 30, 
     createdBy: "Admin", createdDate: "2023-01-10T00:00:00Z", taxCode: 104224702, status: "Active" },
 

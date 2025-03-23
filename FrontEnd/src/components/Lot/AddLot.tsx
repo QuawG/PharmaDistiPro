@@ -23,17 +23,17 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
   const [error, setError] = useState<string>("");
 
   const productOptions = PRODUCTS_DATA.map((p) => ({
-    value: String(p.id),
+    value: String(p.ProductId),
     label: p.ProductName,
   }));
 
   const handleSelectProduct = (selectedOption: any) => {
-    const product = PRODUCTS_DATA.find((p) => String(p.id) === selectedOption.value);
-    if (product && !selectedProducts.some((p) => p.id === String(product.id))) {
+    const product = PRODUCTS_DATA.find((p) => String(p.ProductId) === selectedOption.value);
+    if (product && !selectedProducts.some((p) => p.id === String(product.ProductId))) {
       setSelectedProducts([
         ...selectedProducts,
         {
-          id: String(product.id),
+          id: String(product.ProductId),
           name: product.ProductName,
           price: "",
           quantity: 0, // Mặc định quantity = 0

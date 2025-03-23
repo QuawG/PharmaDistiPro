@@ -14,7 +14,6 @@ import SupplierAdd from "../components/Supplier/AddSupplier";
 import PurchaseOrderListPage from "./Home/PurchaseOrderList"; 
 import PurchaseOrderAdd from "../components/PurchaseOrder/AddPurchaseOrder"; // Import PurchaseOrderAdd
 import Navbar from "../components/global/Navbar";
-import UpdateProduct from "../components/Product/UpdateProduct";
 import LotListPage from "./Home/LotList";
 import ReceivedNoteListPage from "./Home/ReceivedNoteList";
 import AddLot from "../components/Lot/AddLot"; // Import trang AddLot
@@ -24,6 +23,8 @@ import StorageRoomAdd from "../components/StorageRoom/AddStorageRoom";
 import AddReceivedNote from "../components/ReceivedNote/AddReceivedNote"; 
 import OrderListPage from "./Home/OrderList"; // Import OrderListPage
 import NewOrder from "../components/Order/NewOrder";
+import IssueNoteListPage from "./Home/IssueNoteList";
+import UpdateProduct from "../components/Product/UpdateProduct";
 import { useState } from "react";
 
 const HomePage = () => {
@@ -41,20 +42,20 @@ const HomePage = () => {
     // Khi thêm thành công, quay lại danh sách phiếu nhập
     setActivePage("Danh sách phiếu nhập");
   };
+  console.log("📄 Trang hiện tại:", activePage);
   
-
   return (
     <div className="w-screen h-screen flex">
       <Sidebar activeSidebar={activePage} handleChangePage={handleChangePage} />
       <div className="flex-grow">
         <Navbar />
         {activePage === 'Dashboard' && <MyComponent />}
-        {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}
-        {activePage === "Chỉnh sửa sản phẩm" && selectedProductId !== null && (
-          <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
-        )}
+        {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}       
         {activePage === 'Danh sách danh mục hệ thống' && <CategoryList handleChangePage={handleChangePage} />}
         {activePage === 'Tạo sản phẩm' && <ProductAdd handleChangePage={handleChangePage} />}
+        {activePage === 'Chỉnh sửa sản phẩm' && selectedProductId !== null && (
+  <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
+)}
         {activePage === 'Tạo danh mục hệ thống' && <CategoryAdd handleChangePage={handleChangePage} />}
         {activePage === 'Danh sách danh mục thuốc' && <SubCategoryList handleChangePage={handleChangePage} />}
         {activePage === 'Tạo danh mục thuốc' && <SubAddCategory handleChangePage={handleChangePage} />}
@@ -74,6 +75,8 @@ const HomePage = () => {
         {activePage === 'Tạo kho mới' && <StorageRoomAdd/>}
         {activePage === 'Danh sách đơn hàng' && <OrderListPage handleChangePage={handleChangePage} />}
         {activePage === 'Tạo đơn hàng' && <NewOrder />}
+        {activePage === 'Danh sách phiếu xuất kho' && <IssueNoteListPage handleChangePage={handleChangePage} />}
+        
       </div>
     </div>
   );
