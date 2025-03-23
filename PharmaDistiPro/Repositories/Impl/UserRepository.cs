@@ -13,24 +13,18 @@ namespace PharmaDistiPro.Repositories.Impl
 
         public async Task<User> GetUser(string username, string password)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.UserName == username && u.Password == password);
+            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserName == username && u.Password == password);
         }
 
-        //public async Task<User> GetUserByRefreshToken(string refreshToken)
-        //{
-        //    return await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
-        //}
+        public async Task<User> GetUserByRefreshToken(string refreshToken)
+        {
+            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        }
         public async Task<User> GetUserByEmail(string email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email);
 
-        }
-
-        public Task<User> GetUserByRefreshToken(string refreshToken)
-        {
-            throw new NotImplementedException();
-        }
-
+        }       
         public async Task<User> UpdateUser(User user)
         {
 

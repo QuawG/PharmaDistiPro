@@ -1,36 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace PharmaDistiPro.Models
 {
+    [Table("ProductLot")]
     public partial class ProductLot
     {
         public ProductLot()
         {
             IssueNoteDetails = new HashSet<IssueNoteDetail>();
             NoteCheckDetails = new HashSet<NoteCheckDetail>();
-            OrdersDetails = new HashSet<OrdersDetail>();
-            ProductStorageRooms = new HashSet<ProductStorageRoom>();
-            PurchaseOrdersDetails = new HashSet<PurchaseOrdersDetail>();
-            ReceiveNoteDetails = new HashSet<ReceiveNoteDetail>();
+            ReceivedNoteDetails = new HashSet<ReceivedNoteDetail>();
         }
 
+        [Key]
         public int ProductLotId { get; set; }
         public int? ProductId { get; set; }
         public int? LotId { get; set; }
+        [Column(TypeName = "datetime")]
         public DateTime? ManufacturedDate { get; set; }
+        [Column(TypeName = "datetime")]
         public DateTime? ExpiredDate { get; set; }
-        public DateTime? SupplyDate { get; set; }
+        public double? SupplyPrice { get; set; }
         public int? Quantity { get; set; }
         public int? Status { get; set; }
+        public int? StorageRoomId { get; set; }
 
+        [ForeignKey("LotId")]
+        [InverseProperty("ProductLots")]
         public virtual Lot? Lot { get; set; }
+        [ForeignKey("ProductId")]
+        [InverseProperty("ProductLots")]
         public virtual Product? Product { get; set; }
+        [ForeignKey("StorageRoomId")]
+        [InverseProperty("ProductLots")]
+        public virtual StorageRoom? StorageRoom { get; set; }
+        [InverseProperty("ProductLot")]
         public virtual ICollection<IssueNoteDetail> IssueNoteDetails { get; set; }
+        [InverseProperty("ProductLot")]
         public virtual ICollection<NoteCheckDetail> NoteCheckDetails { get; set; }
-        public virtual ICollection<OrdersDetail> OrdersDetails { get; set; }
-        public virtual ICollection<ProductStorageRoom> ProductStorageRooms { get; set; }
-        public virtual ICollection<PurchaseOrdersDetail> PurchaseOrdersDetails { get; set; }
-        public virtual ICollection<ReceiveNoteDetail> ReceiveNoteDetails { get; set; }
+        [InverseProperty("ProductLot")]
+        public virtual ICollection<ReceivedNoteDetail> ReceivedNoteDetails { get; set; }
     }
 }

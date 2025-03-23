@@ -37,7 +37,7 @@ namespace PharmaDistiPro
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
+                    Type = SecuritySchemeType.ApiKey,
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
@@ -90,7 +90,7 @@ namespace PharmaDistiPro
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:ValidAudience"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
                 };
             });
@@ -117,15 +117,25 @@ namespace PharmaDistiPro
             //builder.Services.AddScoped<IOrderService, OrderService>();
             //builder.Services.AddScoped<ICartService, CartService>();
             //#endregion
+            #region GHN SERVICE
+            builder.Services.AddHttpClient<IGHNService, GHNService>();
+
+            #endregion
 
             #region Add DI for repositories
             builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<ILotRepository, LotRepository>();
+            builder.Services.AddScoped<IProductLotRepository, ProductLotRepository>();
+            builder.Services.AddScoped<IReceivedNoteRepository, ReceivedNoteRepository>();
             #endregion
 
             #region Add DI for services
             builder.Services.AddScoped<ISupplierService, SupplierService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<ILotService, LotService>();
+            builder.Services.AddScoped<IProductLotService, ProductLotService>();
+            builder.Services.AddScoped<IReceivedNoteService, ReceivedNoteService>();
             #endregion
             builder.Services.AddAuthorization();
             // Register AutoMapper
@@ -140,7 +150,7 @@ namespace PharmaDistiPro
             }
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

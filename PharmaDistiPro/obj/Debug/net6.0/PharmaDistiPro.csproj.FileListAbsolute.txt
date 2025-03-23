@@ -240,10 +240,10 @@ C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\staticwebassets\msbuild.buildMultiTargeting.PharmaDistiPro.props
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\staticwebassets\msbuild.buildTransitive.PharmaDistiPro.props
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\staticwebassets.pack.json
-C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\staticwebassets.upToDateCheck.txt
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDi.2086D58E.Up2Date
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDistiPro.dll
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\refint\PharmaDistiPro.dll
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDistiPro.pdb
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDistiPro.genruntimeconfig.cache
 C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\ref\PharmaDistiPro.dll
+C:\Users\ADMIN\Desktop\GitPushSEP490G74\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\staticwebassets.upToDateCheck.txt

@@ -30,12 +30,12 @@ namespace PharmaDistiPro.Services.Impl
 
             if (user != null)
             {
-                var accessToken = GenerateAccessToken();
+                var accessToken = GenerateAccessToken(user);
                 var refreshToken = GenerateRefreshToken();
 
-                // Lưu refresh token vào database
-                //user.RefreshToken = refreshToken;
-                //user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // Refresh token sống 7 ngày
+                //Lưu refresh token vào database
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpriedTime = DateTime.UtcNow.AddDays(7); // Refresh token sống 7 ngày
                 await _userRepository.UpdateUser(user);
 
                 var loginResponse = new LoginResponse
@@ -55,16 +55,19 @@ namespace PharmaDistiPro.Services.Impl
             return new Response<LoginResponse>
             {
                 StatusCode = 404,
-                Message = "NOT FOUND"
+                Message = "User does not exist"
             };
         }
         #endregion
-        private string GenerateAccessToken()
+        private string GenerateAccessToken(User user)
         {
             var claims = new[]
             {
-        new Claim(ClaimTypes.NameIdentifier, "admin"),
-        new Claim(ClaimTypes.Role, "admin")
+        new Claim(ClaimTypes.NameIdentifier, user.UserName),
+        new Claim(ClaimTypes.Role, user.Role.RoleName),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
+        new Claim("UserId", user.UserId.ToString())
     };
 
             var token = new JwtSecurityToken
@@ -96,22 +99,22 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<LoginResponse>();
             var user = await _userRepository.GetUserByRefreshToken(tokenModel.RefreshToken);
 
-            //if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-            //{
-            //    response = new Response<LoginResponse>
-            //    {
-            //        StatusCode = 401,
-            //        Message = "Invalid refresh token"
-            //    };
-            //    return response;
-            //}
+            if (user == null || user.RefreshTokenExpriedTime <= DateTime.UtcNow)
+            {
+                response = new Response<LoginResponse>
+                {
+                    StatusCode = 401,
+                    Message = "Invalid refresh token"
+                };
+                return response;
+            }
 
-            var newAccessToken = GenerateAccessToken();
+            var newAccessToken = GenerateAccessToken(user);
             var newRefreshToken = GenerateRefreshToken();
 
-            //// Cập nhật refresh token mới
-            //user.RefreshToken = newRefreshToken;
-            //user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            // Cập nhật refresh token mới
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpriedTime = DateTime.UtcNow.AddDays(7);
             await _userRepository.UpdateUser(user);
             response = new Response<LoginResponse>
             {
@@ -139,27 +142,27 @@ namespace PharmaDistiPro.Services.Impl
                 };
                 return response;
             }
-            //if (user.ResetPasswordOTP != resetPasswordRequest.OTP)
-            //{
-            //    response = new Response<ResetPasswordResponse>
-            //    {
-            //        StatusCode = 400,
-            //        Message = "Invalid OTP"
-            //    };
-            //    return response;
-            //}
-            //if (user.ResetPasswordOTPExpiry < DateTime.Now)
-            //{
-            //    response = new Response<ResetPasswordResponse>
-            //    {
-            //        StatusCode = 400,
-            //        Message = "OTP expired"
-            //    };
-            //    return response;
-            //}
-            //user.Password = resetPasswordRequest.Password;
-            //user.ResetPasswordOTP = null;
-            //user.ResetPasswordOTPExpiry = null;
+            if (user.ResetPasswordOtp != resetPasswordRequest.OTP)
+            {
+                response = new Response<ResetPasswordResponse>
+                {
+                    StatusCode = 400,
+                    Message = "Invalid OTP"
+                };
+                return response;
+            }
+            if (user.ResetpasswordOtpexpriedTime < DateTime.Now)
+            {
+                response = new Response<ResetPasswordResponse>
+                {
+                    StatusCode = 400,
+                    Message = "OTP expired"
+                };
+                return response;
+            }
+            user.Password = resetPasswordRequest.Password;
+            user.ResetPasswordOtp = null;
+            user.ResetpasswordOtpexpriedTime = null;
             await _userRepository.UpdateUser(user);
             response = new Response<ResetPasswordResponse>
             {
@@ -203,7 +206,9 @@ namespace PharmaDistiPro.Services.Impl
             return await _userRepository.GetUserByEmail(email);
         }
 
-
-
+        public async Task<User> UpdateUser(User user)
+        {
+            return await _userRepository.UpdateUser(user);
+        }
     }
 }

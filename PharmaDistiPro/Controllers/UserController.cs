@@ -36,7 +36,7 @@ namespace PharmaDistiPro.Controllers
             {
                 return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
             }
-            return StatusCode(response.StatusCode, response.Message);
+            return StatusCode(response.StatusCode, new { response.Message,  response.Data });
         }
         #endregion
         #region refreshToken
@@ -96,14 +96,14 @@ namespace PharmaDistiPro.Controllers
         #region send OTP
 
         [HttpPost("SentOTP")]
-        public async Task<IActionResult> SendOTP([FromBody] ResetPasswordRequest request)
+        public async Task<IActionResult> SendOTP([FromBody] string email)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { Message = "Invalid model state", Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
             }
             var response = new Services.Response<ResetPasswordResponse>();
-            var user = await _userService.getUserByEmail(request.Email);
+            var user = await _userService.getUserByEmail(email);
             if (user == null)
             {
                 response = new Services.Response<ResetPasswordResponse>
@@ -113,11 +113,12 @@ namespace PharmaDistiPro.Controllers
                 };
                 return StatusCode(response.StatusCode, response.Message);
             }
-            //user.ResetPasswordOTP;
-            //user.ResetPasswordOTPExpiry;
-
+            string OTP = CreateRandomOTP();
+            user.ResetPasswordOtp = OTP;
+            user.ResetpasswordOtpexpriedTime = DateTime.UtcNow.AddDays(1); ;
+            _userService.UpdateUser(user);
             //send email with OTP
-            var emailSent = await _emailService.SendEmailAsync(request.Email, "Your OTP Code", $"Your OTP is: {CreateRandomOTP()}. It expires in 10 minutes.");
+            var emailSent = await _emailService.SendEmailAsync(email, "Your OTP Code", $"Your OTP is: {OTP}. It expires in 1 days.");
 
             if (!emailSent)
             {

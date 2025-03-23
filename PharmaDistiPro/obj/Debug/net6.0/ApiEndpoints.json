@@ -1,5 +1,370 @@
 [
   {
+    "ContainingType": "PharmaDistiPro.Controllers.GHNController",
+    "Method": "GetExpectedDeliveryTime",
+    "RelativePath": "api/GHN/calculate-expected-delivery-time",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "fromDistrictId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "fromWardCode",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "toDistrictId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "toWardCode",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.GHNController",
+    "Method": "CalculateOrderFee",
+    "RelativePath": "api/GHN/calculate-fee/{orderId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "orderId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "orderId",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.GHNController",
+    "Method": "CreateOrder",
+    "RelativePath": "api/GHN/create-orderGHN/{orderId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "orderId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "orderId",
+        "Type": "",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.GHNController",
+    "Method": "GetDistricts",
+    "RelativePath": "api/GHN/districts/{provinceId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "provinceId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.GHNController",
+    "Method": "GetServiceTypes",
+    "RelativePath": "api/GHN/get-services-type",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "fromDistrictId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "toDistrictId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.GHNController",
+    "Method": "GetProvinces",
+    "RelativePath": "api/GHN/provinces",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.GHNController",
+    "Method": "GetWards",
+    "RelativePath": "api/GHN/wards/{districtId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "districtId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.LotController",
+    "Method": "GetLots",
+    "RelativePath": "api/Lot",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[PharmaDistiPro.DTO.Lots.LotResponse, PharmaDistiPro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.LotController",
+    "Method": "CreateLot",
+    "RelativePath": "api/Lot",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lot",
+        "Type": "PharmaDistiPro.DTO.Lots.LotRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PharmaDistiPro.DTO.Lots.LotResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.LotController",
+    "Method": "GetLotByLotCode",
+    "RelativePath": "api/Lot/{lotCode}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lotCode",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.LotController",
+    "Method": "UpdateLot",
+    "RelativePath": "api/Lot/{lotCode}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lotCode",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "lot",
+        "Type": "PharmaDistiPro.DTO.Lots.LotRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PharmaDistiPro.DTO.Lots.LotResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ProductLotController",
+    "Method": "GetProductLots",
+    "RelativePath": "api/ProductLot",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[PharmaDistiPro.DTO.ProductLots.ProductLotResponse, PharmaDistiPro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ProductLotController",
+    "Method": "CreateProductLot",
+    "RelativePath": "api/ProductLot",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productLot",
+        "Type": "PharmaDistiPro.DTO.ProductLots.ProductLotRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ProductLotController",
+    "Method": "UpdateProductLot",
+    "RelativePath": "api/ProductLot",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productLot",
+        "Type": "PharmaDistiPro.DTO.ProductLots.ProductLotRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ProductLotController",
+    "Method": "GetProductLotById",
+    "RelativePath": "api/ProductLot/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ReceivedNoteController",
+    "Method": "GetReceivedNoteList",
+    "RelativePath": "api/ReceivedNote",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[PharmaDistiPro.DTO.ReceivedNotes.ReceivedNoteResponse, PharmaDistiPro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ReceivedNoteController",
+    "Method": "CreateReceivedNote",
+    "RelativePath": "api/ReceivedNote",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "receivedNote",
+        "Type": "PharmaDistiPro.DTO.ReceivedNotes.ReceivedNoteRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ReceivedNoteController",
+    "Method": "CancelReceivedNote",
+    "RelativePath": "api/ReceivedNote",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "receivedNote",
+        "Type": "PharmaDistiPro.Models.ReceivedNote",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.ReceivedNoteController",
+    "Method": "GetReceivedNoteById",
+    "RelativePath": "api/ReceivedNote/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "PharmaDistiPro.Controllers.SupplierController",
     "Method": "ActivateDeactivateSupplier",
     "RelativePath": "api/Supplier/ActivateDeactivateSupplier/{supplierId}/{status}",
@@ -221,8 +586,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "request",
-        "Type": "PharmaDistiPro.DTO.Users.ResetPasswordRequest",
+        "Name": "email",
+        "Type": "System.String",
         "IsRequired": true
       }
     ],

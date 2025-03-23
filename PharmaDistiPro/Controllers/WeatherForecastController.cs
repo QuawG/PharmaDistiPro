@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PharmaDistiPro.Controllers
@@ -17,7 +18,7 @@ namespace PharmaDistiPro.Controllers
         {
             _logger = logger;
         }
-
+        [Authorize(Roles = "User")]
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {

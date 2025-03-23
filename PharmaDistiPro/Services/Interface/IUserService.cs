@@ -9,6 +9,7 @@ namespace PharmaDistiPro.Services.Interface
         Task<Services.Response<LoginResponse>> Logout([FromBody] string refreshToken);
         Task<Services.Response<LoginResponse>> RefreshToken(TokenModel tokenModel);
         Task<User> getUserByEmail(string email);
+        Task<User> UpdateUser(User user);
         Task<Services.Response<LoginResponse>> Login(LoginRequest loginModel);
         Task<Services.Response<ResetPasswordResponse>> ResetPassword(ResetPasswordRequest resetPasswordRequest);
     }
