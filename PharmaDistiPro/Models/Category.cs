@@ -14,6 +14,7 @@ namespace PharmaDistiPro.Models
         public int? CategoryMainId { get; set; }
         public string? CategoryName { get; set; }
         public string? CategoryCode { get; set; }
+        public string? Image { get; set; }
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 

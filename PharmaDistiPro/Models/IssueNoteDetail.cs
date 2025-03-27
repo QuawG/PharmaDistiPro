@@ -5,7 +5,7 @@ namespace PharmaDistiPro.Models
 {
     public partial class IssueNoteDetail
     {
-        public int Id { get; set; }
+        public int IssueNoteDetailId { get; set; }
         public int? IssueNoteId { get; set; }
         public int? ProductLotId { get; set; }
         public int? Quantity { get; set; }

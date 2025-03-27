@@ -13,7 +13,6 @@ namespace PharmaDistiPro.DTO.Suppliers
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
-        public virtual User? CreatedByNavigation { get; set; }
-        public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; }
+     
     }
 }

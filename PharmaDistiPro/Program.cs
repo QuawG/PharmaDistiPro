@@ -40,7 +40,13 @@ namespace PharmaDistiPro
            .EnableSensitiveDataLogging() // Thêm để ghi chi tiết lỗi
             );
             builder.Services.AddHttpContextAccessor(); // Đăng ký IHttpContextAccessor
-
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    policy => policy.AllowAnyOrigin()
+                                    .AllowAnyMethod()
+                                    .AllowAnyHeader());
+            });
             #region cloudinary 
             var cloudName = builder.Configuration.GetValue<string>("Cloudinary:CloudName");
             var apiKey = builder.Configuration.GetValue<string>("Cloudinary:Key");
@@ -88,10 +94,10 @@ namespace PharmaDistiPro
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
+            app.UseCors("AllowAll");
             app.MapControllers();
 
             app.Run();

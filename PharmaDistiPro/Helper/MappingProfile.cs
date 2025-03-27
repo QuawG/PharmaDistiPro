@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.IdentityModel.Tokens;
 using PharmaDistiPro.DTO.Categorys;
+using PharmaDistiPro.DTO.NoteCheckDetails;
+using PharmaDistiPro.DTO.NoteChecks;
 using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.Products;
 using PharmaDistiPro.DTO.StorageRooms;
@@ -24,10 +26,23 @@ namespace PharmaDistiPro.Helper
             #region StorageRoom
             CreateMap<StorageRoom, StorageRoomDTO>();
             CreateMap<StorageRoomDTO, StorageRoom>();
-            #endregion
 
-            #region Unit
-            CreateMap<Unit, UnitDTO>();
+            CreateMap<StorageRoomInputRequest, StorageRoom>()
+           .ForMember(dest => dest.StorageRoomId, opt => opt.MapFrom(src => src.StorageRoomId))
+           .ForMember(dest => dest.Temperature, opt => opt.MapFrom(src => src.Temperature))
+           .ForMember(dest => dest.Humidity, opt => opt.MapFrom(src => src.Humidity))
+           .ForMember(dest => dest.StorageRoomCode, opt => opt.MapFrom(src => src.StorageRoomCode))
+           .ForMember(dest => dest.StorageRoomName, opt => opt.MapFrom(src => src.StorageRoomName))
+           .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+           .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+           .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => src.CreatedBy))
+           .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+           .ReverseMap(); // Để hỗ trợ ánh xạ 2 chiều
+        
+        #endregion
+
+        #region Unit
+        CreateMap<Unit, UnitDTO>();
             CreateMap<UnitDTO, Unit>();
             #endregion
 
@@ -103,10 +118,33 @@ namespace PharmaDistiPro.Helper
             CreateMap<ImageProduct, ImageProductDTO>()
                 .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product)) 
                 .ReverseMap()
-                .ForMember(dest => dest.Product, opt => opt.Ignore()); 
+                .ForMember(dest => dest.Product, opt => opt.Ignore());
             #endregion
 
+            #region NoteCheck
+            CreateMap<NoteCheck, CheckNoteRequestDTO>().ReverseMap()
+                .ForMember(dest => dest.NoteCheckDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore());
 
+            CreateMap<NoteCheck, CheckNoteResponseDTO>()
+                .ForMember(dest => dest.CheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
+                .ReverseMap()
+                .ForMember(dest => dest.NoteCheckDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore());
+
+            CreateMap<ApproveCheckNoteRequestDTO, NoteCheck>().ReverseMap();
+            CreateMap<ApproveCheckNoteResponseDTO, NoteCheck>().ReverseMap();
+            #endregion
+
+            #region NoteCheckDetail
+            CreateMap<NoteCheckDetail, CheckNoteDetailDTO>().ReverseMap()
+                .ForMember(dest => dest.NoteCheck, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductLot, opt => opt.Ignore());
+
+            CreateMap<NoteCheckDetail, CheckNoteDetailResponseDTO>().ReverseMap()
+                .ForMember(dest => dest.NoteCheck, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductLot, opt => opt.Ignore());
+            #endregion
 
         }
     }
