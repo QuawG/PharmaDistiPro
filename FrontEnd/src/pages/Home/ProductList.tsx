@@ -115,7 +115,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
       {/* Search and Actions */}
       <div className="bg-white rounded-lg shadow p-5">
         <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <div className="bg-[#FF9F43] p-2 rounded-lg">
               <FunnelIcon className="w-5 h-5 text-white" />
             </div>
@@ -138,7 +138,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
                 </svg>
               </span>
             </div>
-          </div>
+          </div> */}
           <div className="flex gap-2">
             <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <FileText className="w-5 h-5" />

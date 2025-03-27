@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Table, Dropdown, Button, Modal, Input, Form } from "antd";
+import { Table, Dropdown, Button, Modal, Input, Form, Select } from "antd";
 import { MoreOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+
+const { Option } = Select;
 
 interface Order {
   orderId: number;
@@ -17,24 +19,29 @@ interface Order {
   assignTo?: number;
 }
 
-// interface OrderDetail {
-//     orderDetailId: number;
-//     orderId: number;
-//     productId: number;
-//     quantity: number;
-//   }
+interface OrderDetail {
+  orderDetailId: number;
+  orderId: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+}
 
 interface OrderTableProps {
   orders?: Order[];
+  orderDetails?: OrderDetail[];
   handleChangePage: (page: string, orderId?: number) => void;
   onUpdate: (updatedOrder: Order) => void;
   onDelete: (orderId: number) => void;
 }
 
-const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdate, onDelete }) => {
+const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate, onDelete }) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [form] = Form.useForm();
+
+  const orderStatuses = ["Hủy", "Chờ xác nhận", "Đã xác nhận", "Chờ lấy hàng", "Vận chuyển", "Hoàn thành"];
 
   const openEditModal = (order: Order) => {
     setSelectedOrder(order);
@@ -68,48 +75,59 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdate, onDelete }) =
     });
   };
 
+  const handleStatusChange = (order: Order, newStatus: string) => {
+    Modal.confirm({
+      title: "Xác nhận thay đổi trạng thái",
+      content: `Bạn có chắc chắn muốn đổi trạng thái đơn hàng sang '${newStatus}'?`,
+      okText: "Đồng ý",
+      cancelText: "Hủy",
+      onOk: () => onUpdate({ ...order, status: newStatus }),
+    });
+  };
+
   const columns = [
     { title: "Mã đơn hàng", dataIndex: "orderCode", key: "orderCode" },
-    { title: "Trạng thái", dataIndex: "status", key: "status" },
-    { title: "Khách hàng", dataIndex: "customerId", key: "customerId" },
-    { 
-      title: "Ngày tạo", 
-      dataIndex: "createdDate", 
-      key: "createdDate", 
-      render: (date: Date) => new Date(date).toLocaleDateString("vi-VN") 
+    { title: "Số sản phẩm", dataIndex: "productCount", key: "productCount" },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      render: (status: string, record: Order) => (
+        <Select value={status} onChange={(newStatus) => handleStatusChange(record, newStatus)}>
+          {orderStatuses.map((status) => (
+            <Option key={status} value={status}>
+              {status}
+            </Option>
+          ))}
+        </Select>
+      ),
     },
-    { 
-      title: "Tổng tiền", 
-      dataIndex: "totalAmount", 
-      key: "totalAmount", 
-      render: (amount: number) => `${amount.toLocaleString()} VND` 
+    { title: "Khách hàng", dataIndex: "customerId", key: "customerId" },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdDate",
+      key: "createdDate",
+      render: (date: Date) => new Date(date).toLocaleDateString("vi-VN"),
+    },
+    {
+      title: "Tổng tiền",
+      dataIndex: "totalAmount",
+      key: "totalAmount",
+      render: (amount: number) => `${amount.toLocaleString()} VND`,
     },
     {
       title: "Hành động",
       key: "actions",
-      render: (_: any, record: Order) => {
-        const menuItems = [
-          {
-            key: "edit",
-            label: "Chỉnh sửa",
-            icon: <EditOutlined />,
-            onClick: () => openEditModal(record),
-          },
-          {
-            key: "delete",
-            label: "Xóa",
-            icon: <DeleteOutlined />,
-            danger: true,
-            onClick: () => handleDelete(record.orderId),
-          },
-        ];
-
-        return (
-          <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
-            <Button shape="circle" icon={<MoreOutlined />} />
-          </Dropdown>
-        );
-      },
+      render: (_: any, record: Order) => (
+        <Dropdown menu={{
+          items: [
+            { key: "edit", label: "Chỉnh sửa", icon: <EditOutlined />, onClick: () => openEditModal(record) },
+            { key: "delete", label: "Xóa", icon: <DeleteOutlined />, danger: true, onClick: () => handleDelete(record.orderId) },
+          ]
+        }} trigger={["click"]}>
+          <Button shape="circle" icon={<MoreOutlined />} />
+        </Dropdown>
+      ),
     },
   ];
 
@@ -123,6 +141,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdate, onDelete }) =
           open={isEditModalOpen}
           onCancel={closeEditModal}
           onOk={handleSave}
+          width={800}
         >
           <Form form={form} layout="vertical">
             <Form.Item label="Mã đơn hàng" name="orderCode">
@@ -138,6 +157,19 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdate, onDelete }) =
               <Input type="number" />
             </Form.Item>
           </Form>
+
+          <Table
+            title={() => "Chi tiết đơn hàng"}
+            columns={[
+              { title: "Tên sản phẩm", dataIndex: "productName", key: "productName" },
+              { title: "Số lượng", dataIndex: "quantity", key: "quantity" },
+              { title: "Giá bán", dataIndex: "price", key: "price", render: (price: number) => `${price.toLocaleString()} VND` },
+              { title: "Tổng giá", key: "total", render: (record: OrderDetail) => `${(record.quantity * record.price).toLocaleString()} VND` },
+            ]}
+            dataSource={orderDetails?.filter(detail => detail.orderId === selectedOrder.orderId)}
+            rowKey="orderDetailId"
+            pagination={false}
+          />
         </Modal>
       )}
     </>

@@ -3,7 +3,7 @@ import { HomeIcon, InboxStackIcon, ChevronRightIcon, UserIcon, ShoppingCartIcon,
 import { PackageIcon, StoreIcon } from "lucide-react";
 
 const menus = {
-    "Sản phẩm": ["Danh sách sản phẩm", "Tạo sản phẩm", "Danh sách danh mục hệ thống", "Tạo danh mục hệ thống", "Danh sách danh mục thuốc", "Tạo danh mục thuốc", "Nhập sản phẩm"],
+    "Sản phẩm": ["Danh sách sản phẩm", "Tạo sản phẩm", "Danh sách loại sản phẩm", "Tạo loại sản phẩm", "Danh sách danh mục thuốc", "Tạo danh mục thuốc", "Nhập sản phẩm"],
     "Nhà thuốc": ["Danh sách nhà thuốc", "Tạo nhà thuốc"],
     "Người dùng": ["Danh sách người dùng", "Tạo người dùng"],
     "Nhà cung cấp": ["Danh sách nhà cung cấp", "Tạo nhà cung cấp"],

@@ -61,6 +61,7 @@ const StorageRoomListPage: React.FC<StorageRoomListPageProps> = ({ handleChangeP
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>(''); // Trạng thái được chọn
   const [filteredRooms, setFilteredRooms] = useState<StorageRoom[]>(STORAGE_ROOMS_DATA);
+  
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

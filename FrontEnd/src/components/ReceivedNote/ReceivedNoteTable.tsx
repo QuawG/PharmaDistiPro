@@ -80,13 +80,13 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({ notes, onDelete, 
     };
 
     const columns = [
-        { title: "Mã Phiếu", dataIndex: "ReceiveNotesCode", key: "ReceiveNotesCode" },
-        { title: "Trạng Thái", dataIndex: "Status", key: "Status" },
-        { title: "Người Giao Hàng", dataIndex: "DeliveryPerson", key: "DeliveryPerson" },
-        { title: "Số Sản Phẩm", dataIndex: "Details", key: "Details", render: (details: ReceivedNoteDetail[]) => details.length },
-        { title: "Số lượng", key: "TotalQuantity", render: (_: any, record: ReceivedNote) => record.Details.reduce((total, detail) => total + detail.ActualReceived, 0) },
-        { title: "Tổng Tiền", dataIndex: "TotalAmount", key: "TotalAmount", render: (amount: number) => `${amount.toLocaleString()} VND` },
-        { title: "Ngày Tạo", dataIndex: "CreatedDate", key: "CreatedDate" },
+        { title: "Mã phiếu", dataIndex: "ReceiveNotesCode", key: "ReceiveNotesCode" },
+        { title: "Trạng thái", dataIndex: "Status", key: "Status" },
+        { title: "Người giao hàng", dataIndex: "DeliveryPerson", key: "DeliveryPerson" },
+        { title: "Số loại sản phẩm", dataIndex: "Details", key: "Details", render: (details: ReceivedNoteDetail[]) => details.length },
+        { title: "Số lượng sản phẩm", key: "TotalQuantity", render: (_: any, record: ReceivedNote) => record.Details.reduce((total, detail) => total + detail.ActualReceived, 0) },
+        { title: "Tổng tiền", dataIndex: "TotalAmount", key: "TotalAmount", render: (amount: number) => `${amount.toLocaleString()} VND` },
+        { title: "Ngày nhập", dataIndex: "CreatedDate", key: "CreatedDate" },
         {
             title: <UnorderedListOutlined />,
             key: "actions",

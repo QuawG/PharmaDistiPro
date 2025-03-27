@@ -50,7 +50,7 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({
     try {
       const values = await form.validateFields();
       onSave({ ...category, ...values });
-      message.success("Cập nhật danh mục thành công!");
+      message.success("Cập nhật loại sản phẩm!");
       onClose();
     } catch (error) {
       message.error("Vui lòng điền đầy đủ thông tin!");
@@ -59,7 +59,7 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({
 
   return (
     <Modal
-      title="Cập nhật danh mục"
+      title="Cập nhật loại sản phẩm"
       open={isOpen}
       onCancel={onClose}
       onOk={handleSave}
@@ -68,7 +68,7 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({
     >
       <Form form={form} layout="vertical">
         {/* Upload ảnh */}
-        <Form.Item name="image" label="Ảnh danh mục">
+        <Form.Item name="image" label="Ảnh ">
           <Upload
             showUploadList={false}
             beforeUpload={handleUpload}
@@ -87,16 +87,16 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({
 
         <Form.Item
           name="name"
-          label="Tên danh mục"
-          rules={[{ required: true, message: "Vui lòng nhập tên danh mục!" }]}
+          label="Tên loại sản phẩm"
+          rules={[{ required: true, message: "Vui lòng nhập tên loại sản phẩm!" }]}
         >
           <Input />
         </Form.Item>
 
         <Form.Item
           name="code"
-          label="Mã danh mục"
-          rules={[{ required: true, message: "Vui lòng nhập mã danh mục!" }]}
+          label="Mã "
+          rules={[{ required: true, message: "Vui lòng nhập mã !" }]}
         >
           <Input />
         </Form.Item>

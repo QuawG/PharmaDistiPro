@@ -11,15 +11,15 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
 
     const handleSubmit = (values: any) => {
         console.log("Adding Category:", values);
-        message.success("Danh mục đã được thêm thành công!");
-        handleChangePage("Danh sách danh mục chính");
+        message.success("Loại sản phẩm đã được thêm thành công!");
+        handleChangePage("Danh sách loại sản phẩm");
     };
 
     const handleCancel = () => {
         form.resetFields();
         setFileList([]);
         setPreviewImage(null);
-        handleChangePage("Danh sách danh mục chính");
+        handleChangePage("Danh sách loại sản phẩm");
     };
 
     const handleImageChange = ({ file }: any) => {
@@ -39,26 +39,26 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
             <Card className="mt-5">
                 <Form form={form} layout="vertical" onFinish={handleSubmit}>
                     <Form.Item
-                        label="Tên danh mục"
+                        label="Tên loại sản phẩm"
                         name="categoryName"
-                        rules={[{ required: true, message: "Vui lòng nhập tên danh mục!" }]}
+                        rules={[{ required: true, message: "Vui lòng nhập tên loại sản phẩm!" }]}
                     >
-                        <Input placeholder="Nhập tên danh mục" />
+                        <Input placeholder="Nhập loại sản phẩm" />
                     </Form.Item>
 
                     <Form.Item
-                        label="Mã danh mục"
+                        label="Mã "
                         name="categoryCode"
-                        rules={[{ required: true, message: "Vui lòng nhập mã danh mục!" }]}
+                        rules={[{ required: true, message: "Vui lòng nhập mã !" }]}
                     >
-                        <Input placeholder="Nhập mã danh mục" />
+                        <Input placeholder="Nhập mã " />
                     </Form.Item>
 
                     <Form.Item label="Mô tả" name="description">
-                        <Input.TextArea rows={4} placeholder="Nhập mô tả danh mục" />
+                        <Input.TextArea rows={4} placeholder="Nhập mô tả về loại sản phẩm" />
                     </Form.Item>
 
-                    <Form.Item label="Ảnh danh mục">
+                    <Form.Item label="Ảnh">
                         <Upload
                             beforeUpload={(file) => {
                                 handleImageChange({ file });

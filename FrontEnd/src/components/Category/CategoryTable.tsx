@@ -37,7 +37,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
 
   const columns = [
     {
-      title: 'Tên danh mục',
+      title: 'Tên loại sản phẩm',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: Category) => (
@@ -52,7 +52,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
       ),
     },
     {
-      title: 'Mã danh mục',
+      title: 'Mã ',
       dataIndex: 'code',
       key: 'code',
     },

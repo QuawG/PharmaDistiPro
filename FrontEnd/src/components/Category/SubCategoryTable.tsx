@@ -56,7 +56,7 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA })
       ),
     },
     {
-      title: "Danh mục chính",
+      title: "Chủng loại",
       dataIndex: "parentCategory",
       key: "parentCategory",
     },

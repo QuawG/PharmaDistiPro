@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Table, Select, Button, Modal, Image, Input } from "antd";
-import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Table, Select, Button, Modal, Image, Input, DatePicker, Collapse } from "antd";
+const { RangePicker } = DatePicker;
+const { Panel } = Collapse;
+import { EyeOutlined, EditOutlined, DeleteOutlined, FilterOutlined } from "@ant-design/icons";
 import ProductDetailsModal from "./ProductDetail";
 
 interface Product {
@@ -34,23 +36,40 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
+  const [showFilters, setShowFilters] = useState(false);
+
   // Filter state
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [minPrice, setMinPrice] = useState<number | string>("");
   const [maxPrice, setMaxPrice] = useState<number | string>("");
+  const [createdByFilter, setCreatedByFilter] = useState<string>("");
+  const [manufactureFilter, setManufactureFilter] = useState<string>("");
+  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
 
   // Filter products based on filter criteria
 
+  const uniqueCreators = Array.from(new Set(PRODUCTS_DATA.map(product => product.CreatedBy)));
+  const uniqueManufacturers = Array.from(new Set(PRODUCTS_DATA.map(product => product.ManufactureName)));
+
   const uniqueCategories = Array.from(new Set(PRODUCTS_DATA.map(product => product.SubCategoryName)));
+
+  const removeVietnameseTones = (str: string) => {
+    return str
+      .normalize("NFD") // Tách dấu ra khỏi ký tự gốc
+      .replace(/[\u0300-\u036f]/g, "") // Xóa dấu
+      .replace(/đ/g, "d") // Thay thế 'đ' thành 'd'
+      .replace(/Đ/g, "D") // Thay thế 'Đ' thành 'D'
+      .toLowerCase(); // Chuyển về chữ thường
+  };
   const filterProducts = () => {
     let filteredProducts = [...PRODUCTS_DATA];
 
     if (searchTerm.trim()) {
-      filteredProducts = filteredProducts.filter((product) =>
-        product.ProductName.toLowerCase().includes(searchTerm.toLowerCase())
+      const normalizedSearch = removeVietnameseTones(searchTerm.toLowerCase());
+      filteredProducts = filteredProducts.filter((product) => 
+        removeVietnameseTones(product.ProductName.toLowerCase()).includes(normalizedSearch)
       );
     }
 
@@ -68,6 +87,20 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
 
     if (maxPrice !== "" && !isNaN(Number(maxPrice))) {
       filteredProducts = filteredProducts.filter((product) => product.SellingPrice <= Number(maxPrice));
+    }
+    if (createdByFilter) {
+      filteredProducts = filteredProducts.filter((product) => product.CreatedBy === createdByFilter);
+    }
+
+    if (manufactureFilter) {
+      filteredProducts = filteredProducts.filter((product) => product.ManufactureName === manufactureFilter);
+    }
+
+    if (dateRange) {
+      filteredProducts = filteredProducts.filter((product) => {
+        const createdDate = new Date(product.CreatedDate);
+        return createdDate >= new Date(dateRange[0]) && createdDate <= new Date(dateRange[1]);
+      });
     }
 
     setProducts(filteredProducts);
@@ -164,55 +197,93 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
       ),
     },
   ];
+  useEffect(() => {
+    filterProducts();
+  }, [searchTerm, categoryFilter, statusFilter, minPrice, maxPrice, createdByFilter, manufactureFilter, dateRange]);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <div className="flex gap-4 mb-4">
-        <Input
-          placeholder="Tìm kiếm theo tên sản phẩm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: 200 }}
-        />
-         <Select
-          placeholder="Chọn danh mục"
-          value={categoryFilter}
-          onChange={(value) => setCategoryFilter(value)}
-          style={{ width: 200 }}
-        >
-          <Select.Option value="">Tất cả danh mục</Select.Option>
-          {uniqueCategories.map((subCategory) => (
-            <Select.Option key={subCategory} value={subCategory}>
-              {subCategory}
-            </Select.Option>
-          ))}
-        </Select>
-        <Select
-          placeholder="Chọn trạng thái"
-          value={statusFilter}
-          onChange={(value) => setStatusFilter(value)}
-          style={{ width: 200 }}
-        >
-          <Select.Option value="">Tất cả trạng thái</Select.Option>
-          <Select.Option value="Đang bán">Đang bán</Select.Option>
-          <Select.Option value="Ngừng bán">Ngừng bán</Select.Option>
-        </Select>
-        <Input
-          type="number"
-          placeholder="Giá tối thiểu"
-          value={minPrice}
-          onChange={(e) => setMinPrice(e.target.value)}
-          style={{ width: 150 }}
-        />
-        
-        <Input
-          type="number"
-          placeholder="Giá tối đa"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(e.target.value)}
-          style={{ width: 150 }}
-        />
+        <Input placeholder="Tìm kiếm theo tên sản phẩm" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: 200 }} />
+        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>Lọc</Button>
       </div>
+
+      {showFilters && (
+        <Collapse defaultActiveKey={["1"]}>
+        <Panel header="Bộ lọc nâng cao" key="1">
+          <div className="grid grid-cols-3 gap-4">
+            <Select placeholder="Chọn danh mục" value={categoryFilter} onChange={setCategoryFilter} style={{ width: "100%" }}>
+              <Select.Option value="">Tất cả danh mục</Select.Option>
+              {uniqueCategories.map((subCategory) => (
+                <Select.Option key={subCategory} value={subCategory}>{subCategory}</Select.Option>
+              ))}
+            </Select>
+      
+            <Select placeholder="Người tạo" value={createdByFilter} onChange={setCreatedByFilter} style={{ width: "100%" }}>
+              <Select.Option value="">Tất cả</Select.Option>
+              {uniqueCreators.map((creator) => (
+                <Select.Option key={creator} value={creator}>{creator}</Select.Option>
+              ))}
+            </Select>
+      
+            <Select placeholder="Hãng sản xuất" value={manufactureFilter} onChange={setManufactureFilter} style={{ width: "100%" }}>
+              <Select.Option value="">Tất cả</Select.Option>
+              {uniqueManufacturers.map((manufacturer) => (
+                <Select.Option key={manufacturer} value={manufacturer}>{manufacturer}</Select.Option>
+              ))}
+            </Select>
+      
+            <RangePicker onChange={(dates, dateStrings) => setDateRange(dateStrings as [string, string])} />
+      
+            <Select
+              placeholder="Trạng thái"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              style={{ width: "100%" }}
+            >
+              <Select.Option value="">Tất cả</Select.Option>
+              <Select.Option value="Đang bán">Đang bán</Select.Option>
+              <Select.Option value="Ngừng bán">Ngừng bán</Select.Option>
+            </Select>
+      
+            <Input.Group compact style={{ width: "100%" }}>
+              <Input
+                type="number"
+                placeholder="Giá từ"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                style={{ width: "50%" }}
+              />
+              <Input
+                type="number"
+                placeholder="đến"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                style={{ width: "50%" }}
+              />
+            </Input.Group>
+      
+            {/* Nút Xóa bộ lọc */}
+            <Button
+              onClick={() => {
+                setSearchTerm("");
+                setCategoryFilter("");
+                setStatusFilter("");
+                setMinPrice("");
+                setMaxPrice("");
+                setCreatedByFilter("");
+                setManufactureFilter("");
+                setDateRange(null);
+              }}
+              style={{ width: "100%", marginTop: "10px" }}
+            >
+              Xóa bộ lọc
+            </Button>
+          </div>
+        </Panel>
+      </Collapse>
+      
+      )}
 
       <Table columns={columns} dataSource={products} rowKey="ProductId" />
 
@@ -230,8 +301,8 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
 
       {/* Modal chi tiết sản phẩm */}
       <ProductDetailsModal
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)} 
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
         product={selectedProduct} // Truyền selectedProduct vào đây
       />
     </div>

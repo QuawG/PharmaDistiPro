@@ -51,12 +51,12 @@ const HomePage = () => {
         <Navbar />
         {activePage === 'Dashboard' && <MyComponent />}
         {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}       
-        {activePage === 'Danh sách danh mục hệ thống' && <CategoryList handleChangePage={handleChangePage} />}
+        {activePage === 'Danh sách loại sản phẩm' && <CategoryList handleChangePage={handleChangePage} />}
         {activePage === 'Tạo sản phẩm' && <ProductAdd handleChangePage={handleChangePage} />}
         {activePage === 'Chỉnh sửa sản phẩm' && selectedProductId !== null && (
   <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
 )}
-        {activePage === 'Tạo danh mục hệ thống' && <CategoryAdd handleChangePage={handleChangePage} />}
+        {activePage === 'Tạo loại sản phẩm' && <CategoryAdd handleChangePage={handleChangePage} />}
         {activePage === 'Danh sách danh mục thuốc' && <SubCategoryList handleChangePage={handleChangePage} />}
         {activePage === 'Tạo danh mục thuốc' && <SubAddCategory handleChangePage={handleChangePage} />}
         {activePage === 'Danh sách nhà thuốc' && <CustomerListPage handleChangePage={handleChangePage} />}

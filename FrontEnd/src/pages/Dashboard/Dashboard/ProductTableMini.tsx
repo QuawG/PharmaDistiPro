@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import DeleteConfirmation from "../../../components/Confirm/DeleteConfirm";
-import ProductDetailsModal from "../../../components/Product/ProductDetail";
+// import ProductDetailsModal from "../../../components/Product/ProductDetail";
 
 interface Product {
   id: number;
@@ -32,7 +32,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA_MINI}) => {
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 4 });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  // const [isOpen, setIsOpen] = useState(false);
 
   const handleDelete = () => {
     setIsDeleteModalOpen(false);
@@ -155,7 +155,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA_MINI}) => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
       />
-      <ProductDetailsModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      {/* <ProductDetailsModal isOpen={isOpen} onClose={() => setIsOpen(false)} /> */}
     </div>
   );
 };
