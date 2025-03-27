@@ -78,7 +78,8 @@ const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
     {
       title: "Số ngày còn hạn",
       key: "RemainingDays",
-      render: (text: string, record: Lot) => `${calculateRemainingDays(record.ExpiredDate)} ngày`,
+      render: ( record: Lot) => `${calculateRemainingDays(record.ExpiredDate)} ngày`,
+      // text: string,
     },
     {
       title: "Trạng thái",
@@ -96,7 +97,8 @@ const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
     {
       title: "Thao tác",
       key: "actions",
-      render: (text: string, record: Lot) => (
+      // text: string, 
+      render: (record: Lot) => (
         <Dropdown
           overlay={
             <Menu>

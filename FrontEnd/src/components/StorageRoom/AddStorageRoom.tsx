@@ -12,7 +12,8 @@ interface StorageRoom {
 
 export default function AddStorageRoom() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [storageRooms, setStorageRooms] = useState<StorageRoom[]>([]);
+    const [, setStorageRooms] = useState<StorageRoom[]>([]);
+    // storageRooms
     const [newStorageRoom, setNewStorageRoom] = useState<Partial<StorageRoom>>({
         code: "",
         name: "",

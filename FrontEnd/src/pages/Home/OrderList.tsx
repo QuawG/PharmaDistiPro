@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { FileText, Table, Printer } from "lucide-react";
+import {  Table, Printer } from "lucide-react";
 import { PlusIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import OrderTable from "../../components/Order/OrderTable";
-import { PRODUCTS_DATA } from "../../components/data/product";
-
+// import { PRODUCTS_DATA } from "../../components/data/product";
+// FileText,
 
 interface OrderListPageProps {
     handleChangePage: (page: string, productId?: number) => void;
@@ -26,12 +26,12 @@ interface Order {
   assignTo?: number;
 }
 
-interface OrderDetail {
-    orderDetailId: number;
-    orderId: number;
-    productId: number;
-    quantity: number;
-  }
+// interface OrderDetail {
+//     orderDetailId: number;
+//     orderId: number;
+//     productId: number;
+//     quantity: number;
+//   }
 // Dữ liệu mẫu
 const ORDERS_DATA: Order[] = [
   {
@@ -62,11 +62,11 @@ const ORDERS_DATA: Order[] = [
   },
 ];
 
-const ORDER_DETAILS: OrderDetail[] = [
-  { orderDetailId: 1, orderId: 1, productId: 1, quantity: 3 },
-  { orderDetailId: 2, orderId: 1, productId: 2, quantity: 2 },
-  { orderDetailId: 3, orderId: 2, productId: 3, quantity: 1 },
-];
+// const ORDER_DETAILS: OrderDetail[] = [
+//   { orderDetailId: 1, orderId: 1, productId: 1, quantity: 3 },
+//   { orderDetailId: 2, orderId: 1, productId: 2, quantity: 2 },
+//   { orderDetailId: 3, orderId: 2, productId: 3, quantity: 1 },
+// ];
 
 const OrderListPage: React.FC<OrderListPageProps> = ({ handleChangePage }) => {
   const [searchTerm, setSearchTerm] = useState("");
