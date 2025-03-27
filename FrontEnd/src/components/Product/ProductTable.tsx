@@ -233,8 +233,8 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
               ))}
             </Select>
       
-            <RangePicker onChange={(dates, dateStrings) => setDateRange(dateStrings as [string, string])} />
-      
+            <RangePicker onChange={(_, dateStrings) => setDateRange(dateStrings as [string, string])} />
+            {/* dates */}
             <Select
               placeholder="Trạng thái"
               value={statusFilter}

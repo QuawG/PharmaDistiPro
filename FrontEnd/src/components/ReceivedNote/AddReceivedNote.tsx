@@ -36,10 +36,12 @@ interface ReceivedNote {
 const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({ handleChangePage, handleAddNote }) => {
     const [noteCode, setNoteCode] = useState("");
     const [purchaseOrderId, setPurchaseOrderId] = useState<number | "">("");
-    const [status, setStatus] = useState("Nhập");
+    const [status] = useState("Nhập");
+    // , setStatus
     const [deliveryPerson, setDeliveryPerson] = useState("");
     const [totalAmount, setTotalAmount] = useState<number>(0);
-    const [createdBy, setCreatedBy] = useState("");
+    const [createdBy] = useState("");
+    // , setCreatedBy
     const [createdDate, setCreatedDate] = useState(() => {
         const today = new Date();
         today.setMinutes(today.getMinutes() - today.getTimezoneOffset()); // Chuyển về múi giờ địa phương

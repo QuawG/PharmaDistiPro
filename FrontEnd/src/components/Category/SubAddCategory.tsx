@@ -84,6 +84,7 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
                                 setFileList([]);
                                 setPreviewImage(null);
                             }}
+                            fileList={fileList}
                             showUploadList={false}
                         >
                             <Button icon={<UploadOutlined />}>Chọn ảnh</Button>

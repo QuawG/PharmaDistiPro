@@ -3,12 +3,13 @@ import { X } from "lucide-react";
 
 // Define the type for the form data
 interface StorageRoom {
+  id: number;
   code: string;
   name: string;
   status: string;
-  temperature: string;
-  humidity: string;
-  capacity: string;
+  temperature: number; // Change from string to number
+  humidity: number; // Change from string to number
+  capacity: number; // Change from string to number
 }
 
 export default function UpdateStorageRoomDetail({
@@ -57,12 +58,12 @@ export default function UpdateStorageRoomDetail({
 
   const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const numericValue = value === "" ? "" : Math.max(0, Number(value)).toString(); // Ensure non-negative numbers
     setFormData((prev: StorageRoom) => ({
       ...prev,
-      [name]: numericValue,
+      [name]: value === "" ? 0 : Number(value), // Convert input to number
     }));
   };
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

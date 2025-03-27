@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { FileText, Table, Printer } from "lucide-react";
-import { PlusIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import ProductTable from "../../components/Product/ProductTable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { PRODUCTS_DATA } from "../../components/data/product";
-
+// , FunnelIcon
 interface ProductListPageProps {
   handleChangePage: (page: string, productId?: number) => void;
 }
@@ -32,17 +32,17 @@ interface Product {
 }
 
 const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(PRODUCTS_DATA);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    const filtered = PRODUCTS_DATA.filter((product) =>
-      product.ProductName.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  };
+  // const [, setSearchTerm] = useState("");
+  const [filteredProducts, ] = useState<Product[]>(PRODUCTS_DATA);
+  // setFilteredProducts
+  // const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = e.target.value;
+  //   setSearchTerm(value);
+  //   const filtered = PRODUCTS_DATA.filter((product) =>
+  //     product.ProductName.toLowerCase().includes(value.toLowerCase())
+  //   );
+  //   setFilteredProducts(filtered);
+  // };
 
   // Hàm xuất dữ liệu ra file Excel có định dạng sẵn
   const exportToExcel = async () => {

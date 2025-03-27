@@ -57,7 +57,7 @@ export default function UpdatePurchaseOrderDetail({
   };
 
   const handleDeleteProduct = (index: number) => {
-    const updatedProducts = formData.products.filter((_, i) => i !== index);
+    const updatedProducts = formData.products.filter((_product: any, i: number) => i !== index);
     setFormData({ ...formData, products: updatedProducts });
   };
 

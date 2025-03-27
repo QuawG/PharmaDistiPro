@@ -17,10 +17,13 @@ import UpdateStorageRoomDetailsModal from './UpdateStorageRoomDetail';
 import UpdateConfirm from '../Confirm/UpdateConfirm'; 
 
 interface StorageRoom {
-  id: number; // ID
+  id: number;
   code: string; // Mã kho
   name: string; // Tên kho
   status: string; // Trạng thái
+  temperature: number; // Nhiệt độ
+  humidity: number; // Độ ẩm
+  capacity: number; // Sức chứa
 }
 
 interface StorageRoomTableProps {
@@ -274,12 +277,13 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ STORAGE_ROOMS_DATA 
         onClose={() => setIsViewModalOpen(false)} 
         room={selectedRoom} 
       />
-      <UpdateStorageRoomDetailsModal 
-        isOpen={isEditModalOpen} 
-        onClose={() => setIsEditModalOpen(false)} 
-        room={selectedRoom} 
-        onSave={handleSave} 
-      />
+      <UpdateStorageRoomDetailsModal
+  isOpen={isEditModalOpen}
+  onClose={() => setIsEditModalOpen(false)}
+  room={selectedRoom ?? { id: 0, code: '', name: '', status: '', temperature: 0, humidity: 0, capacity: 0 }} 
+  onSave={handleSave}
+/>
+
       
       {/* Modal xác nhận */}
       <UpdateConfirm
