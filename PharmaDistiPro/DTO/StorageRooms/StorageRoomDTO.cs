@@ -14,8 +14,7 @@ namespace PharmaDistiPro.DTO.StorageRooms
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
-        public virtual User? CreatedByNavigation { get; set; }
-        public virtual ICollection<NoteCheck> NoteChecks { get; set; }
-        public virtual ICollection<ProductStorageRoom> ProductStorageRooms { get; set; }
+       
+       
     }
 }

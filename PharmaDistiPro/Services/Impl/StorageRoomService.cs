@@ -159,48 +159,96 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
-        // Update  storagerooms
         public async Task<Response<StorageRoomDTO>> UpdateStorageRoom(StorageRoomInputRequest storageRoomUpdateRequest)
         {
             var response = new Response<StorageRoomDTO>();
 
-
             try
             {
-                // Kiểm tra phòng chứa có tồn tại không
+                // 🔍 Kiểm tra xem nhà kho có tồn tại không
                 var storageRoomToUpdate = await _storageRoomRepository.GetByIdAsync(storageRoomUpdateRequest.StorageRoomId);
                 if (storageRoomToUpdate == null)
                 {
                     response.Success = false;
-                    response.Message = "Không tìm thấy phòng chứa kho";
+                    response.Message = "Không tìm thấy nhà kho";
                     return response;
                 }
 
+                
+                if (!string.IsNullOrEmpty(storageRoomUpdateRequest.StorageRoomCode))
+                    storageRoomToUpdate.StorageRoomCode = storageRoomUpdateRequest.StorageRoomCode;
 
+                if (!string.IsNullOrEmpty(storageRoomUpdateRequest.StorageRoomName))
+                    storageRoomToUpdate.StorageRoomName = storageRoomUpdateRequest.StorageRoomName;
 
-                // Map dữ liệu từ DTO sang thực thể
-                _mapper.Map(storageRoomUpdateRequest, storageRoomToUpdate);
+                if (storageRoomUpdateRequest.Temperature.HasValue)
+                    storageRoomToUpdate.Temperature = storageRoomUpdateRequest.Temperature;
 
+                if (storageRoomUpdateRequest.Humidity.HasValue)
+                    storageRoomToUpdate.Humidity = storageRoomUpdateRequest.Humidity;
 
+                if (storageRoomUpdateRequest.Quantity.HasValue)
+                    storageRoomToUpdate.Quantity = storageRoomUpdateRequest.Quantity;
 
+                if (storageRoomUpdateRequest.Status.HasValue)
+                    storageRoomToUpdate.Status = storageRoomUpdateRequest.Status;
+
+                if (storageRoomUpdateRequest.CreatedBy.HasValue)
+                    storageRoomToUpdate.CreatedBy = storageRoomUpdateRequest.CreatedBy;
+
+                if (storageRoomUpdateRequest.CreatedDate.HasValue)
+                    storageRoomToUpdate.CreatedDate = storageRoomUpdateRequest.CreatedDate;
+
+                // ✅ Thực hiện cập nhật
                 await _storageRoomRepository.UpdateAsync(storageRoomToUpdate);
                 await _storageRoomRepository.SaveAsync();
 
                 response.Success = true;
                 response.Data = _mapper.Map<StorageRoomDTO>(storageRoomToUpdate);
-                response.Message = "Cập nhật phòng chứa kho thành công";
+                response.Message = "Cập nhật nhà kho thành công";
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ Lỗi khi cập nhật nhà kho: {ex.Message}");
+                Console.WriteLine($"🔍 Chi tiết lỗi: {ex.StackTrace}");
 
                 response.Success = false;
-                response.Message = "Đã xảy ra lỗi trong quá trình cập nhật phòng chứa kho.";
+                response.Message = $"Lỗi: {ex.Message}"; // Trả về lỗi cụ thể để dễ debug
             }
 
             return response;
         }
 
+        public async Task<Response<IEnumerable<StorageRoomDTO>>> CheckTemperatureWarning()
+        {
+            var response = new Response<IEnumerable<StorageRoomDTO>>();
 
+            try
+            {
+                var storageRooms = await _storageRoomRepository.GetAllAsync();
+                var warningRooms = storageRooms.Where(sr => sr.Temperature.HasValue && sr.Temperature > 30).ToList();
+
+                if (warningRooms.Any())
+                {
+                    response.Success = true;
+                    response.Message = "Cảnh báo: Một số phòng có nhiệt độ cao!";
+                    response.Data = _mapper.Map<IEnumerable<StorageRoomDTO>>(warningRooms);
+                }
+                else
+                {
+                    response.Success = true;
+                    response.Message = "Không có cảnh báo nhiệt độ.";
+                    response.Data = new List<StorageRoomDTO>();
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Lỗi: {ex.Message}";
+            }
+
+            return response;
+        }
 
 
 

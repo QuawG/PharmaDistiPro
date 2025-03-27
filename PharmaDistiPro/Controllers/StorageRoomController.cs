@@ -64,20 +64,50 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
-        //Api update storageRoom
+        ////Api update storageRoom
+        //[HttpPut("UpdateStorageRoom")]
+        //public async Task<IActionResult> UpdateStorageRoom([FromForm] StorageRoomInputRequest storageRoom)
+        //{
+        //    var response = await _storageRoomService.UpdateStorageRoom(storageRoom);
+
+        //    if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        //    if (!response.Success)
+        //        return BadRequest(new { response.Message });
+
+        //    return Ok(response);
+        //}
+
         [HttpPut("UpdateStorageRoom")]
-        public async Task<IActionResult> UpdateStorageRoom([FromForm] StorageRoomInputRequest storageRoom)
+        public async Task<IActionResult> UpdateStorageRoom([FromBody] StorageRoomInputRequest storageRoom)
         {
-            var response = await _storageRoomService.UpdateStorageRoom(storageRoom);
+            try
+            {
+               
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors)
+                                                  .Select(e => e.ErrorMessage)
+                                                  .ToList();
+                    return BadRequest(new { Message = "Dữ liệu không hợp lệ.", Errors = errors });
+                }
 
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+                
+                var response = await _storageRoomService.UpdateStorageRoom(storageRoom);
 
-            if (!response.Success)
-                return BadRequest(new { response.Message });
+               
+                if (!response.Success)
+                    return BadRequest(new { response.Message });
 
-            return Ok(response);
+               
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Lỗi API UpdateStorageRoom: {ex.Message}");
+                return StatusCode(500, new { Message = "Lỗi máy chủ nội bộ." });
+            }
         }
-
         [HttpPut("ActivateDeactivateStorageRoom/{storageRoomId}/{status}")]
         public async Task<IActionResult> ActivateDeactivateStorageRoom(int storageRoomId, bool status)
         {
@@ -86,7 +116,24 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
+        [HttpGet("CheckTemperatureWarning")]
+        public async Task<IActionResult> CheckTemperatureWarning()
+        {
+            try
+            {
+                var response = await _storageRoomService.CheckTemperatureWarning();
 
+                if (!response.Success)
+                    return BadRequest(new { response.Message });
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Lỗi API CheckTemperatureWarning: {ex.Message}");
+                return StatusCode(500, new { Message = "Lỗi máy chủ nội bộ." });
+            }
+        }
 
     }
 }

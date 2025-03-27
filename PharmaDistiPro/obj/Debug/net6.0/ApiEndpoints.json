@@ -481,6 +481,16 @@
   },
   {
     "ContainingType": "PharmaDistiPro.Controllers.StorageRoomController",
+    "Method": "CheckTemperatureWarning",
+    "RelativePath": "api/StorageRoom/CheckTemperatureWarning",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PharmaDistiPro.Controllers.StorageRoomController",
     "Method": "CreateStorageRoom",
     "RelativePath": "api/StorageRoom/CreateStorageRoom",
     "HttpMethod": "POST",
@@ -570,49 +580,9 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "StorageRoomId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "StorageRoomCode",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "StorageRoomName",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Humidity",
-        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "Temperature",
-        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "Quantity",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "Status",
-        "Type": "System.Nullable\u00601[[System.Boolean, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "CreatedBy",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "CreatedDate",
-        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
+        "Name": "storageRoom",
+        "Type": "PharmaDistiPro.DTO.StorageRooms.StorageRoomInputRequest",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
