@@ -394,3 +394,12 @@ D:\SEP490_Backend\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\refint\PharmaDi
 D:\SEP490_Backend\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDistiPro.pdb
 D:\SEP490_Backend\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\PharmaDistiPro.genruntimeconfig.cache
 D:\SEP490_Backend\PharmaDistiPro\PharmaDistiPro\obj\Debug\net6.0\ref\PharmaDistiPro.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\BouncyCastle.Cryptography.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\MailKit.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\MimeKit.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\System.Formats.Asn1.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\System.Security.Cryptography.Pkcs.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\System.Text.Encoding.CodePages.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Security.Cryptography.Pkcs.dll
+D:\FPTU\HK9\SEP_490\Code\Main\PharmaDistiPro\PharmaDistiPro\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Text.Encoding.CodePages.dll

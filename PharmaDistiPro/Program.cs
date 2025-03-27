@@ -11,6 +11,10 @@ using CloudinaryDotNet;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using System.Security.Principal;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 namespace PharmaDistiPro
 {
@@ -25,7 +29,38 @@ namespace PharmaDistiPro
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            #region Swagger
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+                // Configure Swagger to use Bearer Token Authentication
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
+            #endregion
             builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -58,7 +93,34 @@ namespace PharmaDistiPro
             builder.Services.AddSingleton(cloudinary);
             #endregion
 
-          
+            #region Email
+            var emailConfig = builder.Configuration
+                .GetSection("EmailConfiguration")
+                .Get<EmailConfiguration>();
+
+            builder.Services.AddSingleton(emailConfig);
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
+            #endregion
+            #region Authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateActor = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                };
+            });
+            #endregion
+
+            #region GHN SERVICE
+            builder.Services.AddHttpClient<IGHNService, GHNService>();
+            #endregion
 
             #region Add DI for repositories
             builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
@@ -69,6 +131,18 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IOrdersDetailRepository, OrdersDetailRepository>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
+            builder.Services.AddScoped<IOrdersDetailRepository, OrdersDetailRepository>();
+            builder.Services.AddScoped<IIssueNoteRepository, IssueNoteRepository>();
+            builder.Services.AddScoped<IIssueNoteDetailsRepository, IssueNoteDetailsRepository>();
+            builder.Services.AddScoped<IProductLotRepository, ProductLotRepository>();
+            builder.Services.AddScoped<IIssueNoteRepository, IssueNoteRepository>();
+            builder.Services.AddScoped<IIssueNoteDetailsRepository, IssueNoteDetailsRepository>();
+            builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
+            builder.Services.AddScoped<IPurchaseOrdersDetailRepository, PurchaseOrdersDetailRepository>();
+            builder.Services.AddScoped<ILotRepository, LotRepository>();
+            builder.Services.AddScoped<IProductLotRepository, ProductLotRepository>();
+            builder.Services.AddScoped<IReceivedNoteRepository, ReceivedNoteRepository>();
+
             #endregion
 
             #region Add DI for services
@@ -80,7 +154,12 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<IOrderService, OrderService>();
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<ICartService, CartService>();
-            
+            builder.Services.AddScoped<IIssueNoteService, IssueNoteService>();
+            builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
+            builder.Services.AddScoped<ILotService, LotService>();
+            builder.Services.AddScoped<IProductLotService, ProductLotService>();
+            builder.Services.AddScoped<IReceivedNoteService, ReceivedNoteService>();
+
             #endregion
 
             // Register AutoMapper
@@ -94,10 +173,19 @@ namespace PharmaDistiPro
                 app.UseSwaggerUI();
             }
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
-            app.UseCors("AllowAll");
+
+            app.UseCors(builder =>
+            {
+                builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            });
+
             app.MapControllers();
 
             app.Run();

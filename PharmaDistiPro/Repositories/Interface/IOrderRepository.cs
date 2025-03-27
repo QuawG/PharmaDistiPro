@@ -5,5 +5,6 @@ namespace PharmaDistiPro.Repositories.Interface
 {
     public interface IOrderRepository : IRepository<Order>
     {
+         Task InsertOrderAsync(Order order);
     }
 }

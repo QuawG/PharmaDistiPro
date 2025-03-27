@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\SEP490_Backend\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {}
+    "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {}
   },
   "projects": {
-    "D:\\SEP490_Backend\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {
+    "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\SEP490_Backend\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+        "projectUniqueName": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
         "projectName": "PharmaDistiPro",
-        "projectPath": "D:\\SEP490_Backend\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
-        "packagesPath": "C:\\Users\\minhq\\.nuget\\packages\\",
-        "outputPath": "D:\\SEP490_Backend\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
+        "projectPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+        "outputPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\minhq\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -54,6 +54,14 @@
               "target": "Package",
               "version": "[1.27.4, )"
             },
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[6.0.36, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
@@ -64,9 +72,17 @@
               "target": "Package",
               "version": "[6.0.36, )"
             },
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[6.36.0, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.5.0, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[6.36.0, )"
             }
           },
           "imports": [
@@ -80,24 +96,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[6.0.36, 6.0.36]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[6.0.36, 6.0.36]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Ref",
-              "version": "[6.0.36, 6.0.36]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[6.0.36, 6.0.36]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -106,7 +104,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
         }
       }
     }
