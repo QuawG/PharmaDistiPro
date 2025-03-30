@@ -8,7 +8,9 @@ using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
+using System.Globalization;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -179,18 +181,19 @@ namespace PharmaDistiPro.Services.Impl
 
             try
             {
-
+                // Kiểm tra danh mục có tồn tại không
                 var existingCategory = await _categoryRepository.GetSingleByConditionAsync(
-                    c => c.CategoryName.Equals(categoryInputRequest.CategoryName) || (c.CategoryCode != null && c.CategoryCode.Equals(categoryInputRequest.CategoryCode))
+                    c => c.CategoryName.Equals(categoryInputRequest.CategoryName)
                 );
 
                 if (existingCategory != null)
                 {
                     response.Success = false;
-                    response.Message = "Tên hoặc mã danh mục đã tồn tại.";
+                    response.Message = "Tên danh mục đã tồn tại.";
                     return response;
                 }
 
+                string categoryCode;
 
                 if (categoryInputRequest.CategoryMainId.HasValue)
                 {
@@ -201,7 +204,23 @@ namespace PharmaDistiPro.Services.Impl
                         response.Message = "Danh mục cha không tồn tại.";
                         return response;
                     }
+
+                    categoryCode = $"{parentCategory.CategoryCode}_{GenerateCategoryCode(categoryInputRequest.CategoryName)}";
                 }
+                else
+                {
+                    categoryCode = GenerateCategoryCode(categoryInputRequest.CategoryName);
+                }
+
+                // Kiểm tra xem mã danh mục đã tồn tại chưa
+                var isCodeExist = await _categoryRepository.GetSingleByConditionAsync(c => c.CategoryCode == categoryCode);
+                if (isCodeExist != null)
+                {
+                    response.Success = false;
+                    response.Message = $"Mã danh mục '{categoryCode}' đã tồn tại.";
+                    return response;
+                }
+
                 if (categoryInputRequest.Image != null)
                 {
                     var uploadParams = new ImageUploadParams()
@@ -212,29 +231,66 @@ namespace PharmaDistiPro.Services.Impl
 
                     var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                     imageUrl = uploadResult.SecureUri.ToString();
-
-                    var newCategory = _mapper.Map<Category>(categoryInputRequest);
-                    newCategory.CreatedDate = DateTime.Now;
-                    newCategory.Image = imageUrl;
-                    newCategory.CreatedBy = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
-
-                    await _categoryRepository.InsertAsync(newCategory);
-                    await _categoryRepository.SaveAsync();
-
-                    response.Success = true;
-                    response.Data = _mapper.Map<CategoryDTO>(newCategory);
-                    response.Message = "Tạo danh mục thành công";
                 }
+
+                // Tạo danh mục mới
+                var newCategory = _mapper.Map<Category>(categoryInputRequest);
+                newCategory.CreatedDate = DateTime.Now;
+                newCategory.Image = imageUrl;
+                newCategory.CategoryCode = categoryCode;
+                //newCategory.CreatedBy = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
+
+                await _categoryRepository.InsertAsync(newCategory);
+                await _categoryRepository.SaveAsync();
+
+                response.Success = true;
+                response.Data = _mapper.Map<CategoryDTO>(newCategory);
+                response.Message = "Tạo danh mục thành công";
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Lỗi: {ex.Message}";
+                response.Message = $"Lỗi: {ex.Message} - {ex.InnerException?.Message}";
             }
 
             return response;
         }
 
+        private string GenerateCategoryCode(string categoryName)
+        {
+            if (string.IsNullOrWhiteSpace(categoryName))
+                return "UNKNOWN";
+
+            // Chuẩn hóa chuỗi: Xóa khoảng trắng dư thừa, loại bỏ dấu tiếng Việt
+            string normalizedString = RemoveDiacritics(categoryName).Trim();
+
+            // Tách các từ và lấy chữ cái đầu của mỗi từ viết hoa
+            var words = normalizedString.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Nếu chỉ có 1 từ, lấy 2-3 ký tự đầu thay vì chỉ lấy chữ cái đầu
+            if (words.Length == 1)
+                return words[0].Substring(0, Math.Min(3, words[0].Length)).ToUpper();
+
+            return string.Join("", words.Select(w => w.Substring(0, 1).ToUpper()));
+        }
+
+        // Hàm loại bỏ dấu tiếng Việt
+        private string RemoveDiacritics(string text)
+        {
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+        }
         public async Task<Response<CategoryDTO>> UpdateCategoryAsync(CategoryInputRequest categoryUpdateRequest)
         {
             var response = new Response<CategoryDTO>();
