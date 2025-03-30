@@ -9,7 +9,7 @@ namespace PharmaDistiPro.Helper
         {
             if (httpContext?.User?.Identity?.IsAuthenticated != true)
             {
-                return 0; // Người dùng chưa đăng nhập
+                return 0; 
             }
 
             var userIdClaim = httpContext.User.Claims

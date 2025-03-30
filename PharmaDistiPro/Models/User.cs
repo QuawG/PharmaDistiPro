@@ -19,7 +19,6 @@ namespace PharmaDistiPro.Models
             ReceivedNotes = new HashSet<ReceivedNote>();
             StorageRooms = new HashSet<StorageRoom>();
             Suppliers = new HashSet<Supplier>();
-            Units = new HashSet<Unit>();
         }
 
         public int UserId { get; set; }
@@ -56,6 +55,5 @@ namespace PharmaDistiPro.Models
         public virtual ICollection<ReceivedNote> ReceivedNotes { get; set; }
         public virtual ICollection<StorageRoom> StorageRooms { get; set; }
         public virtual ICollection<Supplier> Suppliers { get; set; }
-        public virtual ICollection<Unit> Units { get; set; }
     }
 }

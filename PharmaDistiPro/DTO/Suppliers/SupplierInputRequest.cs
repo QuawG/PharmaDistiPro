@@ -2,7 +2,7 @@
 {
     public class SupplierInputRequest
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
         public string? SupplierName { get; set; }
         public string? SupplierCode { get; set; }
         public string? SupplierAddress { get; set; }

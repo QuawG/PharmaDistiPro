@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.Products;
 using PharmaDistiPro.Models;
+using PharmaDistiPro.Services;
 using PharmaDistiPro.Services.Impl;
 using PharmaDistiPro.Services.Interface;
 
@@ -36,9 +37,26 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
-        // GET: api/product/{productId}
-        // Lấy thông tin sản phẩm theo ID
-        [HttpGet("{productId}")]
+
+
+
+        [HttpGet("ListProduct")]
+        public async Task<ActionResult<Response<IEnumerable<ProductDTO>>>> GetProductList()
+        {
+            var response = new Response<IEnumerable<ProductDTO>>();
+         
+                var products = await _productService.GetProductList();
+                if (!response.Success)
+                {
+                    return NotFound(new { success = response.Success, message = response.Message });
+                }
+                return Ok(response);
+            }
+    
+
+    // GET: api/product/{productId}
+    // Lấy thông tin sản phẩm theo ID
+    [HttpGet("{productId}")]
         public async Task<IActionResult> GetProduct(int productId)
         {
             var response = await _productService.GetProductById(productId);

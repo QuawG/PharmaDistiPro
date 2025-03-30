@@ -231,7 +231,7 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
-
+                userUpdateRequest.Password = userToUpdate.Password;
                 // mapper request model -> entity
                 _mapper.Map(userUpdateRequest, userToUpdate);
 
@@ -276,19 +276,20 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<LoginResponse>();
             var user = await _userRepository.GetUser(loginModel.Username, loginModel.Password);
 
-            if (user.Status == false)
-            {
-                return new Response<LoginResponse>
-                {
-                    StatusCode = 404,
-                    Message = "Tài khoản không được phép đăng nhập"
-                };
-            }
-
-            
+        
 
             if (user != null)
             {
+
+                if (user.Status == false)
+                {
+                    return new Response<LoginResponse>
+                    {
+                        StatusCode = 404,
+                        Message = "Tài khoản không được phép đăng nhập"
+                    };
+                }
+
                 var accessToken = GenerateAccessToken(user);
                 var refreshToken = GenerateRefreshToken();
 
@@ -301,7 +302,10 @@ namespace PharmaDistiPro.Services.Impl
                 {
                     AccessToken = accessToken,
                     RefreshToken = refreshToken,
-                    UserId = user.UserId
+                    UserId = user.UserId,
+                    UserName = user.UserName,
+                    RoleName = user.Role.RoleName,
+                    UserAvatar = user.Avatar
                 };
 
                 response = new Response<LoginResponse>
@@ -449,8 +453,8 @@ namespace PharmaDistiPro.Services.Impl
             }
 
 
-            //user.RefreshToken = null;
-            //user.RefreshTokenExpiryTime = null;
+            user.RefreshToken = null;
+            user.RefreshTokenExpriedTime= null;
             await _userRepository.UpdateUser(user);
             response = new Response<LoginResponse>
             {

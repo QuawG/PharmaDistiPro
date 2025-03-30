@@ -27,6 +27,15 @@ namespace PharmaDistiPro.Helper
             #region Supplier
             CreateMap<Supplier, SupplierDTO>();
             CreateMap<SupplierDTO, Supplier>();
+            CreateMap<SupplierInputRequest, Supplier>()
+                  .ForMember(dest => dest.SupplierName, opt => opt.Condition(src => src.SupplierName != null))
+                  .ForMember(dest => dest.SupplierCode, opt => opt.Condition(src => src.SupplierCode != null))
+                  .ForMember(dest => dest.SupplierAddress, opt => opt.Condition(src => src.SupplierAddress != null))
+                  .ForMember(dest => dest.SupplierPhone, opt => opt.Condition(src => src.SupplierPhone != null))
+                  .ForMember(dest => dest.Status, opt => opt.Condition(src => src.Status.HasValue))
+                  .ForMember(dest => dest.CreatedBy, opt => opt.Condition(src => src.CreatedBy.HasValue))
+                  .ForMember(dest => dest.CreatedDate, opt => opt.Condition(src => src.CreatedDate.HasValue))
+                  .ForMember(dest => dest.Id, opt => opt.Ignore()); 
             #endregion
 
             #region StorageRoom
@@ -102,7 +111,7 @@ namespace PharmaDistiPro.Helper
                 .ForMember(dest => dest.ManufactureName, opt => opt.Condition(src => !string.IsNullOrEmpty(src.ManufactureName)))
                 .ForMember(dest => dest.Description, opt => opt.Condition(src => !string.IsNullOrEmpty(src.Description)))
                 .ForMember(dest => dest.Storageconditions, opt => opt.Condition(src => src.Storageconditions.HasValue))
-                .ForMember(dest => dest.UnitId, opt => opt.Condition(src => src.UnitId.HasValue))
+                .ForMember(dest => dest.Unit, opt => opt.Condition(src => !string.IsNullOrEmpty(src.Unit)))
                 .ForMember(dest => dest.CategoryId, opt => opt.Condition(src => src.CategoryId.HasValue))
                 .ForMember(dest => dest.Vat, opt => opt.Condition(src => src.Vat.HasValue))
                 .ForMember(dest => dest.SellingPrice, opt => opt.Condition(src => src.SellingPrice.HasValue))

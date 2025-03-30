@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using PharmaDistiPro.DTO.Categorys;
 using PharmaDistiPro.DTO.StorageRooms;
+using PharmaDistiPro.DTO.Users;
+using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
@@ -13,11 +17,15 @@ namespace PharmaDistiPro.Services.Impl
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
+        private readonly Cloudinary _cloudinary;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CategoryService(ICategoryRepository categoryRepository, IMapper mapper)
+        public CategoryService(ICategoryRepository categoryRepository, Cloudinary cloudinary, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _categoryRepository = categoryRepository;
             _mapper = mapper;
+            _cloudinary = cloudinary;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         //category tree list
@@ -167,10 +175,11 @@ namespace PharmaDistiPro.Services.Impl
         public async Task<Response<CategoryDTO>> CreateCategoryAsync(CategoryInputRequest categoryInputRequest)
         {
             var response = new Response<CategoryDTO>();
+            string imageUrl = null;
 
             try
             {
-               
+
                 var existingCategory = await _categoryRepository.GetSingleByConditionAsync(
                     c => c.CategoryName.Equals(categoryInputRequest.CategoryName) || (c.CategoryCode != null && c.CategoryCode.Equals(categoryInputRequest.CategoryCode))
                 );
@@ -182,7 +191,7 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-              
+
                 if (categoryInputRequest.CategoryMainId.HasValue)
                 {
                     var parentCategory = await _categoryRepository.GetByIdAsync(categoryInputRequest.CategoryMainId.Value);
@@ -193,18 +202,29 @@ namespace PharmaDistiPro.Services.Impl
                         return response;
                     }
                 }
+                if (categoryInputRequest.Image != null)
+                {
+                    var uploadParams = new ImageUploadParams()
+                    {
+                        File = new FileDescription(categoryInputRequest.Image.FileName, categoryInputRequest.Image.OpenReadStream()),
+                        PublicId = Path.GetFileNameWithoutExtension(categoryInputRequest.Image.FileName)
+                    };
 
-                
-                var newCategory = _mapper.Map<Category>(categoryInputRequest);
-                newCategory.CreatedDate = DateTime.Now;
-              
+                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                    imageUrl = uploadResult.SecureUri.ToString();
 
-                await _categoryRepository.InsertAsync(newCategory);
-                await _categoryRepository.SaveAsync();
+                    var newCategory = _mapper.Map<Category>(categoryInputRequest);
+                    newCategory.CreatedDate = DateTime.Now;
+                    newCategory.Image = imageUrl;
+                    newCategory.CreatedBy = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
 
-                response.Success = true;
-                response.Data = _mapper.Map<CategoryDTO>(newCategory);
-                response.Message = "Tạo danh mục thành công";
+                    await _categoryRepository.InsertAsync(newCategory);
+                    await _categoryRepository.SaveAsync();
+
+                    response.Success = true;
+                    response.Data = _mapper.Map<CategoryDTO>(newCategory);
+                    response.Message = "Tạo danh mục thành công";
+                }
             }
             catch (Exception ex)
             {
@@ -218,7 +238,7 @@ namespace PharmaDistiPro.Services.Impl
         public async Task<Response<CategoryDTO>> UpdateCategoryAsync(CategoryInputRequest categoryUpdateRequest)
         {
             var response = new Response<CategoryDTO>();
-
+            string imageUrl = null;
             try
             {
                 
@@ -271,7 +291,18 @@ namespace PharmaDistiPro.Services.Impl
                 if (categoryUpdateRequest.CategoryMainId.HasValue)
                     categoryToUpdate.CategoryMainId = categoryUpdateRequest.CategoryMainId;
 
-               
+                if (categoryUpdateRequest.Image != null)
+                {
+                    var uploadParams = new ImageUploadParams()
+                    {
+                        File = new FileDescription(categoryUpdateRequest.Image.FileName, categoryUpdateRequest.Image.OpenReadStream()),
+                        PublicId = Path.GetFileNameWithoutExtension(categoryUpdateRequest.Image.FileName)
+                    };
+
+                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                    imageUrl = uploadResult.SecureUri.ToString();
+                    categoryToUpdate.Image = imageUrl;
+                }
 
                 await _categoryRepository.UpdateAsync(categoryToUpdate);
                 await _categoryRepository.SaveAsync();

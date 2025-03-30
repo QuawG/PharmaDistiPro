@@ -106,11 +106,10 @@ namespace PharmaDistiPro.Services.Impl
          
                 newSupplier.CreatedDate = DateTime.Now;
 
-                // Thêm mới user vào database
+            
                 await _supplierRepository.InsertAsync(newSupplier);
                 await _supplierRepository.SaveAsync();
 
-                // Trả về dữ liệu đã tạo mới
                 response.Message = "Tạo mới thành công";
                 response.Success = true;
                 response.Data = _mapper.Map<SupplierDTO>(newSupplier);
@@ -159,15 +158,12 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
-        // Update  supplier
         public async Task<Response<SupplierDTO>> UpdateSupplier(SupplierInputRequest supplierUpdateRequest)
         {
             var response = new Response<SupplierDTO>();
-           
 
             try
             {
-                // Kiểm tra nhà phân phối có tồn tại không
                 var suppplierToUpdate = await _supplierRepository.GetByIdAsync(supplierUpdateRequest.Id);
                 if (suppplierToUpdate == null)
                 {
@@ -176,12 +172,21 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-           
-
-                // Map dữ liệu từ DTO sang thực thể
-                _mapper.Map(supplierUpdateRequest, suppplierToUpdate);
-
-            
+                // Cập nhật từng trường nếu có giá trị từ request
+                if (!string.IsNullOrEmpty(supplierUpdateRequest.SupplierName))
+                    suppplierToUpdate.SupplierName = supplierUpdateRequest.SupplierName;
+                if (!string.IsNullOrEmpty(supplierUpdateRequest.SupplierCode))
+                    suppplierToUpdate.SupplierCode = supplierUpdateRequest.SupplierCode;
+                if (!string.IsNullOrEmpty(supplierUpdateRequest.SupplierAddress))
+                    suppplierToUpdate.SupplierAddress = supplierUpdateRequest.SupplierAddress;
+                if (!string.IsNullOrEmpty(supplierUpdateRequest.SupplierPhone))
+                    suppplierToUpdate.SupplierPhone = supplierUpdateRequest.SupplierPhone;
+                if (supplierUpdateRequest.Status.HasValue)
+                    suppplierToUpdate.Status = supplierUpdateRequest.Status;
+                if (supplierUpdateRequest.CreatedBy.HasValue)
+                    suppplierToUpdate.CreatedBy = supplierUpdateRequest.CreatedBy;
+                if (supplierUpdateRequest.CreatedDate.HasValue)
+                    suppplierToUpdate.CreatedDate = supplierUpdateRequest.CreatedDate;
 
                 await _supplierRepository.UpdateAsync(suppplierToUpdate);
                 await _supplierRepository.SaveAsync();
@@ -192,7 +197,6 @@ namespace PharmaDistiPro.Services.Impl
             }
             catch (Exception ex)
             {
-               
                 response.Success = false;
                 response.Message = "Đã xảy ra lỗi trong quá trình cập nhật nhà phân phối.";
             }
