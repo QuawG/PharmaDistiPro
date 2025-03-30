@@ -71,26 +71,28 @@ namespace PharmaDistiPro.Services.Impl
                 return response;
             }
         }
-
-        // Get all product
         public async Task<Response<IEnumerable<ProductDTO>>> GetProductList()
         {
             var response = new Response<IEnumerable<ProductDTO>>();
             try
             {
                 var products = await _productRepository.GetAllAsync();
+
+               
+      
+
                 response.Data = _mapper.Map<IEnumerable<ProductDTO>>(products);
                 response.Success = true;
-
-                if (!products.Any()) response.Message = "Không có dữ liệu";
-                else response.Message = "Lấy danh sách sản phẩm thành công";
+                response.Message = products.Any() ? "Lấy danh sách sản phẩm thành công" : "Không có dữ liệu";
+              
 
                 return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.Message = $"Lỗi: {ex.Message}";
+            
                 return response;
             }
         }

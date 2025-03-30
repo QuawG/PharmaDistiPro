@@ -93,15 +93,9 @@ namespace PharmaDistiPro.Helper
                 .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.Unit))
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
                 .ForMember(dest => dest.CreatedByNavigation, opt => opt.MapFrom(src => src.CreatedByNavigation))
-                .ForMember(dest => dest.ProductLots, opt => opt.MapFrom(src => src.ProductLots))
-                .ForMember(dest => dest.ImageProducts, opt => opt.MapFrom(src => src.ImageProducts))
-                .ForMember(dest => dest.OrdersDetails, opt => opt.MapFrom(src => src.OrdersDetails))
-                .ForMember(dest => dest.PurchaseOrdersDetails, opt => opt.MapFrom(src => src.PurchaseOrdersDetails))
-                .ReverseMap()
-                .ForMember(dest => dest.ImageProducts, opt => opt.Ignore()) // Ngăn vòng lặp từ ImageProductDTO.Product
-                .ForMember(dest => dest.OrdersDetails, opt => opt.Ignore())
-                .ForMember(dest => dest.ProductLots, opt => opt.Ignore())
-                .ForMember(dest => dest.PurchaseOrdersDetails, opt => opt.Ignore());
+
+                .ReverseMap();
+               
 
             CreateMap<ProductInputRequest, ProductDTO>().ReverseMap();
 
@@ -118,14 +112,8 @@ namespace PharmaDistiPro.Helper
                 .ForMember(dest => dest.Weight, opt => opt.Condition(src => src.Weight.HasValue))
                 .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
-                .ForMember(dest => dest.Status, opt => opt.Ignore())
-                .ForMember(dest => dest.Unit, opt => opt.Ignore())
-                .ForMember(dest => dest.Category, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedByNavigation, opt => opt.Ignore())
-                .ForMember(dest => dest.ImageProducts, opt => opt.Ignore())
-                .ForMember(dest => dest.OrdersDetails, opt => opt.Ignore())
-                .ForMember(dest => dest.ProductLots, opt => opt.Ignore())
-                .ForMember(dest => dest.PurchaseOrdersDetails, opt => opt.Ignore());
+                .ForMember(dest => dest.Status, opt => opt.Ignore());
+          
 
             CreateMap<Product, ProductOrderDto>();
             CreateMap<ProductOrderDto, Product>();

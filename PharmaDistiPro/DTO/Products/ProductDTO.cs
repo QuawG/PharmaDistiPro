@@ -18,13 +18,10 @@ namespace PharmaDistiPro.DTO.Products
         public double? Vat { get; set; }
         public int? Storageconditions { get; set; }
         public double? Weight { get; set; }
-
+        public string Images { get; set; }
         public virtual Category? Category { get; set; }
         public virtual User? CreatedByNavigation { get; set; }
 
-        public virtual ICollection<ImageProduct> ImageProducts { get; set; }
-        public virtual ICollection<OrdersDetail> OrdersDetails { get; set; }
-        public virtual ICollection<ProductLot> ProductLots { get; set; }
-        public virtual ICollection<PurchaseOrdersDetail> PurchaseOrdersDetails { get; set; }
+
     }
 }
