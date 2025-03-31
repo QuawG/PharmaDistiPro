@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Table, Dropdown, Button, Modal, Input, Form, Select } from "antd";
-import { MoreOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { MoreOutlined, EditOutlined, DeleteOutlined, UnorderedListOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
@@ -116,7 +116,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
       render: (amount: number) => `${amount.toLocaleString()} VND`,
     },
     {
-      title: "Hành động",
+      title: <UnorderedListOutlined />,
       key: "actions",
       render: (_: any, record: Order) => (
         <Dropdown menu={{

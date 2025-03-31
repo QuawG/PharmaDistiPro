@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { MoreOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { Dropdown, Menu, Table, Button, Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { MoreOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, UnorderedListOutlined, FileExcelOutlined, PrinterOutlined } from '@ant-design/icons';
+import { Dropdown, Menu, Table, Button, Modal, Input } from 'antd';
+import * as XLSX from 'xlsx';
 import UpdateCategory from '../Category/UpdateCategory';
 
 interface Category {
@@ -14,13 +15,25 @@ interface Category {
 
 interface CategoryTableProps {
   CATEGORY_DATA: Category[];
+  handleChangePage: (page: string, categoryId?: number) => void;
 }
 
-const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
+const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChangePage }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categories, setCategories] = useState<Category[]>(CATEGORY_DATA);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
 
+
+  const removeVietnameseTones = (str: string) => {
+    return str
+      .normalize("NFD") // Tách dấu ra khỏi ký tự gốc
+      .replace(/[\u0300-\u036f]/g, "") // Xóa dấu
+      .replace(/đ/g, "d") // Thay thế 'đ' thành 'd'
+      .replace(/Đ/g, "D") // Thay thế 'Đ' thành 'D'
+      .toLowerCase(); // Chuyển về chữ thường
+  };
   const showDeleteConfirm = (category: Category) => {
     Modal.confirm({
       title: 'Xác nhận xóa',
@@ -35,7 +48,81 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
     });
   };
 
+  const handleRowSelectionChange = (selectedRowKeys: React.Key[]) => {
+    setSelectedRowKeys(selectedRowKeys as number[]);
+  };
+
+  const printTable = () => {
+    const selectedCategories = selectedRowKeys.length > 0 
+      ? categories.filter(category => selectedRowKeys.includes(category.id))
+      : categories;
+
+    if (selectedCategories.length === 0) {
+      alert("Không có danh mục nào được chọn để in.");
+      return;
+    }
+
+    const printContents = `
+      <h2 style="text-align: center;">Danh sách danh mục</h2>
+      <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Tên danh mục</th>
+            <th>Mã danh mục</th>
+            <th>Mô tả</th>
+            <th>Người tạo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${selectedCategories.map(category => `
+            <tr>
+              <td>${category.name}</td>
+              <td>${category.code}</td>
+              <td>${category.description}</td>
+              <td>${category.createdBy}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    const printWindow = window.open('', '', 'height=800,width=1000');
+    if (printWindow) {
+      printWindow.document.write(printContents);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(categories);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Categories");
+    XLSX.writeFile(workbook, "DanhSachDanhMuc.xlsx");
+  };
+
+  const filterCategories = () => {
+    let filteredCategories = [...CATEGORY_DATA];
+  
+    if (searchTerm.trim()) {
+      filteredCategories = filteredCategories.filter(category => 
+        removeVietnameseTones(category.name).includes(removeVietnameseTones(searchTerm))
+      );
+    }
+  
+    setCategories(filteredCategories);
+  };
+
+  useEffect(() => {
+    filterCategories();
+  }, [searchTerm]);
+
   const columns = [
+    {
+      title: 'Mã',
+      dataIndex: 'code',
+      key: 'code',
+    },
     {
       title: 'Tên loại sản phẩm',
       dataIndex: 'name',
@@ -51,11 +138,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
         </div>
       ),
     },
-    {
-      title: 'Mã ',
-      dataIndex: 'code',
-      key: 'code',
-    },
+    
     {
       title: 'Mô tả',
       dataIndex: 'description',
@@ -67,7 +150,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
       key: 'createdBy',
     },
     {
-      title: 'Tính năng',
+      title: <UnorderedListOutlined />,
       key: 'actions',
       render: (_: any, record: Category) => (
         <Dropdown
@@ -93,10 +176,44 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA }) => {
   ];
 
   return (
-    <div className="bg-white">
-      <Table dataSource={categories} columns={columns} rowKey="id" pagination={{ pageSize: 5 }} />
+    <div className="bg-white p-6 rounded-lg shadow">
+      <div className="flex gap-4 mb-4">
+        <Input 
+          placeholder="Tìm kiếm theo tên danh mục" 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+          style={{ width: 200 }} 
+        />
+        <Button type="primary" onClick={() => handleChangePage("Tạo chủng loại")}>
+                  + Tạo chủng loại mới
+                </Button>
+        <Button 
+          type="primary" 
+          icon={<FileExcelOutlined />} 
+          onClick={exportToExcel} 
+          style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}
+        >
+          Xuất Excel
+        </Button>
+        <Button 
+          type="primary" 
+          icon={<PrinterOutlined />} 
+          onClick={printTable}
+        >
+          In danh sách
+        </Button>
+      </div>
 
-      {/* Popup Update Category */}
+      <Table
+        rowSelection={{
+          selectedRowKeys,
+          onChange: handleRowSelectionChange,
+        }}
+        columns={columns}
+        dataSource={categories}
+        rowKey="id"
+      />
+
       <UpdateCategory
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}

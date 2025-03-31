@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Table, Modal, Input, Button, Dropdown, Menu } from "antd";
-import { MoreOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { MoreOutlined, EditOutlined, DeleteOutlined, UnorderedListOutlined } from "@ant-design/icons";
 
 interface Lot {
   id: number;
@@ -95,7 +95,7 @@ const LotTable: React.FC<LotTableProps> = ({ ITEM_DATA }) => {
       },
     },
     {
-      title: "Thao tác",
+      title: <UnorderedListOutlined />,
       key: "actions",
       // text: string, 
       render: (record: Lot) => (

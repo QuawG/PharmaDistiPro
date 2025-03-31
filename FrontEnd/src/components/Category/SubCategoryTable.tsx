@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MoreOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { MoreOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined ,UnorderedListOutlined} from "@ant-design/icons";
 import { Dropdown, Menu, Table, Button, Modal, Image } from "antd";
 import UpdateSubCategory from "../Category/UpdateSubCategory";
 
@@ -76,7 +76,7 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA })
       key: "createdBy",
     },
     {
-      title: "Tính năng",
+      title:  <UnorderedListOutlined />,
       key: "actions",
       render: (_: any, record: SubCategory) => (
         <Dropdown

@@ -1,22 +1,7 @@
 import * as React from "react";
 import { Transition } from "@headlessui/react";
-import {  Settings, User, LogOut } from "lucide-react";
+import { Settings, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-export interface Language {
-    code: string;
-    name: string;
-    flag: string;
-}
-
-export interface Notification {
-    id: string;
-    avatar: string;
-    user: string;
-    action: string;
-    target: string;
-    timestamp: string;
-}
 
 export interface User {
     name: string;
@@ -24,23 +9,17 @@ export interface User {
     avatar: string;
 }
 
-// const languages: Language[] = [
-//     { code: "en", name: "English", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWYW5_EOLH0Qo4eAH8icpJc_yYWszkhNs-Lg&s" },
-//     { code: "fr", name: "French", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJTdYV8slYr9JgTw4LsMPP9DdaEj36iVVfEA&s" },
-//     { code: "es", name: "Spanish", flag: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMMr0gPdt8WQFr18uN4gdiNz_lJZCZfexCbg&s" },
-//     { code: "de", name: "German", flag: "https://www.countryflags.com/wp-content/uploads/germany-flag-png-xl.png" },
-// ];
-
-const currentUser: User = {
-    name: "John Doe",
-    role: "Admin",
-    avatar: "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png",
-};
-
 export default function Navbar() {
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = React.useState(false);
     const profileRef = React.useRef<HTMLDivElement>(null);
+
+    // Lấy thông tin người dùng từ localStorage
+    const [currentUser] = React.useState<User>({
+        name: localStorage.getItem("userName") || "Guest",
+        role: localStorage.getItem("roleName") || "User",
+        avatar: localStorage.getItem("userAvatar") || "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png",
+    });
 
     React.useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -54,7 +33,14 @@ export default function Navbar() {
     }, []);
 
     const handleLogout = () => {
-        console.log("Logging out...");
+        console.log("Đăng xuất...");
+        // Xóa thông tin người dùng khỏi localStorage
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("roleName");
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userAvatar");
         navigate("/signin");
     };
 
@@ -68,7 +54,7 @@ export default function Navbar() {
                             onClick={() => setIsProfileOpen(!isProfileOpen)}
                             className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-100 rounded-lg transition-colors"
                         >
-                            <img src={currentUser.avatar || "/placeholder.svg"} alt="" className="w-8 h-8 rounded-full" />
+                            <img src={currentUser.avatar} alt="" className="w-8 h-8 rounded-full" />
                             <div className="hidden sm:block text-left">
                                 <div className="font-medium">{currentUser.name}</div>
                                 <div className="text-sm text-gray-500">{currentUser.role}</div>

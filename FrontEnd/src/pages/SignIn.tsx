@@ -1,17 +1,47 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [userName, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = () => {
-   
-    if (email && password) {
-      navigate("/");
-    } else {
-      alert("Vui lòng nhập email và mật khẩu!!");
+  const handleSignIn = async () => {
+    if (!userName || !password) {
+      alert("Vui lòng nhập email và mật khẩu!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post("http://pharmadistiprobe.fun/api/User/Login", {
+        userName,
+        password,
+      });
+
+      if (response.status === 200) {
+        const { accessToken, refreshToken, userId, roleName, userName, userAvatar } = response.data.data;
+
+        // Lưu thông tin vào localStorage
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+        localStorage.setItem("userId", userId.toString());
+        localStorage.setItem("roleName", roleName);
+        localStorage.setItem("userName", userName);
+        localStorage.setItem("userAvatar", userAvatar);
+
+        alert("Đăng nhập thành công!");
+        navigate("/");
+      } else {
+        alert("Đăng nhập thất bại. Vui lòng kiểm tra lại!");
+      }
+    } catch (error: any) {
+      console.error("Lỗi đăng nhập:", error);
+      alert(error.response?.data?.message || "Đăng nhập thất bại!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -24,7 +54,7 @@ const SignIn: React.FC = () => {
         <input
           type="text"
           placeholder="Email"
-          value={email}
+          value={userName}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mt-4 focus:ring-2 focus:ring-[#ff9f43] outline-none"
         />
@@ -39,13 +69,13 @@ const SignIn: React.FC = () => {
         {/* Sign In Button */}
         <button
           onClick={handleSignIn}
-          className="w-full bg-[#ff9f43] text-white py-2 rounded-lg mt-6 font-bold transition-all hover:bg-[#e68a36]"
+          className={`w-full text-white py-2 rounded-lg mt-6 font-bold transition-all ${
+            loading ? "bg-gray-400" : "bg-[#ff9f43] hover:bg-[#e68a36]"
+          }`}
+          disabled={loading}
         >
-          Sign In
+          {loading ? "Đang xử lý..." : "Sign In"}
         </button>
-
-        {/* Chuyển sang SignUp */}
-        
       </div>
     </div>
   );

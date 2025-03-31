@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, Dropdown, Button, Table, Modal } from 'antd';
-import { MoreOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { MoreOutlined, DeleteOutlined, EditOutlined, EyeOutlined,UnorderedListOutlined } from '@ant-design/icons';
 import CustomerDetailsModal from './CustomerDetail';
 import UpdateCustomerDetailsModal from './UpdateCustomerDetail';
 
@@ -97,7 +97,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
       ),
     },
     {
-      title: 'Tính năng',
+      title:  <UnorderedListOutlined />,
       key: 'actions',
       render: (_: any, record: Customer) => (
         <Dropdown

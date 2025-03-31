@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Select from "react-select";
+import { Button, Input, Select, Table, message, Space, Form } from "antd";
 import { PRODUCTS_DATA } from "../data/product";
 
 interface AddLotProps {
@@ -27,8 +27,8 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
     label: p.ProductName,
   }));
 
-  const handleSelectProduct = (selectedOption: any) => {
-    const product = PRODUCTS_DATA.find((p) => String(p.ProductId) === selectedOption.value);
+  const handleSelectProduct = (value: string) => {
+    const product = PRODUCTS_DATA.find((p) => String(p.ProductId) === value);
     if (product && !selectedProducts.some((p) => p.id === String(product.ProductId))) {
       setSelectedProducts([
         ...selectedProducts,
@@ -36,7 +36,7 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
           id: String(product.ProductId),
           name: product.ProductName,
           price: "",
-          quantity: 0, // Mặc định quantity = 0
+          quantity: 0,
           manufacturedDate: "",
           expiredDate: "",
           status: "Đã hết hàng",
@@ -49,7 +49,6 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
     setSelectedProducts(selectedProducts.filter((p) => p.id !== id));
   };
 
-  // Xử lý lưu lô hàng
   const handleSave = () => {
     if (!lotNumber.trim()) {
       setError("Vui lòng nhập số lô.");
@@ -68,7 +67,7 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
       }
     }
 
-    setError(""); // Xóa lỗi nếu hợp lệ
+    setError("");
 
     const newLot = {
       lotNumber,
@@ -77,108 +76,109 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
     };
 
     console.log("Lưu lô hàng:", newLot);
-
-    alert("Lô hàng đã được lưu thành công!");
+    message.success("Lô hàng đã được lưu thành công!");
     handleChangePage("Danh sách lô hàng");
   };
 
-  return (
-    <div className="p-6 mt-16 overflow-auto w-full bg-gray-100">
-      <h1 className="text-xl font-semibold text-gray-900">Tạo mới lô hàng</h1>
-
-      <div className="bg-white rounded-lg shadow p-5">
-        {error && <p className="text-red-500">{error}</p>}
-
-        <label className="block text-gray-700 font-medium mb-1">Số lô</label>
-        <input
-          type="text"
-          className="border px-2 py-1 w-full mb-4"
-          placeholder="VD: L0001"
-          value={lotNumber}
-          onChange={(e) => setLotNumber(e.target.value)}
+  const columns = [
+    { title: "Mã SP", dataIndex: "id" },
+    { title: "Tên SP", dataIndex: "name" },
+    {
+      title: "Giá nhập",
+      dataIndex: "price",
+      render: (_: any, record: SelectedProduct) => (
+        <Input
+          value={record.price}
+          onChange={(e) =>
+            setSelectedProducts((prev) =>
+              prev.map((p) => (p.id === record.id ? { ...p, price: e.target.value } : p))
+            )
+          }
         />
+      ),
+    },
+    {
+      title: "Ngày sản xuất",
+      dataIndex: "manufacturedDate",
+      render: (_: any, record: SelectedProduct) => (
+        <Input
+          type="date"
+          value={record.manufacturedDate}
+          onChange={(e) =>
+            setSelectedProducts((prev) =>
+              prev.map((p) => (p.id === record.id ? { ...p, manufacturedDate: e.target.value } : p))
+            )
+          }
+        />
+      ),
+    },
+    {
+      title: "Ngày hết hạn",
+      dataIndex: "expiredDate",
+      render: (_: any, record: SelectedProduct) => (
+        <Input
+          type="date"
+          value={record.expiredDate}
+          onChange={(e) =>
+            setSelectedProducts((prev) =>
+              prev.map((p) => (p.id === record.id ? { ...p, expiredDate: e.target.value } : p))
+            )
+          }
+        />
+      ),
+    },
+    {
+      title: "Xóa",
+      render: (_: any, record: SelectedProduct) => (
+        <Button danger onClick={() => handleRemoveProduct(record.id)}>
+          🗑
+        </Button>
+      ),
+    },
+  ];
 
+  return (
+    <div style={{ padding: "24px", background: "#fafbfe", borderRadius: "8px", marginTop: "60px" }}>
+      <h2>Tạo mới lô hàng</h2>
 
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-        <label className="block text-gray-700 font-medium mb-1">Sản phẩm</label>
-        <Select options={productOptions} onChange={handleSelectProduct} placeholder="Chọn sản phẩm..." />
+      <Form layout="vertical" onFinish={handleSave}>
+        <Form.Item label="Số lô" required>
+          <Input
+            placeholder="VD: L0001"
+            value={lotNumber}
+            onChange={(e) => setLotNumber(e.target.value)}
+          />
+        </Form.Item>
+
+        <Form.Item label="Sản phẩm" required>
+          <Select
+            options={productOptions}
+            onChange={handleSelectProduct}
+            placeholder="Chọn sản phẩm..."
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
 
         {selectedProducts.length > 0 && (
-          <table className="w-full mt-4 border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Mã SP</th>
-                <th className="border p-2">Tên SP</th>
-                <th className="border p-2">Giá nhập</th>
-                <th className="border p-2">Ngày sản xuất</th>
-                <th className="border p-2">Ngày hết hạn</th>
-                <th className="border p-2">Xóa</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedProducts.map((product) => (
-                <tr key={product.id}>
-                  <td className="border p-2">{product.id}</td>
-                  <td className="border p-2">{product.name}</td>
-                  <td className="border p-2">
-                    <input
-                      type="text"
-                      className="border px-2 py-1 w-full"
-                      value={product.price}
-                      onChange={(e) =>
-                        setSelectedProducts(
-                          selectedProducts.map((p) =>
-                            p.id === product.id ? { ...p, price: e.target.value } : p
-                          )
-                        )
-                      }
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="date"
-                      className="border px-2 py-1 w-full"
-                      value={product.manufacturedDate}
-                      onChange={(e) =>
-                        setSelectedProducts(
-                          selectedProducts.map((p) =>
-                            p.id === product.id ? { ...p, manufacturedDate: e.target.value } : p
-                          )
-                        )
-                      }
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="date"
-                      className="border px-2 py-1 w-full"
-                      value={product.expiredDate}
-                      onChange={(e) =>
-                        setSelectedProducts(
-                          selectedProducts.map((p) =>
-                            p.id === product.id ? { ...p, expiredDate: e.target.value } : p
-                          )
-                        )
-                      }
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <button onClick={() => handleRemoveProduct(product.id)} className="text-red-500">🗑</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table
+            columns={columns}
+            dataSource={selectedProducts}
+            rowKey="id"
+            pagination={false}
+            bordered
+            style={{ marginTop: "20px" }}
+          />
         )}
 
-        <button onClick={handleSave} className="bg-green-500 text-white px-4 py-2 mt-4 rounded-lg">
-          Lưu
-        </button>
-
-        <button onClick={() => handleChangePage("Danh sách lô hàng")} className="ml-3 text-gray-600">
-          Quay lại
-        </button>
-      </div>
+        <Space style={{ marginTop: "20px" }}>
+          <Button type="primary" htmlType="submit">
+            Lưu
+          </Button>
+          <Button onClick={() => handleChangePage("Danh sách lô hàng")}>Quay lại</Button>
+        </Space>
+      </Form>
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { HomeIcon, InboxStackIcon, ChevronRightIcon, UserIcon, ShoppingCartIcon,
 import { PackageIcon, StoreIcon } from "lucide-react";
 
 const menus = {
-    "Sản phẩm": ["Danh sách sản phẩm", "Tạo sản phẩm", "Danh sách loại sản phẩm", "Tạo loại sản phẩm", "Danh sách danh mục thuốc", "Tạo danh mục thuốc", "Nhập sản phẩm"],
+    "Sản phẩm": ["Danh sách sản phẩm", "Tạo sản phẩm", "Chủng loại", "Tạo chủng loại", "Danh sách danh mục thuốc", "Tạo danh mục thuốc", "Nhập sản phẩm"],
     "Nhà thuốc": ["Danh sách nhà thuốc", "Tạo nhà thuốc"],
     "Người dùng": ["Danh sách người dùng", "Tạo người dùng"],
     "Nhà cung cấp": ["Danh sách nhà cung cấp", "Tạo nhà cung cấp"],
@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     };
 
     return (
-        <div className="w-[260px] border-r-[1px] border-r-gray-200 z-20 bg-white h-full">
+        <div className="w-[260px] min-w-[260px] max-w-[260px] flex-shrink-0 border-r-[1px] border-r-gray-200 z-20 bg-white h-full overflow-y-auto">
             <div className="w-full">
                 <img className="w-[150px] mx-auto my-1" src="/img/logoPharma.png" alt="Pharma Logo" />
             </div>
