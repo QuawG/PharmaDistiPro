@@ -36,7 +36,7 @@ namespace PharmaDistiPro.Repositories.Impl
         }
         public async Task<User> GetUser(string username, string password)
         {
-            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserName.Equals(username) && u.Password.Equals(password));
+            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserName==username && u.Password==password);
         }
 
 

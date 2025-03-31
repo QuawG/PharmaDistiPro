@@ -35,7 +35,6 @@ namespace PharmaDistiPro.Models
         public virtual DbSet<Role> Roles { get; set; } = null!;
         public virtual DbSet<StorageRoom> StorageRooms { get; set; } = null!;
         public virtual DbSet<Supplier> Suppliers { get; set; } = null!;
-        public virtual DbSet<Unit> Units { get; set; } = null!;
         public virtual DbSet<User> Users { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -43,7 +42,7 @@ namespace PharmaDistiPro.Models
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("server =localhost; database = SEP490_G74;uid=sa;pwd=123;TrustServerCertificate=true");
+                optionsBuilder.UseSqlServer("server =103.166.183.58,1433; database = SEP490_G74;uid=sa;pwd=PhamarDistiPro@123;TrustServerCertificate=true");
             }
         }
 
@@ -208,6 +207,8 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.ProductCode).HasMaxLength(50);
 
+                entity.Property(e => e.Unit).HasMaxLength(50);
+
                 entity.Property(e => e.Vat).HasColumnName("VAT");
 
                 entity.HasOne(d => d.Category)
@@ -219,11 +220,6 @@ namespace PharmaDistiPro.Models
                     .WithMany(p => p.Products)
                     .HasForeignKey(d => d.CreatedBy)
                     .HasConstraintName("FK_Products_Users");
-
-                entity.HasOne(d => d.Unit)
-                    .WithMany(p => p.Products)
-                    .HasForeignKey(d => d.UnitId)
-                    .HasConstraintName("FK_Products_Units");
             });
 
             modelBuilder.Entity<ProductLot>(entity =>
@@ -354,18 +350,6 @@ namespace PharmaDistiPro.Models
                     .WithMany(p => p.Suppliers)
                     .HasForeignKey(d => d.CreatedBy)
                     .HasConstraintName("FK_Suppliers_Users");
-            });
-
-            modelBuilder.Entity<Unit>(entity =>
-            {
-                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-
-                entity.Property(e => e.UnitsName).HasMaxLength(50);
-
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.Units)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .HasConstraintName("FK_Units_Users");
             });
 
             modelBuilder.Entity<User>(entity =>

@@ -71,26 +71,28 @@ namespace PharmaDistiPro.Services.Impl
                 return response;
             }
         }
-
-        // Get all product
         public async Task<Response<IEnumerable<ProductDTO>>> GetProductList()
         {
             var response = new Response<IEnumerable<ProductDTO>>();
             try
             {
                 var products = await _productRepository.GetAllAsync();
+
+               
+      
+
                 response.Data = _mapper.Map<IEnumerable<ProductDTO>>(products);
                 response.Success = true;
-
-                if (!products.Any()) response.Message = "Không có dữ liệu";
-                else response.Message = "Lấy danh sách sản phẩm thành công";
+                response.Message = products.Any() ? "Lấy danh sách sản phẩm thành công" : "Không có dữ liệu";
+              
 
                 return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.Message = $"Lỗi: {ex.Message}";
+            
                 return response;
             }
         }
@@ -148,18 +150,27 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-                // Sinh ProductCode: CategoryCode + số tự tăng
+                // Kiểm tra CategoryId có phải là danh mục con không (không có danh mục con khác)
+                var existingCategory = await _categoryRepository.GetSingleByConditionAsync(c => c.CategoryMainId == category.CategoryMainId);
+                if (existingCategory == null)
+                {
+                    response.Success = false;
+                    response.Message = "Chỉ được chọn danh mục con.";
+                    return response;
+                }
+
+                // Tạo ProductCode: [CategoryCode]_TT_[Tên viết tắt sản phẩm]
                 string categoryCode = category.CategoryCode ?? "DEFAULT";
-                int productCount = await _productRepository.CountAsync(p => p.CategoryId == productInputRequest.CategoryId.Value);
-                string productCode = $"{categoryCode}{productCount + 1:D3}";
+                string productShortCode = GenerateProductCode(productInputRequest.ProductName);
+                string productCode = $"{categoryCode}_{productShortCode}";
                 Console.WriteLine($"Generated ProductCode: {productCode}");
 
                 var newProduct = _mapper.Map<Product>(productInputRequest);
-                newProduct.ProductCode = productCode; // Gán ProductCode đã sinh
-                Console.WriteLine($"newProduct.ProductCode after assignment: {newProduct.ProductCode}");
+                newProduct.ProductCode = productCode;
                 newProduct.CreatedDate = DateTime.Now;
                 newProduct.Status = true;
 
+                // Upload ảnh nếu có
                 if (productInputRequest.Images != null && productInputRequest.Images.Any())
                 {
                     foreach (var image in productInputRequest.Images)
@@ -181,10 +192,9 @@ namespace PharmaDistiPro.Services.Impl
                 }
 
                 await _productRepository.InsertAsync(newProduct);
-                Console.WriteLine($"newProduct.ProductCode before SaveAsync: {newProduct.ProductCode}");
                 await _productRepository.SaveAsync();
-                Console.WriteLine($"newProduct.ProductCode after SaveAsync: {newProduct.ProductCode}");
 
+                // Gán ProductId cho hình ảnh sau khi sản phẩm được lưu
                 if (newProduct.ImageProducts.Any())
                 {
                     foreach (var imageProduct in newProduct.ImageProducts)
@@ -197,7 +207,6 @@ namespace PharmaDistiPro.Services.Impl
                 response.Message = "Tạo mới sản phẩm thành công";
                 response.Success = true;
                 response.Data = _mapper.Map<ProductDTO>(newProduct);
-                Console.WriteLine($"response.Data.ProductCode: {response.Data.ProductCode}");
                 return response;
             }
             catch (Exception ex)
@@ -206,6 +215,16 @@ namespace PharmaDistiPro.Services.Impl
                 response.Message = $"Lỗi: {ex.Message}";
                 return response;
             }
+        }
+
+        // Hàm tạo mã viết tắt từ tên sản phẩm (VD: "Vương Niệu Đan" -> "VND")
+        private string GenerateProductCode(string productName)
+        {
+            if (string.IsNullOrWhiteSpace(productName))
+                return "UNKNOWN";
+
+            var words = productName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            return string.Join("", words.Select(w => w.Substring(0, 1).ToUpper()));
         }
 
         // Get product by Id

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.Products;
 using PharmaDistiPro.Models;
+using PharmaDistiPro.Services;
 using PharmaDistiPro.Services.Impl;
 using PharmaDistiPro.Services.Interface;
 
@@ -35,6 +36,39 @@ namespace PharmaDistiPro.Controllers
             }
             return Ok(response);
         }
+
+
+
+
+        [HttpGet("ListProduct")]
+        public async Task<ActionResult<Response<IEnumerable<ProductDTO>>>> GetProductList()
+        {
+            try
+            {
+                // Gọi service để lấy danh sách sản phẩm
+                var response = await _productService.GetProductList();
+
+                // Kiểm tra kết quả từ service
+                if (!response.Success)
+                {
+                    return NotFound(new { success = response.Success, message = response.Message });
+                }
+
+                return Ok(response); // Trả về Ok với dữ liệu từ service
+            }
+            catch (Exception ex)
+            {
+                var response = new Response<IEnumerable<ProductDTO>>
+                {
+                    Success = false,
+                    Message = $"Lỗi không mong đợi: {ex.Message}",
+                    StatusCode = 500,
+                    Errors = new List<string> { ex.Message }
+                };
+                return Ok(response);
+            }
+        }
+
 
         // GET: api/product/{productId}
         // Lấy thông tin sản phẩm theo ID
