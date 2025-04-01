@@ -28,6 +28,7 @@ namespace PharmaDistiPro.Services.Impl
                 {
                     response.Message = "Số lượng không hợp lệ";
                     response.Success = false;
+                    return response;
                 }
                 if(itemExist == null)
                 {

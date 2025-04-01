@@ -104,7 +104,6 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
-
         // check out  sau khi add to cart
         public async Task<Response<OrderDto>> CheckOut(OrderRequestDto orderRequestDto)
         {
@@ -333,6 +332,7 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<IEnumerable<OrdersDetailDto>>();
             try
             {
+                
                 IEnumerable<OrdersDetail> ordersDetails = await _ordersDetailRepository.GetByConditionAsync(x =>
                 x.Order.Status == (int)Common.Enums.OrderStatus.HOAN_THANH &&
                     (!dateFrom.HasValue || x.Order.CreatedDate >= dateFrom.Value) &&
@@ -357,7 +357,7 @@ namespace PharmaDistiPro.Services.Impl
                     groupedOrders = groupedOrders.Take(topProduct.Value).ToList(); // Đảm bảo kiểu dữ liệu nhất quán
                 }
 
-                var resultOrders = groupedOrders
+                 var resultOrders = groupedOrders
                     .Select(g => new OrdersDetailDto
                     {
                         ProductId = g.ProductId,
