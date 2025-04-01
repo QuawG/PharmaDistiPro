@@ -1,12 +1,31 @@
-// import React from "react";
+import React from "react";
 import { Form, Input, Button, Select, message } from "antd";
+import axios from "axios";
 
 const { Option } = Select;
 
 export default function AddSupplier() {
-  const onFinish = (values: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onFinish = async (values: any) => {
     console.log("Success:", values);
-    message.success("Nhà cung cấp đã được tạo mới!");
+    
+    try {
+      // Gọi API để tạo nhà cung cấp
+      const response = await axios.post('http://pharmadistiprobe.fun/api/Supplier/CreateSupplier', values);
+
+      if (response.data.success) {
+        message.success("Nhà cung cấp đã được tạo mới!");
+        // Reset form hoặc làm gì đó sau khi thành công
+      } else {
+        message.error(response.data.message || "Có lỗi xảy ra!");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        message.error(error.response?.data.message || "Có lỗi xảy ra!");
+      } else {
+        message.error("Lỗi không xác định!");
+      }
+    }
   };
 
   return (
@@ -19,25 +38,24 @@ export default function AddSupplier() {
       <div className="p-5 bg-white rounded-lg shadow w-full max-w-7xl mx-auto">
         <Form layout="vertical" onFinish={onFinish}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Form.Item
+              label="Mã nhà cung cấp"
+              name="supplierCode"
+              rules={[{ required: true, message: "Vui lòng nhập mã nhà cung cấp!" }]}
+            >
+            <Input placeholder="Nhập tên nhà cung cấp" />
+            </Form.Item>
             <Form.Item
               label="Tên nhà cung cấp"
-              name="name"
+              name="supplierName"
               rules={[{ required: true, message: "Vui lòng nhập tên nhà cung cấp!" }]}
             >
               <Input placeholder="Nhập tên nhà cung cấp" />
             </Form.Item>
 
             <Form.Item
-              label="Email"
-              name="email"
-              rules={[{ required: true, message: "Vui lòng nhập email!" }]}
-            >
-              <Input type="email" placeholder="Nhập email" />
-            </Form.Item>
-
-            <Form.Item
               label="Số điện thoại"
-              name="phone"
+              name="supplierPhone"
               rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
             >
               <Input type="tel" placeholder="Nhập số điện thoại" />
@@ -45,7 +63,7 @@ export default function AddSupplier() {
 
             <Form.Item
               label="Địa chỉ"
-              name="address"
+              name="supplierAddress"
               rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
             >
               <Input placeholder="Nhập địa chỉ" />
@@ -59,8 +77,8 @@ export default function AddSupplier() {
               rules={[{ required: true, message: "Vui lòng chọn trạng thái!" }]}
             >
               <Select placeholder="Tùy chỉnh trạng thái">
-                <Option value="active">Hoạt động</Option>
-                <Option value="inactive">Không hoạt động</Option>
+              <Option value={true}>Hoạt động</Option>
+              <Option value={false}>Không hoạt động</Option>
               </Select>
             </Form.Item>
           </div>

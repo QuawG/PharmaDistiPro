@@ -1,37 +1,37 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
-import { Table, Button, Modal, Dropdown, Menu, Select } from 'antd';
-import { MoreOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Table, Modal, Select, message, Dropdown, Menu, Button } from 'antd';
+import { MoreOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import UserDetailsModal from './UserDetail';
 import UpdateUserDetailsModal from './UpdateUserDetail';
+import axios from 'axios';
 
 interface User {
-  id: number;
+  userId: number;
   avatar: string;
+  userName: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   address: string;
-  role: string;
+  age:number;
+  roleId: number;
   employeeCode: string;
   createdBy: string;
   createdDate: string;
-  status: string;
+  status: boolean;
 }
 
 interface UserTableProps {
-  USERS_DATA: User[];
+  users: User[];
 }
 
-const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
-  const [users, setUsers] = useState<User[]>(USERS_DATA);
+const UserTable: React.FC<UserTableProps> = ({ users }) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
-  const handleSave = (updatedUser: User) => {
-    console.log('User updated:', updatedUser);
-  };
 
   const openEditModal = (user: User) => {
     setSelectedUser(user);
@@ -43,7 +43,6 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
     setIsViewModalOpen(true);
   };
 
-  // Handle delete user action
   const handleDelete = (user: User) => {
     Modal.confirm({
       title: 'Bạn có chắc chắn muốn xóa người dùng này?',
@@ -51,27 +50,32 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
       okText: 'Xóa',
       okType: 'danger',
       cancelText: 'Hủy',
-      onOk: () => {
-        const updatedUsers = users.filter((item) => item.id !== user.id);
-        setUsers(updatedUsers);
-        console.log('Updated Users after delete:', updatedUsers);
+      onOk: async () => {
+        try {
+          await axios.delete(`http://pharmadistiprobe.fun/api/User/DeleteUser/${user.userId}`); // Adjust API endpoint
+          message.success('Xóa người dùng thành công!');
+          // Refresh the user list or handle state update
+        } catch (error) {
+          message.error('Lỗi khi xóa người dùng!');
+        }
       },
     });
   };
 
-  // Handle status change with confirmation
-  const handleStatusChange = (value: string, record: User) => {
+  const handleStatusChange = async (value: string, record: User) => {
     Modal.confirm({
       title: 'Bạn có chắc chắn muốn đổi trạng thái?',
       content: 'Hành động này sẽ thay đổi trạng thái của người dùng.',
       okText: 'Đổi trạng thái',
       cancelText: 'Hủy',
-      onOk: () => {
-        const updatedUsers = users.map((user) =>
-          user.id === record.id ? { ...user, status: value } : user
-        );
-        setUsers(updatedUsers);
-        console.log('Updated Users after status change:', updatedUsers);
+      onOk: async () => {
+        try {
+          await axios.put(`http://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}`, { status: value }); // Adjust API endpoint
+          message.success('Cập nhật trạng thái thành công!');
+          // Optionally refresh the user list
+        } catch (error) {
+          message.error('Lỗi khi cập nhật trạng thái!');
+        }
       },
     });
   };
@@ -82,24 +86,22 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
       dataIndex: 'avatar',
       render: (avatar: string) => <img src={avatar} alt="Avatar" className="w-28 h-20" />,
     },
-    { title: 'Tên người dùng', dataIndex: 'firstName' },
+    { title: 'Tên người dùng', dataIndex: 'userName' },
     { title: 'Email', dataIndex: 'email' },
     { title: 'Số điện thoại', dataIndex: 'phone' },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      render: (status: string, record: User) => (
-        <Select
-          value={status}
-          onChange={(value) => handleStatusChange(value, record)}
-          className="border rounded p-1"
-        >
-          <Select.Option value="active">Hoạt động</Select.Option>
-          <Select.Option value="inactive">Không hoạt động</Select.Option>
-          <Select.Option value="pending">Đang chờ</Select.Option>
-        </Select>
-      ),
-    },
+       {
+           title: 'Trạng thái',
+           dataIndex: 'status',
+           render: (status: boolean, record: User) => (
+             <Select
+               defaultValue={status ? 'Hoạt động' : 'Không hoạt động'}
+               onChange={(value) => handleStatusChange(value, record)}
+             >
+               <Select.Option value="Hoạt động">Hoạt động</Select.Option>
+               <Select.Option value="Không hoạt động">Không hoạt động</Select.Option>
+             </Select>
+           ),
+         },
     {
       title: 'Tính năng',
       key: 'actions',
@@ -107,13 +109,16 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => openViewModal(record)}>
-                Xem
-              </Menu.Item>
+              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => {
+                            setSelectedUser(record);
+                            setIsViewModalOpen(true);
+                          }}>
+                            Xem
+                          </Menu.Item>
               <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
                 Chỉnh sửa
               </Menu.Item>
-              <Menu.Item key="delete" icon={<DeleteOutlined />} danger onClick={() => handleDelete(record)}>
+              <Menu.Item key="delete" onClick={() => handleDelete(record)}>
                 Xóa
               </Menu.Item>
             </Menu>
@@ -127,27 +132,12 @@ const UserTable: React.FC<UserTableProps> = ({ USERS_DATA }) => {
   ];
 
   return (
-    <div className="bg-white">
-      <Table
-        columns={columns}
-        dataSource={users}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-        className="overflow-x-auto"
-      />
-
-      <UserDetailsModal
-        isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
-        user={selectedUser}
-      />
-      <UpdateUserDetailsModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        user={selectedUser}
-        onSave={handleSave}
-      />
-    </div>
+    <Table
+      columns={columns}
+      dataSource={users}
+      rowKey="id"
+      pagination={{ pageSize: 10 }}
+    />
   );
 };
 

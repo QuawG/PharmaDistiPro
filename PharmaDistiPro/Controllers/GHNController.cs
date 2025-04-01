@@ -62,13 +62,13 @@ namespace PharmaDistiPro.Controllers
         }
 
         [HttpPost("calculate-fee/{orderId}")]
-        public async Task<IActionResult> CalculateOrderFee(int orderId)
+        public async Task<IActionResult> CalculateOrderFee(CreateOrderRequest orderRequest)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { Message = "Invalid model state", Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
             }
-            var result = await _ghnService.CalculateShippingFee(orderId);
+            var result = await _ghnService.CalculateShippingFee(orderRequest);
 
             return StatusCode(result.StatusCode, result);
         }

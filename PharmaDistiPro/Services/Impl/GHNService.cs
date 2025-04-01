@@ -242,78 +242,78 @@ namespace PharmaDistiPro.Services.Impl
         #endregion
 
         #region Calculate Fee
-        public async Task<Response<FeeDataResponse>> CalculateShippingFee(int? orderId)
+        public async Task<Response<FeeDataResponse>> CalculateShippingFee(CreateOrderRequest requestOrder)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiUrl}/v2/shipping-order/fee");
             AddHeaders(request);
 
-            Order orderCustomer = new Order()
-            {
-                OrdersDetails = new List<OrdersDetail>()
-        {
-            new OrdersDetail()
-            {
-                Product = new Product()
-                {
-                    ProductName = "Heavy Product 1",
-                    ProductCode = "HP001",
-                    SellingPrice = 5000,
-                    Weight = 5000
-                },
-                Quantity = 1
-            },
-            new OrdersDetail()
-            {
-                Product = new Product()
-                {
-                    ProductName = "Heavy Product 2",
-                    ProductCode = "HP002",
-                    SellingPrice = 8000,
-                    Weight = 8000
-                },
-                Quantity = 2
-            }
-        }
-            };
+        //    Order orderCustomer = new Order()
+        //    {
+        //        OrdersDetails = new List<OrdersDetail>()
+        //{
+        //    new OrdersDetail()
+        //    {
+        //        Product = new Product()
+        //        {
+        //            ProductName = "Heavy Product 1",
+        //            ProductCode = "HP001",
+        //            SellingPrice = 5000,
+        //            Weight = 5000
+        //        },
+        //        Quantity = 1
+        //    },
+        //    new OrdersDetail()
+        //    {
+        //        Product = new Product()
+        //        {
+        //            ProductName = "Heavy Product 2",
+        //            ProductCode = "HP002",
+        //            SellingPrice = 8000,
+        //            Weight = 8000
+        //        },
+        //        Quantity = 2
+        //    }
+        //}
+        //    };
 
-            var feeRequest = new CreateOrderRequest()
-            {
-                ServiceTypeId = 5,  
-                FromDistrictId = int.Parse(_returnDistrictId),
-                FromWardCode = _returnWardCode,
-                ToDistrictId = 1482,
-                ToWardCode = "11010",
-                InsuranceValue = 10000,
-                CODFailedAmount = 2000,
-                Coupon = null
-            };
+        //    var feeRequest = new CreateOrderRequest()
+        //    {
+        //        ServiceTypeId = 5,  
+        //        FromDistrictId = int.Parse(_returnDistrictId),
+        //        FromWardCode = _returnWardCode,
+        //        ToDistrictId = 1482,
+        //        ToWardCode = "11010",
+        //        InsuranceValue = 10000,
+        //        CODFailedAmount = 2000,
+        //        Coupon = null
+        //    };
 
-            // Tạo danh sách items
-            List<OrderItem> listItem = new List<OrderItem>();
-            foreach (var orderDetail in orderCustomer.OrdersDetails)
-            {
-                OrderItem item = new OrderItem()
-                {
-                    Name = orderDetail.Product.ProductName,
-                    Code = orderDetail.Product.ProductCode,
-                    Quantity = (int)orderDetail.Quantity,
-                    Price = (int)orderDetail.Product.SellingPrice,
-                    Height = 50,
-                    Length = 20,
-                    Width = 20,
-                    Weight = (int)orderDetail.Product.Weight
-                };
-                listItem.Add(item);
-            }
+        //    // Tạo danh sách items
+        //    List<OrderItem> listItem = new List<OrderItem>();
+        //    foreach (var orderDetail in orderCustomer.OrdersDetails)
+        //    {
+        //        OrderItem item = new OrderItem()
+        //        {
+        //            Name = orderDetail.Product.ProductName,
+        //            Code = orderDetail.Product.ProductCode,
+        //            Quantity = (int)orderDetail.Quantity,
+        //            Price = (int)orderDetail.Product.SellingPrice,
+        //            Height = 50,
+        //            Length = 20,
+        //            Width = 20,
+        //            Weight = (int)orderDetail.Product.Weight
+        //        };
+        //        listItem.Add(item);
+        //    }
 
-            // Cập nhật thông số dựa theo JSON request cho hàng nặng
-            feeRequest.Weight = Math.Max(200, listItem.Sum(i => i.Weight * i.Quantity)); // Đảm bảo không nhỏ hơn 200g
-            feeRequest.Length = 20;
-            feeRequest.Width = 20;
-            feeRequest.Height = 50;
-            feeRequest.Items = listItem;
+        //    // Cập nhật thông số dựa theo JSON request cho hàng nặng
+        //    feeRequest.Weight = Math.Max(200, listItem.Sum(i => i.Weight * i.Quantity)); // Đảm bảo không nhỏ hơn 200g
+        //    feeRequest.Length = 20;
+        //    feeRequest.Width = 20;
+        //    feeRequest.Height = 50;
+        //    feeRequest.Items = listItem;
 
-            request.Content = new StringContent(JsonConvert.SerializeObject(feeRequest), Encoding.UTF8, "application/json");
+            request.Content = new StringContent(JsonConvert.SerializeObject(requestOrder), Encoding.UTF8, "application/json");
 
             var response = await _httpClient.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();

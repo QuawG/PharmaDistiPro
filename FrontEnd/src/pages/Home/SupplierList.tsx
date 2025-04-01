@@ -1,76 +1,117 @@
-import React, { useState } from 'react';
-import { FileText, Table, Printer } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { FileText, Table, Printer } from 'lucide-react'; // Giữ nguyên các biểu tượng cũ
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as XLSX from 'xlsx';
-import SupplierTable from '../../components/Supplier/SupplierTable'; 
-
+import SupplierTable from '../../components/Supplier/SupplierTable';
+import axios from 'axios';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import ExcelJS from 'exceljs';
 interface Supplier {
-  supplierId: number;
-  name: string;
-  address: string;
-  phone: string;
+  id: number;
+  supplierCode: string;
+  supplierName: string;
+  supplierAddress: string;
+  supplierPhone: string;
   createdBy: string;
-  createdDate: string; 
-  status: string; // New field for status
+  createdDate: string;
+  status: boolean;
 }
 
-const SUPPLIERS_DATA: Supplier[] = [
-  {
-    supplierId: 1,
-    name: "Supplier A",
-    address: "123 Supplier St",
-    phone: "123-456-7890",
-    createdBy: "Admin",
-    createdDate: "2023-01-01T00:00:00Z",
-    status: "Active" // New status field
-  },
-  {
-    supplierId: 2,
-    name: "Supplier B",
-    address: "456 Supplier Ave",
-    phone: "234-567-8901",
-    createdBy: "Admin",
-    createdDate: "2023-01-02T00:00:00Z",
-    status: "Inactive" // New status field
-  },
-];
-
 const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>(''); // State for selected status
-  const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>(SUPPLIERS_DATA);
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const response = await axios.get('http://pharmadistiprobe.fun/api/Supplier/GetSupplierList');
+        setSuppliers(response.data.data);
+      } catch (error) {
+        console.error("Error fetching suppliers:", error);
+      }
+    };
+
+    fetchSuppliers();
+  }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    filterSuppliers(value, selectedStatus);
-  };
-
-  const filterSuppliers = (searchTerm: string, status: string) => {
-    const filtered = SUPPLIERS_DATA.filter(supplier => {
-      const matchesName = supplier.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = !status || supplier.status === status; 
-      return matchesName && matchesStatus;
-    });
-    setFilteredSuppliers(filtered);
+    setSearchTerm(e.target.value);
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const status = e.target.value;
-    setSelectedStatus(status);
-    filterSuppliers(searchTerm, status);
+    setSelectedStatus(e.target.value);
   };
 
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredSuppliers);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Suppliers");
-    XLSX.writeFile(workbook, "Suppliers_List.xlsx");
+
+  const filteredSuppliers = suppliers.filter(supplier => {
+    const matchesSearch =
+      supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.supplierCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.supplierPhone.includes(searchTerm);
+    const matchesStatus = !selectedStatus || (selectedStatus === 'Active' ? supplier.status : !supplier.status);
+    return matchesSearch && matchesStatus;
+  });
+
+
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Suppliers');
+    
+    // Đặt tiêu đề cột
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Mã nhà cung cấp', key: 'supplierCode', width: 20 },
+      { header: 'Tên nhà cung cấp', key: 'supplierName', width: 30 },
+      { header: 'Địa chỉ', key: 'supplierAddress', width: 30 },
+      { header: 'Số điện thoại', key: 'supplierPhone', width: 15 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+    ];
+  
+    // Thêm dữ liệu
+    filteredSuppliers.forEach(supplier => {
+      worksheet.addRow({
+        id: supplier.id,
+        supplierCode: supplier.supplierCode,
+        supplierName: supplier.supplierName,
+        supplierAddress: supplier.supplierAddress,
+        supplierPhone: supplier.supplierPhone,
+        status: supplier.status ? 'Hoạt động' : 'Không hoạt động',
+      });
+    });
+  
+    // Định dạng tiêu đề
+    worksheet.getRow(1).font = { bold: true, size: 12 };
+    worksheet.getRow(1).alignment = { horizontal: 'center' };
+  
+    // Định dạng ô
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
+      row.eachCell({ includeEmpty: true }, (cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      });
+    });
+  
+    // Xuất file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Danh_Sách_Nhà_Cung_Cấp.xlsx';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
-      {/* Header */}
       <div className="flex justify-between items-center mb-[25px]">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Danh sách nhà cung cấp</h1>
@@ -83,28 +124,20 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
         </button>
       </div>
 
-      {/* Search and Actions */}
       <div className='bg-white rounded-lg shadow p-5'>
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <div className="bg-[#FF9F43] p-2 rounded-lg">
               <FunnelIcon className="w-5 h-5 text-white" />
             </div>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Tìm kiếm..."
-                className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
-                value={searchTerm}
-                onChange={handleSearch}
-              />
-              <span className="absolute left-2 top-1/2 -translate-y-1/2">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </span>
-            </div>
-            {/* Dropdown for status */}
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+            <p>Lọc theo trạng thái</p>
             <select
               value={selectedStatus}
               onChange={handleStatusChange}
@@ -129,7 +162,7 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
         </div>
 
         {/* Table */}
-        <SupplierTable SUPPLIERS_DATA={filteredSuppliers} />
+        <SupplierTable suppliers={filteredSuppliers} />
       </div>
     </div>
   );

@@ -4,6 +4,13 @@ import { XOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
+const userRoles: { [key: number]: string } = {
+  1: 'Giám đốc',
+  2: 'Quản lí kho',
+  3: 'Trưởng phòng kinh doanh',
+  4: 'Nhân viên bán hàng',
+};
+
 export default function SupplierDetail({
   isOpen,
   onClose,
@@ -11,6 +18,7 @@ export default function SupplierDetail({
 }: {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supplier: any;
 }) {
   const [mounted, setMounted] = useState(false);
@@ -44,9 +52,17 @@ export default function SupplierDetail({
           <div className="w-full">
             <div className="border-[1px] border-gray-300 rounded-lg p-4 w-full">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Tên</label>
+                <label className="block text-sm font-medium text-gray-700">Mã nhà cung cấp</label>
                 <Input
-                  value={supplier?.name || "N/A"}
+                  value={supplier?.supplierCode || "N/A"}
+                  readOnly
+                  className="mt-1"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Tên nhà cung cấp</label>
+                <Input
+                  value={supplier?.supplierName || "N/A"}
                   readOnly
                   className="mt-1"
                 />
@@ -54,7 +70,7 @@ export default function SupplierDetail({
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
                 <Input
-                  value={supplier?.address || "N/A"}
+                  value={supplier?.supplierAddress || "N/A"}
                   readOnly
                   className="mt-1"
                 />
@@ -62,7 +78,7 @@ export default function SupplierDetail({
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
                 <Input
-                  value={supplier?.phone || "N/A"}
+                  value={supplier?.supplierPhone || "N/A"}
                   readOnly
                   className="mt-1"
                 />
@@ -70,7 +86,7 @@ export default function SupplierDetail({
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
                 <Input
-                  value={supplier?.status || "N/A"}
+                  value={supplier?.status ? 'Hoạt động' : 'Không hoạt động'}
                   readOnly
                   className="mt-1"
                 />
@@ -78,7 +94,7 @@ export default function SupplierDetail({
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Tạo bởi</label>
                 <Input
-                  value={supplier?.createdBy || "N/A"}
+                  value={userRoles[supplier?.createdBy] || "N/A"} 
                   readOnly
                   className="mt-1"
                 />
