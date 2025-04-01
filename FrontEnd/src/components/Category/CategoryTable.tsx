@@ -8,7 +8,6 @@ interface Category {
   id: number;
   name: string;
   code: string;
-  description: string;
   createdBy: string;
   image?: string;
 }
@@ -53,7 +52,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
   };
 
   const printTable = () => {
-    const selectedCategories = selectedRowKeys.length > 0 
+    const selectedCategories = selectedRowKeys.length > 0
       ? categories.filter(category => selectedRowKeys.includes(category.id))
       : categories;
 
@@ -67,18 +66,18 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
       <table border="1" style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr>
-            <th>Tên danh mục</th>
-            <th>Mã danh mục</th>
-            <th>Mô tả</th>
+          <th>Mã chủng loại</th>
+            <th>Tên chủng loại</th>
+            
             <th>Người tạo</th>
           </tr>
         </thead>
         <tbody>
           ${selectedCategories.map(category => `
             <tr>
+                         <td>${category.code}</td>
               <td>${category.name}</td>
-              <td>${category.code}</td>
-              <td>${category.description}</td>
+
               <td>${category.createdBy}</td>
             </tr>
           `).join('')}
@@ -103,13 +102,13 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
 
   const filterCategories = () => {
     let filteredCategories = [...CATEGORY_DATA];
-  
+
     if (searchTerm.trim()) {
-      filteredCategories = filteredCategories.filter(category => 
+      filteredCategories = filteredCategories.filter(category =>
         removeVietnameseTones(category.name).includes(removeVietnameseTones(searchTerm))
       );
     }
-  
+
     setCategories(filteredCategories);
   };
 
@@ -119,12 +118,12 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
 
   const columns = [
     {
-      title: 'Mã',
+      title: 'Mã chủng loại',
       dataIndex: 'code',
       key: 'code',
     },
     {
-      title: 'Tên loại sản phẩm',
+      title: 'Chủng loại',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: Category) => (
@@ -138,12 +137,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
         </div>
       ),
     },
-    
-    {
-      title: 'Mô tả',
-      dataIndex: 'description',
-      key: 'description',
-    },
+
     {
       title: 'Người tạo',
       dataIndex: 'createdBy',
@@ -178,26 +172,26 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <div className="flex gap-4 mb-4">
-        <Input 
-          placeholder="Tìm kiếm theo tên danh mục" 
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)} 
-          style={{ width: 200 }} 
+        <Input
+          placeholder="Tìm kiếm theo tên chủng loại"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: 200 }}
         />
         <Button type="primary" onClick={() => handleChangePage("Tạo chủng loại")}>
-                  + Tạo chủng loại mới
-                </Button>
-        <Button 
-          type="primary" 
-          icon={<FileExcelOutlined />} 
-          onClick={exportToExcel} 
+          + Tạo chủng loại mới
+        </Button>
+        <Button
+          type="primary"
+          icon={<FileExcelOutlined />}
+          onClick={exportToExcel}
           style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}
         >
           Xuất Excel
         </Button>
-        <Button 
-          type="primary" 
-          icon={<PrinterOutlined />} 
+        <Button
+          type="primary"
+          icon={<PrinterOutlined />}
           onClick={printTable}
         >
           In danh sách

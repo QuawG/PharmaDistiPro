@@ -46,18 +46,13 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
                         <Input placeholder="Nhập mã " />
                     </Form.Item>
                     <Form.Item
-                        label="Tên loại sản phẩm"
+                        label="Chủng loại"
                         name="categoryName"
-                        rules={[{ required: true, message: "Vui lòng nhập tên loại sản phẩm!" }]}
+                        rules={[{ required: true, message: "Vui lòng nhập chủng loại!" }]}
                     >
-                        <Input placeholder="Nhập loại sản phẩm" />
+                        <Input placeholder="Nhập tên chủng loại" />
                     </Form.Item>
 
-                    
-
-                    <Form.Item label="Mô tả" name="description">
-                        <Input.TextArea rows={4} placeholder="Nhập mô tả về loại sản phẩm" />
-                    </Form.Item>
 
                     <Form.Item label="Ảnh">
                         <Upload

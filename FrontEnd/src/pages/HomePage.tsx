@@ -26,7 +26,7 @@ import NewOrder from "../components/Order/NewOrder";
 import IssueNoteListPage from "./Home/IssueNoteList";
 import UpdateProduct from "../components/Product/UpdateProduct";
 import { useState } from "react";
-
+import OrderListForSalesManager from "./Home/OrderListForSalesManager";
 const HomePage = () => {
   const [activePage, setActivePage] = useState<string>("Danh sách sản phẩm");
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
@@ -75,6 +75,7 @@ const HomePage = () => {
         {activePage === 'Tạo kho mới' && <StorageRoomAdd/>}
         {activePage === 'Danh sách đơn hàng' && <OrderListPage handleChangePage={handleChangePage} />}
         {activePage === 'Tạo đơn hàng' && <NewOrder />}
+        {activePage === 'Đơn hàng (Sales Manager)' && <OrderListForSalesManager handleChangePage={handleChangePage} />}
         {activePage === 'Danh sách phiếu xuất kho' && <IssueNoteListPage handleChangePage={handleChangePage} />}
         
       </div>

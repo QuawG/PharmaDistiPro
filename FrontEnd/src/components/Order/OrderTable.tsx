@@ -1,8 +1,18 @@
-import React, { useState } from "react";
-import { Table, Dropdown, Button, Modal, Input, Form, Select } from "antd";
-import { MoreOutlined, EditOutlined, DeleteOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Table, Select, Button, Modal, Input, Form, Collapse, DatePicker, Dropdown, Menu } from "antd";
+const { Panel } = Collapse;
+import { MoreOutlined, EditOutlined, DeleteOutlined, FilterOutlined, UnorderedListOutlined, PrinterOutlined, FileExcelOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import * as XLSX from "xlsx";
+import { Dayjs } from "dayjs";
 
 const { Option } = Select;
+const { RangePicker } = DatePicker;
+
+declare global {
+  interface Window {
+    XLSX: typeof XLSX;
+  }
+}
 
 interface Order {
   orderId: number;
@@ -36,12 +46,69 @@ interface OrderTableProps {
   onDelete: (orderId: number) => void;
 }
 
-const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate, onDelete }) => {
+type RangeValue = [Dayjs | null, Dayjs | null] | null;
+
+const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate, onDelete, handleChangePage }) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [minTotal, setMinTotal] = useState<number | string>("");
+  const [maxTotal, setMaxTotal] = useState<number | string>("");
+  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders || []);
+  const orderStatuses = ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"];
 
-  const orderStatuses = ["Hủy", "Chờ xác nhận", "Đã xác nhận", "Chờ lấy hàng", "Vận chuyển", "Hoàn thành"];
+  useEffect(() => {
+    setFilteredOrders(orders || []);
+  }, [orders]);
+
+  const removeVietnameseTones = (str: string) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toLowerCase();
+  };
+
+  const filterOrders = () => {
+    let filtered = [...(orders || [])];
+
+    if (searchTerm.trim()) {
+      const normalizedSearch = removeVietnameseTones(searchTerm.toLowerCase());
+      filtered = filtered.filter((order) =>
+        removeVietnameseTones(order.orderCode.toLowerCase()).includes(normalizedSearch)
+      );
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((order) => order.status === statusFilter);
+    }
+
+    if (minTotal !== "" && !isNaN(Number(minTotal))) {
+      filtered = filtered.filter((order) => order.totalAmount >= Number(minTotal));
+    }
+
+    if (maxTotal !== "" && !isNaN(Number(maxTotal))) {
+      filtered = filtered.filter((order) => order.totalAmount <= Number(maxTotal));
+    }
+
+    if (dateRange) {
+      filtered = filtered.filter((order) => {
+        const createdDate = new Date(order.createdDate);
+        return createdDate >= new Date(dateRange[0]) && createdDate <= new Date(dateRange[1]);
+      });
+    }
+
+    setFilteredOrders(filtered);
+  };
+
+  useEffect(() => {
+    filterOrders();
+  }, [searchTerm, statusFilter, minTotal, maxTotal, dateRange, orders]);
 
   const openEditModal = (order: Order) => {
     setSelectedOrder(order);
@@ -64,14 +131,15 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
     });
   };
 
-  const handleDelete = (orderId: number) => {
+  const showDeleteConfirm = (order: Order) => {
     Modal.confirm({
       title: "Xác nhận xóa",
-      content: "Bạn có chắc chắn muốn xóa đơn hàng này?",
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc chắn muốn xóa đơn hàng "${order.orderCode}" không?`,
       okText: "Xóa",
       okType: "danger",
       cancelText: "Hủy",
-      onOk: () => onDelete(orderId),
+      onOk: () => onDelete(order.orderId),
     });
   };
 
@@ -85,9 +153,57 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
     });
   };
 
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredOrders);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+    XLSX.writeFile(workbook, "DanhSachDonHang.xlsx");
+  };
+
+  const printTable = () => {
+    const printContents = `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2>Danh sách đơn hàng</h2>
+      </div>
+      <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Mã đơn hàng</th>
+            <th>Trạng thái</th>
+            <th>Khách hàng</th>
+            <th>Ngày tạo</th>
+            <th>Tổng tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filteredOrders
+        .map((order) => `
+            <tr>
+              <td>${order.orderCode}</td>
+              <td>${order.status}</td>
+              <td>${order.customerId}</td>
+              <td>${new Date(order.createdDate).toLocaleDateString("vi-VN")}</td>
+              <td>${order.totalAmount.toLocaleString()} VND</td>
+            </tr>
+          `)
+        .join("")}
+        </tbody>
+      </table>
+    `;
+
+    const printWindow = window.open("", "", "height=800,width=1000");
+    if (printWindow) {
+      printWindow.document.write("<html><head>");
+      printWindow.document.write("</head><body>");
+      printWindow.document.write(printContents);
+      printWindow.document.write("</body></html>");
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   const columns = [
     { title: "Mã đơn hàng", dataIndex: "orderCode", key: "orderCode" },
-    { title: "Số sản phẩm", dataIndex: "productCount", key: "productCount" },
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -119,12 +235,19 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
       title: <UnorderedListOutlined />,
       key: "actions",
       render: (_: any, record: Order) => (
-        <Dropdown menu={{
-          items: [
-            { key: "edit", label: "Chỉnh sửa", icon: <EditOutlined />, onClick: () => openEditModal(record) },
-            { key: "delete", label: "Xóa", icon: <DeleteOutlined />, danger: true, onClick: () => handleDelete(record.orderId) },
-          ]
-        }} trigger={["click"]}>
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item key="edit" onClick={() => openEditModal(record)}>
+                <EditOutlined /> Chỉnh sửa
+              </Menu.Item>
+              <Menu.Item key="delete" onClick={() => showDeleteConfirm(record)} danger>
+                <DeleteOutlined /> Xóa
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={["click"]}
+        >
           <Button shape="circle" icon={<MoreOutlined />} />
         </Dropdown>
       ),
@@ -132,8 +255,91 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
   ];
 
   return (
-    <>
-      <Table columns={columns} dataSource={orders} rowKey="orderId" />
+    <div className="bg-white p-6 rounded-lg shadow">
+      <div className="flex gap-4 mb-4">
+        <Input placeholder="Tìm kiếm theo mã đơn hàng" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: 200 }} />
+        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>Lọc</Button>
+        <Button type="primary" onClick={() => handleChangePage("Tạo đơn hàng")}>
+          + Tạo đơn hàng mới
+        </Button>
+        <Button
+          type="primary"
+          icon={<FileExcelOutlined />}
+          onClick={exportToExcel}
+          style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}
+        >
+          Xuất Excel
+        </Button>
+        <Button
+          type="primary"
+          icon={<PrinterOutlined />}
+          onClick={printTable}
+          style={{ marginLeft: 8 }}
+        >
+          In danh sách
+        </Button>
+      </div>
+
+      {showFilters && (
+        <Collapse defaultActiveKey={["1"]}>
+          <Panel header="Bộ lọc nâng cao" key="1">
+            <div className="grid grid-cols-3 gap-4">
+              <Select
+                placeholder="Trạng thái"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: "100%" }}
+              >
+                <Option value="">Chọn trạng thái</Option>
+                {orderStatuses.map((status) => (
+                  <Option key={status} value={status}>{status}</Option>
+                ))}
+              </Select>
+              <div className="col-span-3">
+                <span style={{ marginRight: 8, marginBottom: 8 }}>Lọc theo ngày tạo</span>
+                <RangePicker onChange={(_: RangeValue, dateStrings: [string, string]) => setDateRange(dateStrings)} style={{ width: "100%" }} />
+              </div>
+              <div className="col-span-3">
+                <span style={{ marginRight: 8, marginBottom: 8 }}>Lọc theo tổng tiền</span>
+                <Input.Group compact style={{ width: "100%" }}>
+                  <Input
+                    type="number"
+                    placeholder="Từ"
+                    value={minTotal}
+                    onChange={(e) => setMinTotal(e.target.value)}
+                    style={{ width: "50%" }}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="đến"
+                    value={maxTotal}
+                    onChange={(e) => setMaxTotal(e.target.value)}
+                    style={{ width: "50%" }}
+                  />
+                </Input.Group>
+              </div>
+              <div className="col-span-2">
+                <Button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("");
+                    setMinTotal("");
+                    setMaxTotal("");
+                    setDateRange(null);
+                  }}
+                  style={{ width: "100%", marginTop: "10px" }}
+                >
+                  Xóa bộ lọc
+                </Button>
+              </div>
+            </div>
+          </Panel>
+        </Collapse>
+      )}
+
+      <div id="printableArea">
+        <Table columns={columns} dataSource={filteredOrders} rowKey="orderId" />
+      </div>
 
       {selectedOrder && (
         <Modal
@@ -166,13 +372,13 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
               { title: "Giá bán", dataIndex: "price", key: "price", render: (price: number) => `${price.toLocaleString()} VND` },
               { title: "Tổng giá", key: "total", render: (record: OrderDetail) => `${(record.quantity * record.price).toLocaleString()} VND` },
             ]}
-            dataSource={orderDetails?.filter(detail => detail.orderId === selectedOrder.orderId)}
+            dataSource={orderDetails?.filter((detail) => detail.orderId === selectedOrder.orderId)}
             rowKey="orderDetailId"
             pagination={false}
           />
         </Modal>
       )}
-    </>
+    </div>
   );
 };
 

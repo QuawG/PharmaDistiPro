@@ -41,15 +41,22 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
                 <Form form={form} layout="vertical" onFinish={handleSubmit} className="w-full">
                     {/* Danh mục hệ thống */}
                     <Form.Item
-                        label="Danh mục hệ thống"
+                        label="Chủng loại"
                         name="parentCategory"
-                        rules={[{ required: true, message: "Vui lòng chọn danh mục hệ thống!" }]}
+                        rules={[{ required: true, message: "Vui lòng chọn chủng loại!" }]}
                     >
-                        <Select placeholder="Chọn danh mục hệ thống">
-                            <Option value="Category">Danh mục hệ thống</Option>
+                        <Select placeholder="Chọn chủng loại">
+                            <Option value="Category">Chủng loại</Option>
                         </Select>
                     </Form.Item>
-
+                    {/* Mã danh mục */}
+                    <Form.Item
+                        label="Mã danh mục"
+                        name="categoryCode"
+                        rules={[{ required: true, message: "Vui lòng nhập mã danh mục!" }]}
+                    >
+                        <Input placeholder="Nhập mã danh mục" />
+                    </Form.Item>
                     {/* Tên danh mục */}
                     <Form.Item
                         label="Tên danh mục"
@@ -59,19 +66,6 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
                         <Input placeholder="Nhập tên danh mục" />
                     </Form.Item>
 
-                    {/* Mã danh mục */}
-                    <Form.Item
-                        label="Mã danh mục"
-                        name="categoryCode"
-                        rules={[{ required: true, message: "Vui lòng nhập mã danh mục!" }]}
-                    >
-                        <Input placeholder="Nhập mã danh mục" />
-                    </Form.Item>
-
-                    {/* Mô tả */}
-                    <Form.Item label="Mô tả" name="description">
-                        <Input.TextArea rows={4} placeholder="Nhập mô tả danh mục" />
-                    </Form.Item>
 
                     {/* Ảnh danh mục */}
                     <Form.Item label="Ảnh danh mục">

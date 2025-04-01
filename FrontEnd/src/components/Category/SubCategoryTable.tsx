@@ -8,7 +8,6 @@ interface SubCategory {
   name: string;
   parentCategory: string;
   code: string;
-  description: string;
   createdBy: string;
   image?: string;
 }
@@ -38,6 +37,11 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA })
 
   const columns = [
     {
+      title: "Mã danh mục",
+      dataIndex: "code",
+      key: "code",
+    },
+    {
       title: "Danh mục thuốc",
       dataIndex: "name",
       key: "name",
@@ -55,21 +59,13 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA })
         </div>
       ),
     },
+
     {
       title: "Chủng loại",
       dataIndex: "parentCategory",
       key: "parentCategory",
     },
-    {
-      title: "Mã danh mục",
-      dataIndex: "code",
-      key: "code",
-    },
-    {
-      title: "Mô tả",
-      dataIndex: "description",
-      key: "description",
-    },
+
     {
       title: "Người tạo",
       dataIndex: "createdBy",
