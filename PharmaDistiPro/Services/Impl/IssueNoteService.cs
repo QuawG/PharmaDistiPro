@@ -343,7 +343,7 @@ namespace PharmaDistiPro.Services.Impl
                 var issueNoteDetails = await _issueNoteDetailsRepository
                     .GetByConditionAsync(
                         x => true,
-                        includes: new string[] { "ProductLot", "ProductLot.Product" } // Ghi đúng đường dẫn quan hệ
+                        includes: new string[] { "ProductLot", "ProductLot.Product" } 
                     );
                 if (!issueNoteDetails.Any())
                 {
