@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PharmaDistiPro.DTO.NoteCheckDetails;
 
-namespace PharmaDistiPro.Models
+namespace PharmaDistiPro.DTO.NoteChecks
 {
-    public partial class NoteCheck
+    public class NoteCheckDTO
     {
-        public NoteCheck()
-        {
-            NoteCheckDetails = new HashSet<NoteCheckDetail>();
-        }
-
         public int NoteCheckId { get; set; }
         public string? NoteCheckCode { get; set; }
         public int? DifferenceQuatity { get; set; }
@@ -20,7 +14,6 @@ namespace PharmaDistiPro.Models
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
-        public virtual StorageRoom? StorageRoom { get; set; }
-        public virtual ICollection<NoteCheckDetail> NoteCheckDetails { get; set; }
+        public List<NoteCheckDetailsDTO> NoteCheckDetails { get; set; } = new();
     }
 }

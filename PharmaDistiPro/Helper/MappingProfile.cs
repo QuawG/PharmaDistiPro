@@ -127,29 +127,36 @@ namespace PharmaDistiPro.Helper
             #endregion
 
             #region NoteCheck
-            CreateMap<NoteCheck, CheckNoteRequestDTO>().ReverseMap()
-                .ForMember(dest => dest.NoteCheckDetails, opt => opt.Ignore())
-                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore());
 
-            CreateMap<NoteCheck, CheckNoteResponseDTO>()
-                .ForMember(dest => dest.CheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
-                .ReverseMap()
-                .ForMember(dest => dest.NoteCheckDetails, opt => opt.Ignore())
-                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore());
 
-            CreateMap<ApproveCheckNoteRequestDTO, NoteCheck>().ReverseMap();
-            CreateMap<ApproveCheckNoteResponseDTO, NoteCheck>().ReverseMap();
-            #endregion
+            // Ánh xạ từ Model -> DTO
+            CreateMap<NoteCheck, NoteCheckDTO>()
+                .ForMember(dest => dest.NoteCheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
+                .ReverseMap(); // Cho phép ánh xạ ngược từ DTO -> Model
 
-            #region NoteCheckDetail
-            CreateMap<NoteCheckDetail, CheckNoteDetailDTO>().ReverseMap()
-                .ForMember(dest => dest.NoteCheck, opt => opt.Ignore())
-                .ForMember(dest => dest.ProductLot, opt => opt.Ignore());
+            // Ánh xạ từ RequestDTO -> Model
+            CreateMap<NoteCheckRequestDTO, NoteCheck>()
+                .ForMember(dest => dest.NoteCheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
+                .ReverseMap(); // Cho phép ánh xạ ngược từ Model -> RequestDTO
 
-            CreateMap<NoteCheckDetail, CheckNoteDetailResponseDTO>().ReverseMap()
-                .ForMember(dest => dest.NoteCheck, opt => opt.Ignore())
-                .ForMember(dest => dest.ProductLot, opt => opt.Ignore());
-            #endregion
+            // Ánh xạ giữa NoteCheckDetail và DTO
+            CreateMap<NoteCheckDetail, NoteCheckDetailsDTO>()
+                .ForMember(dest => dest.ProductLot, opt => opt.MapFrom(src => src.ProductLot))
+                .ReverseMap();
+
+            // Ánh xạ từ RequestDTO -> Model cho NoteCheckDetail
+            CreateMap<NoteCheckDetailRequestDTO, NoteCheckDetail>()
+                .ReverseMap();
+
+            // Ánh xạ ProductLot -> ProductLotCheckNoteDetailsDTO
+            CreateMap<ProductLot, ProductLotCheckNoteDetailsDTO>()
+                .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product))
+                .ReverseMap();
+
+           
+
+
+#endregion
 
             #region productlot
             CreateMap<ProductLot, ProductLotIssueNoteDetailsDto>().ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))

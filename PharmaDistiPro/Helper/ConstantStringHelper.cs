@@ -13,5 +13,7 @@
         public const string LotCode = "LOT_";
 
         public const string ReceviedCode = "REC_";
+
+        public const string NoteCheckCode = "NTC_";
     }
 }

@@ -47,7 +47,7 @@ namespace PharmaDistiPro.Controllers
 
         // Api create supplier
         [HttpPost("CreateSupplier")]
-        public async Task<IActionResult> CreateSupplier([FromForm]SupplierInputRequest supplier)
+        public async Task<IActionResult> CreateSupplier([FromBody] SupplierInputRequest supplier)
         {
             var response = await _supplierService.CreateNewSupplier(supplier);
 

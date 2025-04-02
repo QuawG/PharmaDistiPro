@@ -139,6 +139,8 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 
+                entity.Property(e => e.NoteCheckCode).HasMaxLength(50);
+
                 entity.HasOne(d => d.StorageRoom)
                     .WithMany(p => p.NoteChecks)
                     .HasForeignKey(d => d.StorageRoomId)

@@ -1,17 +1,12 @@
 ﻿using PharmaDistiPro.Models;
+using PharmaDistiPro.Repositories.Infrastructures;
 
 namespace PharmaDistiPro.Repositories.Interface
 {
-    public interface INoteCheckRepository
+    public interface INoteCheckRepository : IRepository<NoteCheck>
     {
-        Task<int> CreateCheckNote(NoteCheck noteCheck);
-        Task CreateCheckNoteDetails(List<NoteCheckDetail> details);
-        Task<ProductLot> GetProductLotById(int productLotId);
-        Task<bool> StorageRoomExists(int storageRoomId);
-        Task<NoteCheck> GetCheckNoteById(int noteCheckId);
-        Task<List<NoteCheckDetail>> GetCheckNoteDetailsByCheckNoteId(int noteCheckId);
-        Task UpdateProductLot(ProductLot productLot);
-        Task UpdateCheckNote(NoteCheck noteCheck);
-        Task UpdateCheckNoteDetails(List<NoteCheckDetail> details);
+        Task<NoteCheckDetail> GetDetailByIdAsync(int noteCheckDetailId);
+        Task InsertNoteCheckAsync(NoteCheck notecheck);
+        Task UpdateDetailAsync(NoteCheckDetail noteCheckDetail);
     }
 }
