@@ -74,27 +74,28 @@ namespace PharmaDistiPro.Services.Impl
         public async Task<Response<IEnumerable<ProductDTO>>> GetProductList()
         {
             var response = new Response<IEnumerable<ProductDTO>>();
+
             try
             {
-                var products = await _productRepository.GetAllAsync();
+                // Lấy danh sách sản phẩm từ repository
+                var products = await _productRepository.GetAllAsyncProduct() ?? new List<Product>();
 
-               
-      
-
+                // Ánh xạ dữ liệu sang DTO
                 response.Data = _mapper.Map<IEnumerable<ProductDTO>>(products);
                 response.Success = true;
-                response.Message = products.Any() ? "Lấy danh sách sản phẩm thành công" : "Không có dữ liệu";
-              
+                response.Message = products.Any() ? "Lấy danh sách sản phẩm thành công" : "Không có sản phẩm nào.";
 
-                return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Lỗi: {ex.Message}";
-            
-                return response;
+                response.Message = "Đã xảy ra lỗi khi lấy danh sách sản phẩm.";
+
+                // Ghi log lỗi, nếu có ILogger thì dùng _logger.LogError(ex, "Lỗi khi lấy danh sách sản phẩm.");
+                Console.WriteLine($"Lỗi: {ex}");
             }
+
+            return response;
         }
 
         // Deactivate product
@@ -233,7 +234,7 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<ProductDTO>();
             try
             {
-                var product = await _productRepository.GetByIdAsync(productId);
+                var product = await _productRepository.GetByIdAsyncProduct(productId);
                 if (product == null)
                 {
                     response.Success = false;
