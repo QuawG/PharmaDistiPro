@@ -1,29 +1,17 @@
 import React, { useState } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  SortingState,
-  RowSelectionState,
-} from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
-import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import StorageRoomDetailsModal from './StorageRoomDetail'; 
-import UpdateStorageRoomDetailsModal from './UpdateStorageRoomDetail'; 
-import UpdateConfirm from '../Confirm/UpdateConfirm'; 
+import { Table, Button, Modal, Dropdown, Menu, Select } from 'antd';
+import { MoreOutlined, DeleteOutlined, EditOutlined, EyeOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import StorageRoomDetailsModal from './StorageRoomDetail';
+import UpdateStorageRoomDetailsModal from './UpdateStorageRoomDetail';
 
 interface StorageRoom {
   id: number;
-  code: string; // Mã kho
-  name: string; // Tên kho
-  status: string; // Trạng thái
-  temperature: number; // Nhiệt độ
-  humidity: number; // Độ ẩm
-  capacity: number; // Sức chứa
+  code: string;
+  name: string;
+  status: string;
+  temperature: number;
+  humidity: number;
+  capacity: number;
 }
 
 interface StorageRoomTableProps {
@@ -31,267 +19,129 @@ interface StorageRoomTableProps {
 }
 
 const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ STORAGE_ROOMS_DATA }) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [globalFilter, setGlobalFilter] = useState<string>('');
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [storageRooms, setStorageRooms] = useState<StorageRoom[]>(STORAGE_ROOMS_DATA);
+  const [selectedRoom, setSelectedRoom] = useState<StorageRoom | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
-  const [selectedRoom, setSelectedRoom] = useState<StorageRoom | null>(null);
-  const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
-
-  const handleDelete = () => {
-    setIsDeleteModalOpen(false);
-    // Thực hiện xóa kho ở đây
-  };
 
   const handleSave = (updatedRoom: StorageRoom) => {
-    console.log('Room saved:', updatedRoom);
-    // Cập nhật danh sách kho nếu cần
+    const updatedRooms = storageRooms.map(room =>
+      room.id === updatedRoom.id ? updatedRoom : room
+    );
+    setStorageRooms(updatedRooms);
   };
 
-  const handleViewDetail = (room: StorageRoom) => {
+  const openViewModal = (room: StorageRoom) => {
     setSelectedRoom(room);
     setIsViewModalOpen(true);
   };
 
-  const handleEdit = (room: StorageRoom) => {
+  const openEditModal = (room: StorageRoom) => {
     setSelectedRoom(room);
-    setIsEditModalOpen(true); 
+    setIsEditModalOpen(true);
   };
 
-  const handleStatusChange = (index: number, newStatus: string) => {
-    setSelectedRoom(STORAGE_ROOMS_DATA[index]); 
-    setNewStatus(newStatus); 
-    setIsConfirmModalOpen(true); // Mở modal xác nhận
+  const handleDelete = (room: StorageRoom) => {
+    Modal.confirm({
+      title: 'Bạn có chắc chắn muốn xóa kho này?',
+      content: 'Hành động này không thể hoàn tác!',
+      okText: 'Xóa',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      onOk: () => {
+        const updatedRooms = storageRooms.filter((item) => item.id !== room.id);
+        setStorageRooms(updatedRooms);
+      },
+    });
   };
 
-  const confirmStatusChange = () => {
-    // Cập nhật trạng thái kho ở đây
-    const updatedRooms = [...STORAGE_ROOMS_DATA];
-    const index = updatedRooms.findIndex(room => room.id === selectedRoom?.id);
-    if (index !== -1) {
-      updatedRooms[index].status = newStatus;
-      // Cập nhật lại dữ liệu kho nếu cần
-    }
-    setIsConfirmModalOpen(false);
+  const handleStatusChange = (value: string, room: StorageRoom) => {
+    Modal.confirm({
+      title: 'Bạn có chắc chắn muốn đổi trạng thái?',
+      content: 'Hành động này sẽ thay đổi trạng thái của kho.',
+      okText: 'Đổi trạng thái',
+      cancelText: 'Hủy',
+      onOk: () => {
+        const updatedRooms = storageRooms.map((item) =>
+          item.id === room.id ? { ...item, status: value } : item
+        );
+        setStorageRooms(updatedRooms);
+      },
+    });
   };
 
-  const columns: ColumnDef<StorageRoom>[] = [
+  const columns = [
+    { title: 'Mã Kho', dataIndex: 'code', key: 'code' },
+    { title: 'Tên Kho', dataIndex: 'name', key: 'name' },
     {
-      id: 'select',
-      header: ({ table }) => (
-        <input
-          type="checkbox"
-          className="w-4 h-4 rounded border-gray-300 custom-checkbox"
-          checked={table.getIsAllRowsSelected()}
-          onChange={table.getToggleAllRowsSelectedHandler()}
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          className="w-4 h-4 rounded border-gray-300 custom-checkbox"
-          checked={row.getIsSelected()}
-          onChange={row.getToggleSelectedHandler()}
-        />
-      ),
-      enableSorting: false,
-    },
-    { accessorKey: 'id', header: 'ID Kho' },
-    { accessorKey: 'code', header: 'Mã Kho' },
-    { accessorKey: 'name', header: 'Tên Kho' },
-    {
-      id: 'status',
-      header: 'Trạng thái',
-      cell: ({ row }) => (
-        <select
-          value={row.original.status} // Đảm bảo giá trị này được liên kết với trạng thái của kho
-          onChange={(e) => handleStatusChange(row.index, e.target.value)}
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string, room: StorageRoom) => (
+        <Select
+          value={status}
+          onChange={(value) => handleStatusChange(value, room)}
           className="border rounded p-1"
         >
-          <option value="Hoạt động">Hoạt động</option>
-          <option value="Không hoạt động">Không hoạt động</option>
-          <option value="Đang chờ">Đang chờ</option>
-        </select>
+          <Select.Option value="Hoạt động">Hoạt động</Select.Option>
+          <Select.Option value="Không hoạt động">Không hoạt động</Select.Option>
+          <Select.Option value="Đang chờ">Đang chờ</Select.Option>
+        </Select>
       ),
     },
+    { title: 'Nhiệt độ', dataIndex: 'temperature', key: 'temperature' },
+    { title: 'Độ ẩm', dataIndex: 'humidity', key: 'humidity' },
     {
-      id: 'actions',
-      header: 'Tính năng',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <button
-            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
-            onClick={() => handleViewDetail(row.original)}
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
-            onClick={() => handleEdit(row.original)}
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
-            onClick={() => {
-              setSelectedRoom(row.original);
-              setIsDeleteModalOpen(true);
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+      title: <UnorderedListOutlined />,
+      key: 'actions',
+      render: (_: any, room: StorageRoom) => (
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => openViewModal(room)}>
+                Xem
+              </Menu.Item>
+              <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => openEditModal(room)}>
+                Chỉnh sửa
+              </Menu.Item>
+              <Menu.Item key="delete" icon={<DeleteOutlined />} danger onClick={() => handleDelete(room)}>
+                Xóa
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={['click']}
+        >
+          <Button shape="circle" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
-      enableSorting: false,
     },
   ];
 
-  const table = useReactTable({
-    data: STORAGE_ROOMS_DATA,
-    columns,
-    state: {
-      sorting,
-      rowSelection,
-      globalFilter,
-      pagination: {
-        pageSize,
-        pageIndex: 0,
-      },
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
   return (
     <div className="bg-white">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-none bg-gray-50">
-                {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-4 py-3 text-left text-[14px] font-bold">
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className="flex items-center gap-2 cursor-pointer select-none"
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{
-                          asc: <ChevronUp className="w-4 h-4" />,
-                          desc: <ChevronDown className="w-4 h-4" />,
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-800 opacity-90">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between px-4 py-3 border-t">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Hiển thị</span>
-          <select
-            value={pageSize}
-            onChange={e => {
-              setPageSize(Number(e.target.value));
-              table.setPageSize(Number(e.target.value));
-            }}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {[10, 20, 30, 40, 50].map(size => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <span className="text-sm text-gray-600">mục</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-gray-600">
-            Trang{' '}
-            <strong>
-              {table.getState().pagination.pageIndex + 1} of{' '}
-              {table.getPageCount()}
-            </strong>
-          </div>
-          <div className="flex gap-1">
-            <button
-              className={`px-3 py-1 text-sm rounded ${
-                !table.getCanPreviousPage()
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-[#FF9F43] text-white hover:bg-[#ff8f20]'
-              }`}
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Trước
-            </button>
-            <button
-              className={`px-3 py-1 text-sm rounded ${
-                !table.getCanNextPage()
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-[#FF9F43] text-white hover:bg-[#ff8f20]'
-              }`}
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Sau
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <DeleteConfirmation
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDelete}
+      <Table
+        columns={columns}
+        dataSource={storageRooms}
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+        className="overflow-x-auto"
       />
-      <StorageRoomDetailsModal 
-        isOpen={isViewModalOpen} 
-        onClose={() => setIsViewModalOpen(false)} 
-        room={selectedRoom} 
-      />
-      <UpdateStorageRoomDetailsModal
-  isOpen={isEditModalOpen}
-  onClose={() => setIsEditModalOpen(false)}
-  room={selectedRoom ?? { id: 0, code: '', name: '', status: '', temperature: 0, humidity: 0, capacity: 0 }} 
-  onSave={handleSave}
-/>
 
-      
-      {/* Modal xác nhận */}
-      <UpdateConfirm
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={confirmStatusChange}
-        message="Bạn có chắc chắn muốn đổi trạng thái?"
-      />
+      {selectedRoom && (
+        <>
+          <StorageRoomDetailsModal
+            isOpen={isViewModalOpen}
+            onClose={() => setIsViewModalOpen(false)}
+            room={selectedRoom}
+          />
+          <UpdateStorageRoomDetailsModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            room={selectedRoom}
+            onSave={handleSave}
+          />
+        </>
+      )}
     </div>
   );
 };

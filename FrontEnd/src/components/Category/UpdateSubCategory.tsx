@@ -5,7 +5,6 @@ interface SubCategory {
   name: string;
   parentCategory: string;
   code: string;
-  description: string;
   createdBy: string;
   image?: string;
 }
@@ -23,7 +22,6 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
     name: "",
     parentCategory: "",
     code: "",
-    description: "",
     createdBy: "",
     image: "",
   });
@@ -93,19 +91,14 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
         </div>
 
         <div className="mb-3">
+          <label className="block text-sm font-medium">Mã danh mục</label>
+          <input type="text" name="code" value={formData.code} onChange={handleChange} className="w-full p-2 border rounded-md" />
+        </div>
+        <div className="mb-3">
           <label className="block text-sm font-medium">Tên danh mục thuốc</label>
           <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-2 border rounded-md" />
         </div>
 
-        <div className="mb-3">
-          <label className="block text-sm font-medium">Mã danh mục</label>
-          <input type="text" name="code" value={formData.code} onChange={handleChange} className="w-full p-2 border rounded-md" />
-        </div>
-
-        <div className="mb-3">
-          <label className="block text-sm font-medium">Mô tả</label>
-          <textarea name="description" value={formData.description} onChange={handleChange} className="w-full p-2 border rounded-md" />
-        </div>
 
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-md">Hủy</button>

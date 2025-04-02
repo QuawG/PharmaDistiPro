@@ -6,7 +6,6 @@ interface Category {
   id: number;
   name: string;
   code: string;
-  description: string;
   createdBy: string;
   image?: string;
 }
@@ -101,9 +100,6 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({
           <Input />
         </Form.Item>
 
-        <Form.Item name="description" label="Mô tả">
-          <Input.TextArea rows={3} />
-        </Form.Item>
       </Form>
     </Modal>
   );

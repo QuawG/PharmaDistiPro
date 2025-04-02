@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Menu, Dropdown, Button, Table, Modal } from 'antd';
-import { MoreOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Menu, Dropdown, Button, Table, Modal, message, Select } from 'antd';
+import { MoreOutlined, DeleteOutlined, EditOutlined, EyeOutlined,UnorderedListOutlined } from '@ant-design/icons';
 import CustomerDetailsModal from './CustomerDetail';
 import UpdateCustomerDetailsModal from './UpdateCustomerDetail';
+import axios from 'axios';
 
 interface Customer {
-  id: number;
+  userId: number;
   avatar: string;
-  firstName: string;
+  lastName: string;
   employeeCode: string;
   email: string;
   phone: string;
@@ -16,34 +17,31 @@ interface Customer {
   createdBy: string;
   createdDate: string;
   taxCode: number;
-  status: string;
+  status: boolean;
 }
 
 interface CustomerTableProps {
-  CUSTOMERS_DATA: Customer[];
+  customers: Customer[];
+  setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>; // Thêm prop để cập nhật danh sách khách hàng
 }
 
-const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
-  const [customers, setCustomers] = useState<Customer[]>(CUSTOMERS_DATA);
+const CustomerTable: React.FC<CustomerTableProps> = ({ customers, setCustomers }) => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const handleSave = (updatedCustomer: Customer) => {
-    console.log('Customer updated:', updatedCustomer);
-  };
 
   const openEditModal = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsEditModalOpen(true);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const openViewModal = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsViewModalOpen(true);
   };
 
-  // Handle delete customer action
+  // Xử lý xóa khách hàng
   const handleDelete = (customer: Customer) => {
     Modal.confirm({
       title: 'Bạn có chắc chắn muốn xóa khách hàng này?',
@@ -51,61 +49,94 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
       okText: 'Xóa',
       okType: 'danger',
       cancelText: 'Hủy',
-      onOk: () => {
-        const updatedCustomers = customers.filter((item) => item.id !== customer.id);
-        setCustomers(updatedCustomers);  // Cập nhật danh sách khách hàng sau khi xóa
-        console.log('Updated Customers after delete:', updatedCustomers);
+      onOk: async () => {
+        try {
+          await axios.delete(`http://pharmadistiprobe.fun/api/Customer/DeleteCustomer/${customer.userId}`);
+          message.success('Xóa khách hàng thành công!');
+
+          // Cập nhật danh sách khách hàng
+          const updatedCustomers = customers.filter(item => item.userId !== customer.userId);
+          setCustomers(updatedCustomers); // Cập nhật state để phản ánh sự thay đổi
+        } catch (error) {
+          console.error("Error deleting customer:", error);
+          message.error('Lỗi khi xóa khách hàng!');
+        }
       },
     });
   };
 
-  // Handle status change with confirmation
+  // // Xử lý thay đổi trạng thái
+  // const handleStatusChange = async (value: string, record: Customer) => {
+  //   Modal.confirm({
+  //     title: 'Bạn có chắc chắn muốn đổi trạng thái?',
+  //     content: 'Hành động này sẽ thay đổi trạng thái của khách hàng.',
+  //     okText: 'Đổi trạng thái',
+  //     cancelText: 'Hủy',
+  //     onOk: async () => {
+  //       try {
+  //         await axios.put(`http://pharmadistiprobe.fun/api/Customer/ActivateDeactivateCustomer/${record.userId}`, { status: value });
+  //         message.success('Cập nhật trạng thái thành công!');
+  //         // Cập nhật danh sách khách hàng nếu cần
+  //       } catch (error) {
+  //         console.error("Error updating status:", error);
+  //         message.error('Lỗi khi cập nhật trạng thái!');
+  //       }
+  //     },
+  //   });
+  // };
+
+  
   const handleStatusChange = (value: string, record: Customer) => {
+    const newStatus = value === 'Hoạt động';
+    
     Modal.confirm({
       title: 'Bạn có chắc chắn muốn đổi trạng thái?',
-      content: 'Hành động này sẽ thay đổi trạng thái của khách hàng.',
+      content: 'Hành động này sẽ thay đổi trạng thái của nhà cung cấp.',
       okText: 'Đổi trạng thái',
       cancelText: 'Hủy',
-      onOk: () => {
-        const updatedCustomers = customers.map((customer) =>
-          customer.id === record.id ? { ...customer, status: value } : customer
-        );
-        setCustomers(updatedCustomers);  // Cập nhật trạng thái sau khi thay đổi
-        console.log('Updated Customers after status change:', updatedCustomers);
+      onOk: async () => {
+        try {
+          await axios.put(`http://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}/${newStatus}`);
+          message.success('Cập nhật trạng thái thành công!');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (error) {
+          message.error('Lỗi khi cập nhật trạng thái!');
+        }
       },
     });
   };
-
   const columns = [
+    { title: 'ID', dataIndex: 'userId' },
+    { title: 'Tên khách hàng', dataIndex: 'lastName' },
     { title: 'Ảnh đại diện', dataIndex: 'avatar', render: (avatar: string) => <img src={avatar} alt="Avatar" className="w-28 h-20" /> },
-    { title: 'Tên nhà thuốc', dataIndex: 'firstName' },
     { title: 'Email', dataIndex: 'email' },
     { title: 'Số điện thoại', dataIndex: 'phone' },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
-      render: (status: string, record: Customer) => (
-        <select
-          value={status}
-          onChange={(e) => handleStatusChange(e.target.value, record)}  // Trigger the status change handler
-          className="border rounded p-1"
+      render: (status: boolean, record: Customer) => (
+        <Select
+          defaultValue={status ? 'Hoạt động' : 'Không hoạt động'}
+          onChange={(value) => handleStatusChange(value, record)}
         >
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-          <option value="pending">Đang chờ</option>
-        </select>
+          <Select.Option value="Hoạt động">Hoạt động</Select.Option>
+          <Select.Option value="Không hoạt động">Không hoạt động</Select.Option>
+        </Select>
       ),
     },
     {
-      title: 'Tính năng',
+      title:  <UnorderedListOutlined />,
       key: 'actions',
       render: (_: any, record: Customer) => (
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => openViewModal(record)}>
-                Xem
-              </Menu.Item>
+              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => {
+                            setSelectedCustomer(record);
+                            setIsViewModalOpen(true);
+                          }}>
+                            Xem
+                          </Menu.Item>
               <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
                 Chỉnh sửa
               </Menu.Item>
@@ -126,10 +157,9 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
     <div className="bg-white">
       <Table
         columns={columns}
-        dataSource={customers}  // Sử dụng state customers để hiển thị dữ liệu
-        rowKey="id"
+        dataSource={customers}
+        rowKey="userId"
         pagination={{ pageSize: 10 }}
-        className="overflow-x-auto"
       />
 
       <CustomerDetailsModal
@@ -141,7 +171,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ CUSTOMERS_DATA }) => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         customer={selectedCustomer}
-        onSave={handleSave}
+        onSave={(updatedCustomer) => console.log('Customer updated:', updatedCustomer)} // Handle save logic
       />
     </div>
   );

@@ -11,15 +11,15 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
 
     const handleSubmit = (values: any) => {
         console.log("Adding Category:", values);
-        message.success("Loại sản phẩm đã được thêm thành công!");
-        handleChangePage("Danh sách loại sản phẩm");
+        message.success("Chủng loại đã được thêm thành công!");
+        handleChangePage("Chủng loại");
     };
 
     const handleCancel = () => {
         form.resetFields();
         setFileList([]);
         setPreviewImage(null);
-        handleChangePage("Danh sách loại sản phẩm");
+        handleChangePage("Chủng loại");
     };
 
     const handleImageChange = ({ file }: any) => {
@@ -33,30 +33,26 @@ const AddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ h
 
     return (
         <div className="p-6 mt-[60px] w-full bg-[#f8f9fc]">
-            <Title level={2}>Tạo danh mục chính</Title>
-            <Text type="secondary">Tạo danh mục chính mới</Text>
+            <Title level={2}>Tạo chủng loại</Title>
+            <Text type="secondary">Tạo chủng loại mới</Text>
 
             <Card className="mt-5">
                 <Form form={form} layout="vertical" onFinish={handleSubmit}>
-                    <Form.Item
-                        label="Tên loại sản phẩm"
-                        name="categoryName"
-                        rules={[{ required: true, message: "Vui lòng nhập tên loại sản phẩm!" }]}
-                    >
-                        <Input placeholder="Nhập loại sản phẩm" />
-                    </Form.Item>
-
-                    <Form.Item
+                <Form.Item
                         label="Mã "
                         name="categoryCode"
                         rules={[{ required: true, message: "Vui lòng nhập mã !" }]}
                     >
                         <Input placeholder="Nhập mã " />
                     </Form.Item>
-
-                    <Form.Item label="Mô tả" name="description">
-                        <Input.TextArea rows={4} placeholder="Nhập mô tả về loại sản phẩm" />
+                    <Form.Item
+                        label="Chủng loại"
+                        name="categoryName"
+                        rules={[{ required: true, message: "Vui lòng nhập chủng loại!" }]}
+                    >
+                        <Input placeholder="Nhập tên chủng loại" />
                     </Form.Item>
+
 
                     <Form.Item label="Ảnh">
                         <Upload

@@ -1,107 +1,87 @@
 import React, { useState } from 'react';
-import { Table, Modal, Button, Dropdown, Menu, Select } from 'antd';
-import { MoreOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Table, Modal, Select, message, Dropdown, Menu, Button } from 'antd';
+import { MoreOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import SupplierDetailsModal from './SupplierDetail';
 import UpdateSupplierDetailsModal from './UpdateSupplierDetail';
+import axios from 'axios';
 
 interface Supplier {
-  supplierId: number;
-  name: string;
-  address: string;
-  phone: string;
-  createdBy: string;
+  id: number;
+  supplierCode: string;
+  supplierName: string;
+  supplierAddress: string;
+  supplierPhone: string;
+  createdBy: number;
   createdDate: string;
-  status: string;
+  status: boolean;
 }
 
 interface SupplierTableProps {
-  SUPPLIERS_DATA: Supplier[];
+  suppliers: Supplier[];
 }
 
-const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(SUPPLIERS_DATA);
+const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const openEditModal = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
-    setIsEditModalOpen(true);
-  };
-
-  const openViewModal = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
-    setIsViewModalOpen(true);
-  };
-
-  // Handle delete supplier action
-  const handleDelete = (supplier: Supplier) => {
-    Modal.confirm({
-      title: 'Bạn có chắc chắn muốn xóa nhà cung cấp này?',
-      content: 'Hành động này không thể hoàn tác!',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      onOk: () => {
-        const updatedSuppliers = suppliers.filter((item) => item.supplierId !== supplier.supplierId);
-        setSuppliers(updatedSuppliers);  // Cập nhật danh sách nhà cung cấp sau khi xóa
-        console.log('Updated Suppliers after delete:', updatedSuppliers);
-      },
-    });
-  };
-
-  // Handle status change with confirmation
   const handleStatusChange = (value: string, record: Supplier) => {
+    const newStatus = value === 'Hoạt động';
+    
     Modal.confirm({
       title: 'Bạn có chắc chắn muốn đổi trạng thái?',
       content: 'Hành động này sẽ thay đổi trạng thái của nhà cung cấp.',
       okText: 'Đổi trạng thái',
       cancelText: 'Hủy',
-      onOk: () => {
-        const updatedSuppliers = suppliers.map((supplier) =>
-          supplier.supplierId === record.supplierId ? { ...supplier, status: value } : supplier
-        );
-        setSuppliers(updatedSuppliers);  // Cập nhật trạng thái sau khi thay đổi
-        console.log('Updated Suppliers after status change:', updatedSuppliers);
+      onOk: async () => {
+        try {
+          await axios.put(`http://pharmadistiprobe.fun/api/Supplier/ActivateDeactivateSupplier/${record.id}/${newStatus}`);
+          message.success('Cập nhật trạng thái thành công!');
+        } catch (error) {
+          message.error('Lỗi khi cập nhật trạng thái!');
+        }
       },
     });
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'supplierId' },
-    { title: 'Tên', dataIndex: 'name' },
-    { title: 'Số điện thoại', dataIndex: 'phone' },
+    { title: 'ID', dataIndex: 'id' },
+    { title: 'Mã nhà cung cấp', dataIndex: 'supplierCode' },
+    { title: 'Tên nhà cung cấp', dataIndex: 'supplierName' },
+    { title: 'Số điện thoại', dataIndex: 'supplierPhone' },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
-      render: (status: string, record: Supplier) => (
+      render: (status: boolean, record: Supplier) => (
         <Select
-          value={status}
-          onChange={(value) => handleStatusChange(value, record)}  // Trigger the status change handler
-          className="border rounded p-1"
+          defaultValue={status ? 'Hoạt động' : 'Không hoạt động'}
+          onChange={(value) => handleStatusChange(value, record)}
         >
-          <Select.Option value="Active">Hoạt động</Select.Option>
-          <Select.Option value="Inactive">Không hoạt động</Select.Option>
-          <Select.Option value="Pending">Đang chờ</Select.Option>
+          <Select.Option value="Hoạt động">Hoạt động</Select.Option>
+          <Select.Option value="Không hoạt động">Không hoạt động</Select.Option>
         </Select>
       ),
     },
     {
       title: 'Tính năng',
       key: 'actions',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
       render: (_: any, record: Supplier) => (
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => openViewModal(record)}>
-                Xem
-              </Menu.Item>
-              <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
-                Chỉnh sửa
-              </Menu.Item>
-              <Menu.Item key="delete" icon={<DeleteOutlined />} danger onClick={() => handleDelete(record)}>
-                Xóa
-              </Menu.Item>
+            <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => {
+              setSelectedSupplier(record);
+              setIsViewModalOpen(true);
+            }}>
+              Xem
+            </Menu.Item>
+            <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => {
+  setSelectedSupplier(record);
+  setIsEditModalOpen(true);
+}}>
+  Chỉnh sửa
+</Menu.Item>
             </Menu>
           }
           trigger={['click']}
@@ -114,30 +94,13 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ SUPPLIERS_DATA }) => {
 
   return (
     <div className="bg-white">
-      <Table
-        columns={columns}
-        dataSource={suppliers}  // Sử dụng state suppliers để hiển thị dữ liệu
-        rowKey="supplierId"
-        pagination={{ pageSize: 10 }}
-        className="overflow-x-auto"
-      />
-
-      <SupplierDetailsModal
-        isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
-        supplier={selectedSupplier}
-      />
+      <Table columns={columns} dataSource={suppliers} rowKey="id" pagination={{ pageSize: 10 }} />
+      <SupplierDetailsModal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} supplier={selectedSupplier} />
       <UpdateSupplierDetailsModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         supplier={selectedSupplier}
-        onSave={(updatedSupplier: Supplier) => {
-          console.log('Supplier updated:', updatedSupplier);
-          const updatedSuppliers = suppliers.map((supplier) =>
-            supplier.supplierId === updatedSupplier.supplierId ? updatedSupplier : supplier
-          );
-          setSuppliers(updatedSuppliers);
-        }}
+        onSave={() => {/* Refresh supplier data if needed */}}
       />
     </div>
   );

@@ -1,17 +1,31 @@
+// src/pages/SignIn.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./Home/AuthContext";
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const { login } = useAuth();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = () => {
-   
-    if (email && password) {
+  const handleSignIn = async () => {
+    if (!username || !password) {
+      alert("Vui lòng nhập username và mật khẩu!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await login(username, password);
+      alert("Đăng nhập thành công!");
       navigate("/");
-    } else {
-      alert("Vui lòng nhập email và mật khẩu!!");
+    } catch (error: any) {
+      console.error("Lỗi đăng nhập:", error);
+      alert(error.message || "Đăng nhập thất bại!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -20,12 +34,11 @@ const SignIn: React.FC = () => {
       <div className="max-w-md w-full bg-white shadow-lg rounded-xl p-8 border border-gray-200">
         <h3 className="text-2xl font-bold text-[#ff9f43] text-center">Đăng nhập</h3>
 
-        {/* Input fields */}
         <input
           type="text"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mt-4 focus:ring-2 focus:ring-[#ff9f43] outline-none"
         />
         <input
@@ -36,16 +49,15 @@ const SignIn: React.FC = () => {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mt-4 focus:ring-2 focus:ring-[#ff9f43] outline-none"
         />
 
-        {/* Sign In Button */}
         <button
           onClick={handleSignIn}
-          className="w-full bg-[#ff9f43] text-white py-2 rounded-lg mt-6 font-bold transition-all hover:bg-[#e68a36]"
+          className={`w-full text-white py-2 rounded-lg mt-6 font-bold transition-all ${
+            loading ? "bg-gray-400" : "bg-[#ff9f43] hover:bg-[#e68a36]"
+          }`}
+          disabled={loading}
         >
-          Sign In
+          {loading ? "Đang xử lý..." : "Sign In"}
         </button>
-
-        {/* Chuyển sang SignUp */}
-        
       </div>
     </div>
   );

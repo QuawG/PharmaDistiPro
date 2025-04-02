@@ -3,7 +3,12 @@ import { XCircle } from "lucide-react";
 import { Modal, Button, Input, Avatar, Typography, Row, Col } from "antd";
 
 const { Title, Text } = Typography;
-
+const userRoles: { [key: number]: string } = {
+  1: 'Giám đốc',
+  2: 'Quản lí kho',
+  3: 'Trưởng phòng kinh doanh',
+  4: 'Nhân viên bán hàng',
+};
 export default function CustomerDetail({
   isOpen,
   onClose,
@@ -57,7 +62,15 @@ export default function CustomerDetail({
                 <Text strong>Tên nhà thuốc</Text>
                 <Input
                   className="mt-1"
-                  value={customer?.firstName || "N/A"}
+                  value={customer?.lastName || "N/A"}
+                  disabled
+                />
+              </div>
+              <div className="mb-4">
+                <Text strong>Tên đăng nhập</Text>
+                <Input
+                  className="mt-1"
+                  value={customer?.userName || "N/A"}
                   disabled
                 />
               </div>
@@ -122,7 +135,7 @@ export default function CustomerDetail({
             <Text strong>Tạo bởi</Text>
             <Input
               className="mt-1"
-              value={customer?.createdBy || "N/A"}
+              value={userRoles[customer?.createdBy] || "N/A"}
               disabled
             />
           </div>
