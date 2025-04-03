@@ -69,98 +69,98 @@ namespace PharmaDistiPro.UnitTest.OrderServiceTest
         }
 
         [Fact]
-        public async Task GetAllOrderDetails_WhenCalled_ReturnsOrderList()
+        public async Task GetAllOrderDetails_WhenCalled_ReturnsOrderedProductList()
         {
-            // Mock dữ liệu OrdersDetail (bao gồm Order và Product)
-            var orderList = new List<Order>
-    {
-        new Order
-        {
-            OrderId = 1,
-            Status = (int)Common.Enums.OrderStatus.HOAN_THANH // Đảm bảo Status phù hợp
-        }
-    };
+            // Arrange
 
-            var list = new List<OrdersDetail>
-    {
-        new OrdersDetail
-        {
-            OrderDetailId = 1,
-            OrderId = 1,
-            ProductId = 1,
-            Quantity = 5,
-            Product = new Product
+            var orderDetailsList = new List<OrdersDetail>
+
+            {   
+                new OrdersDetail { OrderDetailId = 1, OrderId = 1,  ProductId = 1,   Quantity = 5,
+                Product = new Product
+            {   ProductId = 1,  ProductName = "Loc"   },
+            
+                    Order = new Order
+            {  OrderId = 1,CreatedDate = DateTime.Now, Status = (int)Common.Enums.OrderStatus.HOAN_THANH } },      
+                new OrdersDetail                       
+                {          
+                    OrderDetailId = 2,           
+                    OrderId = 2,          
+                    ProductId = 2,           
+                    Quantity = 10,           
+                    Product = new Product           
+                    {           
+                        ProductId = 2,            
+                        ProductName = "Filter"           
+                    },            
+                    Order = new Order          
+                    {            
+                        OrderId = 2,             
+                        CreatedDate = DateTime.Now,            
+                        Status = (int)Common.Enums.OrderStatus.HOAN_THANH           
+                    }       
+                }    
+            };
+
+            var expectedDtoList = new List<OrdersDetailDto>   
             {
-                ProductId = 1,
-                ProductName = "Loc"
-            },Order = new Order
-            {
-                OrderId = 1,
-                CreatedDate = DateTime.Now, // Đảm bảo điều kiện lọc không loại bỏ Order
-                Status = (int)Common.Enums.OrderStatus.HOAN_THANH
-            }
-        }
-    };
+                new OrdersDetailDto
+                { 
+                    OrderDetailId = 1, 
+                    OrderId = 1,    
+                    ProductId = 1,      
+                    Quantity = 5,
+                    Product = new ProductOrderDto   
+                    { 
+                        ProductId = 1, 
+                        ProductName = "Loc"
+                    } 
+                },
+        
+                new OrdersDetailDto      
+                {          
+                    OrderDetailId = 2,          
+                    OrderId = 2,         
+                    ProductId = 2,          
+                    Quantity = 10,            
+                    Product = new ProductOrderDto          
+                    {              
+                        ProductId = 2,              
+                        ProductName = "Filter"           
+                    }        
+                }
+            };
 
-            // Mock DTO kết quả ánh xạ
-            var listDto = new List<OrdersDetailDto>
-    {
-        new OrdersDetailDto
-        {
-            OrderDetailId = 1,
-            OrderId = 1,
-            ProductId = 1,
-            Quantity = 5,
-            Product = new ProductOrderDto
-            {
-                ProductId = 1,
-                ProductName = "Loc"
-            }
-        }
-    };
-
-            // Setup mock repository trả về dữ liệu Orders
-            _orderRepositoryMock.Setup(repo => repo.GetByConditionAsync(
-                It.IsAny<Expression<Func<Order, bool>>>(),
-                It.IsAny<string[]>(),
-                It.IsAny<Func<IQueryable<Order>, IOrderedQueryable<Order>>>()))
-                .ReturnsAsync(orderList);
-
-            // Setup mock repository trả về OrdersDetail
+            // Mock repository để trả về dữ liệu đơn hàng hoàn thành
+            Func<IQueryable<OrdersDetail>, IOrderedQueryable<OrdersDetail>>? orderBy = null;
             _ordersDetailRepositoryMock.Setup(repo => repo.GetByConditionAsync(
                 It.IsAny<Expression<Func<OrdersDetail, bool>>>(),
                 It.IsAny<string[]>(),
-                It.IsAny<Func<IQueryable<OrdersDetail>, IOrderedQueryable<OrdersDetail>>>()))
-                .ReturnsAsync(list);
+                It.IsAny<Func<IQueryable<OrdersDetail>, IOrderedQueryable<OrdersDetail>>>()
+            )).ReturnsAsync(orderDetailsList);
 
-            // Setup AutoMapper mock (Product -> ProductOrderDto)
-            _mapperMock.Setup(mapper => mapper.Map<ProductOrderDto>(It.IsAny<Product>()))
-                .Returns((Product p) => new ProductOrderDto
-                {
-                    ProductId = p?.ProductId ?? 0,
-                    ProductName = p?.ProductName ?? "Unknown"
-                });
-
-            // Setup AutoMapper mock (OrdersDetail -> OrdersDetailDto)
+            // Mock AutoMapper
             _mapperMock.Setup(mapper => mapper.Map<IEnumerable<OrdersDetailDto>>(It.IsAny<IEnumerable<OrdersDetail>>()))
                 .Returns((IEnumerable<OrdersDetail> src) =>
-                    src?.Select(o => new OrdersDetailDto
+                    src.Select(o => new OrdersDetailDto
                     {
                         OrderDetailId = o.OrderDetailId,
                         OrderId = o.OrderId,
                         ProductId = o.ProductId,
+                        Quantity = o.Quantity,
                         Product = new ProductOrderDto
                         {
                             ProductId = o.Product?.ProductId ?? 0,
                             ProductName = o.Product?.ProductName ?? "Unknown"
                         }
-                    }) ?? new List<OrdersDetailDto>());
+                    }));
 
-            // Gọi phương thức cần kiểm thử
-            var result = await _orderService.GetAllOrderDetails(null, null, 0);
+            // Act
+            var result = await _orderService.GetAllOrderDetails(null, null, null);
 
-            // Kiểm tra kết quả trả về
+            // Assert
             Assert.NotNull(result);
+            Assert.True(result.Success);
         }
 
 

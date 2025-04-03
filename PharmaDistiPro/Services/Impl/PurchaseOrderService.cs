@@ -41,7 +41,7 @@ namespace PharmaDistiPro.Services.Impl
                
 
                 await _purchaseOrderRepository.InsertPurchaseOrderAsync(purchaseOrder);
-                await _purchaseOrderRepository.SaveAsync(); // Lưu đơn hàng trước khi tạo chi tiết đơn hàng
+                await _purchaseOrderRepository.SaveAsync(); 
 
 
                 // Chuẩn bị danh sách PurchaseOrderDetails
@@ -68,7 +68,6 @@ namespace PharmaDistiPro.Services.Impl
 
             return response;
         }
-
 
         public async Task<Response<IEnumerable<PurchaseOrdersDto>>> GetPurchaseOrdersList(int[] status, DateTime? dateFrom, DateTime? dateTo)
         {
