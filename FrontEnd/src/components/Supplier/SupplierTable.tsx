@@ -11,7 +11,7 @@ interface Supplier {
   supplierName: string;
   supplierAddress: string;
   supplierPhone: string;
-  createdBy: number;
+  createdBy: string;  // Ensure this matches the expected type in SupplierTable
   createdDate: string;
   status: boolean;
 }

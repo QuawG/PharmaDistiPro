@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { FileText, Table, Printer } from 'lucide-react'; // Giữ nguyên các biểu tượng cũ
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as XLSX from 'xlsx';
+import { FileText, Table, Printer } from 'lucide-react';
+import ExcelJS from 'exceljs';
 import SupplierTable from '../../components/Supplier/SupplierTable';
 import axios from 'axios';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import ExcelJS from 'exceljs';
+
 interface Supplier {
   id: number;
   supplierCode: string;
   supplierName: string;
   supplierAddress: string;
   supplierPhone: string;
-  createdBy: string;
+  createdBy: string;  // Ensure this matches the expected type in SupplierTable
   createdDate: string;
   status: boolean;
 }
@@ -21,7 +19,7 @@ interface Supplier {
 const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>(''); // State for selected status
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -44,7 +42,6 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
     setSelectedStatus(e.target.value);
   };
 
-
   const filteredSuppliers = suppliers.filter(supplier => {
     const matchesSearch =
       supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,7 +50,6 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
     const matchesStatus = !selectedStatus || (selectedStatus === 'Active' ? supplier.status : !supplier.status);
     return matchesSearch && matchesStatus;
   });
-
 
   const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -86,9 +82,8 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
     worksheet.getRow(1).alignment = { horizontal: 'center' };
   
     // Định dạng ô
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
-      row.eachCell({ includeEmpty: true }, (cell) => {
+    worksheet.eachRow({ includeEmpty: true }, (row: ExcelJS.Row, _: number) => {
+      row.eachCell({ includeEmpty: true }, (cell: ExcelJS.Cell) => {
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },

@@ -1,9 +1,11 @@
 // src/components/Order/OrderTableForSalesManager.tsx
 import React, { useState, useEffect } from "react";
 import { Table, Select, Button, Modal, Collapse, Dropdown, Menu, message, Input, DatePicker } from "antd";
-import { MoreOutlined, EyeOutlined, CheckOutlined, FilterOutlined, PrinterOutlined, FileExcelOutlined, SearchOutlined } from "@ant-design/icons";
+import { MoreOutlined, EyeOutlined, CheckOutlined, FilterOutlined, PrinterOutlined, FileExcelOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import axios from "axios";
+// import { useAuth } from "../../pages/Home/AuthContext"; // Đảm bảo đường dẫn đúng với cấu trúc thư mục của bạn
+import Cookies from "js-cookie";
 // import { Dayjs } from "dayjs";
 
 const { Panel } = Collapse;
@@ -69,6 +71,8 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
   const [priceRange, setPriceRange] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>(""); // Thêm trạng thái cho ô tìm kiếm
   const orderStatuses = ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"];
+  // const { user } = useAuth(); // Lấy thông tin user từ AuthContext
+  const accessToken = Cookies.get("token") || localStorage.getItem("accessToken"); // Lấy token từ cookies hoặc localStorage
 
   useEffect(() => {
     setFilteredOrders(orders);
@@ -127,21 +131,84 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
 
   const handleConfirmOrder = async (orderId: number) => {
     try {
-      const response = await axios.put(`http://pharmadistiprobe.fun/api/Order/ConfirmOrder/${orderId}`, null, {
-        headers: { "Content-Type": "application/json" },
-      });
-      if (response.data.success) {
+      const response = await axios.put(
+        `http://pharmadistiprobe.fun/api/Order/ConfirmOrder/${orderId}`,
+        {}, // Body request nếu API yêu cầu
+        {
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`, // Thêm token vào header
+          },
+        }
+      );
+      
+      if (response.status === 200 || response.data.success) {
         message.success("Xác nhận đơn hàng thành công!");
         setFilteredOrders((prev) =>
-          prev.map((order) => (order.orderId === orderId ? { ...order, status: 2 } : order))
+          prev.map((order) => 
+            order.orderId === orderId ? { ...order, status: 2 } : order
+          )
         );
       } else {
         message.error(response.data.message || "Không thể xác nhận đơn hàng!");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi khi xác nhận đơn hàng:", error);
-      message.error("Lỗi khi xác nhận đơn hàng!");
+      if (error.response?.status === 401) {
+        message.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+        // Có thể gọi logout() từ useAuth tại đây nếu muốn
+      } else {
+        message.error(error.response?.data?.message || "Lỗi khi xác nhận đơn hàng!");
+      }
     }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    try {
+      const response = await axios.put(
+        `http://pharmadistiprobe.fun/api/Order/UpdateOrderStatus/${orderId}/0`, // Cập nhật endpoint đúng
+        {}, // Body request (có thể không cần nếu API chỉ dùng query params)
+        {
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+        }
+      );
+      
+      if (response.status === 200 || response.data.success) {
+        message.success("Hủy đơn hàng thành công!");
+        setFilteredOrders((prev) =>
+          prev.map((order) => 
+            order.orderId === orderId ? { ...order, status: 0 } : order
+          )
+        );
+      } else {
+        message.error(response.data.message || "Không thể hủy đơn hàng!");
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi hủy đơn hàng:", error.response ? error.response.data : error.message);
+      if (error.response?.status === 401) {
+        message.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+      } else if (error.response?.status === 400) {
+        message.error(error.response.data.message || "Yêu cầu không hợp lệ!");
+      } else if (error.response?.status === 404) {
+        message.error("Không tìm thấy đơn hàng hoặc endpoint!");
+      } else {
+        message.error(error.response?.data?.message || "Lỗi khi hủy đơn hàng!");
+      }
+    }
+  };
+
+  const showCancelModal = (orderId: number) => {
+    Modal.confirm({
+      title: "Hủy đơn hàng",
+      content: "Bạn có chắc chắn muốn hủy đơn hàng này không?",
+      okText: "Xác nhận hủy",
+      cancelText: "Không",
+      okType: "danger", // Nút xác nhận có màu đỏ
+      onOk: () => handleCancelOrder(orderId),
+    });
   };
 
   const showConfirmModal = (orderId: number) => {
@@ -274,6 +341,11 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
               {record.status === 1 && (
                 <Menu.Item key="confirm" onClick={() => showConfirmModal(record.orderId)}>
                   <CheckOutlined /> Xác nhận
+                </Menu.Item>
+              )}
+              {record.status === 2 && (
+                <Menu.Item key="cancel" onClick={() => showCancelModal(record.orderId)}>
+                  <CloseOutlined /> Hủy đơn hàng
                 </Menu.Item>
               )}
             </Menu>

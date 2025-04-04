@@ -20,7 +20,7 @@ const SignIn: React.FC = () => {
     try {
       await login(username, password);
       alert("Đăng nhập thành công!");
-      navigate("/");
+      navigate("/"); // Điều hướng về HomePage, logic trang mặc định sẽ xử lý ở HomePage
     } catch (error: any) {
       console.error("Lỗi đăng nhập:", error);
       alert(error.message || "Đăng nhập thất bại!");

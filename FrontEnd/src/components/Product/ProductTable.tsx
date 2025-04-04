@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, Select, Button, Modal, Image, Input, DatePicker, Collapse } from "antd";
 const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
@@ -55,13 +55,13 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
 
 
   const printTable = () => {
-    const selectedProducts = selectedRowKeys.length > 0 
-        ? products.filter((product) => selectedRowKeys.includes(product.ProductId))
-        : products; // Nếu không chọn sản phẩm nào, in tất cả
+    const selectedProducts = selectedRowKeys.length > 0
+      ? products.filter((product) => selectedRowKeys.includes(product.ProductId))
+      : products; // Nếu không chọn sản phẩm nào, in tất cả
 
     if (selectedProducts.length === 0) {
-        alert("Không có sản phẩm nào được chọn để in.");
-        return;
+      alert("Không có sản phẩm nào được chọn để in.");
+      return;
     }
 
     // Tạo nội dung bảng để in
@@ -83,7 +83,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
             </thead>
             <tbody>
                 ${selectedProducts
-                    .map((product) => `
+        .map((product) => `
                         <tr>
                             <td>${product.ProductName}</td>
                             <td>${product.ProductCode}</td>
@@ -94,7 +94,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
                             <td>${product.Status}</td>
                         </tr>
                     `)
-                    .join("")}
+        .join("")}
             </tbody>
         </table>
     `;
@@ -102,14 +102,14 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
     // Tạo cửa sổ in
     const printWindow = window.open("", "", "height=800,width=1000");
     if (printWindow) {
-        printWindow.document.write("<html><head>");
-        printWindow.document.write("</head><body>");
-        printWindow.document.write(printContents);
-        printWindow.document.write("</body></html>");
-        printWindow.document.close();
-        printWindow.print();
+      printWindow.document.write("<html><head>");
+      printWindow.document.write("</head><body>");
+      printWindow.document.write(printContents);
+      printWindow.document.write("</body></html>");
+      printWindow.document.close();
+      printWindow.print();
     }
-};
+  };
 
 
 
@@ -218,7 +218,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
         </div>
       ),
     },
-    
+
     {
       title: "Danh mục thuốc",
       dataIndex: "SubCategoryName",
@@ -291,13 +291,13 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
           Xuất Excel
         </Button>
         <Button
-    type="primary"
-    icon={<PrinterOutlined />}
-    onClick={printTable}
-    style={{ marginLeft: 8 }}
->
-    In danh sách
-</Button>
+          type="primary"
+          icon={<PrinterOutlined />}
+          onClick={printTable}
+          style={{ marginLeft: 8 }}
+        >
+          In danh sách
+        </Button>
 
       </div>
 
@@ -384,17 +384,17 @@ const ProductTable: React.FC<ProductTableProps> = ({ PRODUCTS_DATA, handleChange
 
       )}
 
-<div id="printableArea">
-    <Table
-        columns={columns}
-        dataSource={products}
-        rowKey="ProductId"
-        rowSelection={{
+      <div id="printableArea">
+        <Table
+          columns={columns}
+          dataSource={products}
+          rowKey="ProductId"
+          rowSelection={{
             selectedRowKeys,
             onChange: handleRowSelectionChange,
-        }}
-    />
-</div>
+          }}
+        />
+      </div>
 
 
       {/* Modal xác nhận xóa */}

@@ -1,68 +1,75 @@
+// src/components/Order/OrderTable.tsx
 import React, { useState, useEffect } from "react";
-import { Table, Select, Button, Modal, Input, Form, Collapse, DatePicker, Dropdown, Menu } from "antd";
-const { Panel } = Collapse;
-import { MoreOutlined, EditOutlined, DeleteOutlined, FilterOutlined, UnorderedListOutlined, PrinterOutlined, FileExcelOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import * as XLSX from "xlsx";
-import { Dayjs } from "dayjs";
+import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu, message } from "antd";
+import { MoreOutlined, EyeOutlined, FilterOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import axios from "axios";
 
+
+const { Panel } = Collapse;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-
-declare global {
-  interface Window {
-    XLSX: typeof XLSX;
-  }
-}
 
 interface Order {
   orderId: number;
   orderCode: string;
   customerId: number;
-  updatedStatusDate: Date;
-  stockReleaseDate: Date;
+  updatedStatusDate: string;
+  stockReleaseDate: string | null;
   totalAmount: number;
-  status: string;
-  deliveryFee: number;
-  address: string;
-  confirmedBy?: number;
-  createdDate: Date;
-  assignTo?: number;
+  status: number;
+  wardCode: string;
+  districtId: number;
+  deliveryFee: number | null;
+  address: string | null;
+  confirmedBy: number | null;
+  createdDate: string;
+  assignTo: number | null;
+  customer: {
+    userId: number;
+    userName: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    address: string;
+  };
 }
 
 interface OrderDetail {
   orderDetailId: number;
   orderId: number;
   productId: number;
-  productName: string;
   quantity: number;
-  price: number;
+  product: {
+    productId: number;
+    productCode: string;
+    manufactureName: string;
+    productName: string;
+    sellingPrice: number;
+    description: string;
+    vat: number;
+  };
 }
 
 interface OrderTableProps {
-  orders?: Order[];
-  orderDetails?: OrderDetail[];
+  orders: Order[];
   handleChangePage: (page: string, orderId?: number) => void;
   onUpdate: (updatedOrder: Order) => void;
-  onDelete: (orderId: number) => void;
 }
 
-type RangeValue = [Dayjs | null, Dayjs | null] | null;
-
-const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate, onDelete, handleChangePage }) => {
+const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpdate }) => {
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [form] = Form.useForm();
+  const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [minTotal, setMinTotal] = useState<number | string>("");
-  const [maxTotal, setMaxTotal] = useState<number | string>("");
+  const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders || []);
   const orderStatuses = ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"];
 
   useEffect(() => {
-    setFilteredOrders(orders || []);
+    setFilteredOrders(orders);
   }, [orders]);
 
   const removeVietnameseTones = (str: string) => {
@@ -74,132 +81,78 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
       .toLowerCase();
   };
 
-  const filterOrders = () => {
-    let filtered = [...(orders || [])];
-
+  useEffect(() => {
+    let filtered = [...orders];
     if (searchTerm.trim()) {
       const normalizedSearch = removeVietnameseTones(searchTerm.toLowerCase());
       filtered = filtered.filter((order) =>
         removeVietnameseTones(order.orderCode.toLowerCase()).includes(normalizedSearch)
       );
     }
-
-    if (statusFilter) {
+    if (statusFilter !== null) {
       filtered = filtered.filter((order) => order.status === statusFilter);
     }
-
-    if (minTotal !== "" && !isNaN(Number(minTotal))) {
-      filtered = filtered.filter((order) => order.totalAmount >= Number(minTotal));
-    }
-
-    if (maxTotal !== "" && !isNaN(Number(maxTotal))) {
-      filtered = filtered.filter((order) => order.totalAmount <= Number(maxTotal));
-    }
-
     if (dateRange) {
       filtered = filtered.filter((order) => {
         const createdDate = new Date(order.createdDate);
         return createdDate >= new Date(dateRange[0]) && createdDate <= new Date(dateRange[1]);
       });
     }
-
     setFilteredOrders(filtered);
-  };
+  }, [searchTerm, statusFilter, dateRange, orders]);
 
-  useEffect(() => {
-    filterOrders();
-  }, [searchTerm, statusFilter, minTotal, maxTotal, dateRange, orders]);
-
-  const openEditModal = (order: Order) => {
-    setSelectedOrder(order);
-    form.setFieldsValue(order);
-    setIsEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setSelectedOrder(null);
-    setIsEditModalOpen(false);
-  };
-
-  const handleSave = () => {
-    form.validateFields().then((values) => {
-      if (selectedOrder) {
-        const updatedOrder = { ...selectedOrder, ...values };
-        onUpdate(updatedOrder);
-        closeEditModal();
-      }
-    });
-  };
-
-  const showDeleteConfirm = (order: Order) => {
-    Modal.confirm({
-      title: "Xác nhận xóa",
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc chắn muốn xóa đơn hàng "${order.orderCode}" không?`,
-      okText: "Xóa",
-      okType: "danger",
-      cancelText: "Hủy",
-      onOk: () => onDelete(order.orderId),
-    });
-  };
-
-  const handleStatusChange = (order: Order, newStatus: string) => {
-    Modal.confirm({
-      title: "Xác nhận thay đổi trạng thái",
-      content: `Bạn có chắc chắn muốn đổi trạng thái đơn hàng sang '${newStatus}'?`,
-      okText: "Đồng ý",
-      cancelText: "Hủy",
-      onOk: () => onUpdate({ ...order, status: newStatus }),
-    });
-  };
-
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredOrders);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
-    XLSX.writeFile(workbook, "DanhSachDonHang.xlsx");
-  };
-
-  const printTable = () => {
-    const printContents = `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2>Danh sách đơn hàng</h2>
-      </div>
-      <table border="1" style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th>Mã đơn hàng</th>
-            <th>Trạng thái</th>
-            <th>Khách hàng</th>
-            <th>Ngày tạo</th>
-            <th>Tổng tiền</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${filteredOrders
-        .map((order) => `
-            <tr>
-              <td>${order.orderCode}</td>
-              <td>${order.status}</td>
-              <td>${order.customerId}</td>
-              <td>${new Date(order.createdDate).toLocaleDateString("vi-VN")}</td>
-              <td>${order.totalAmount.toLocaleString()} VND</td>
-            </tr>
-          `)
-        .join("")}
-        </tbody>
-      </table>
-    `;
-
-    const printWindow = window.open("", "", "height=800,width=1000");
-    if (printWindow) {
-      printWindow.document.write("<html><head>");
-      printWindow.document.write("</head><body>");
-      printWindow.document.write(printContents);
-      printWindow.document.write("</body></html>");
-      printWindow.document.close();
-      printWindow.print();
+  const fetchOrderDetails = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrderDetails(response.data.data || []);
+      setIsDetailModalOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      message.error("Không thể lấy chi tiết đơn hàng!");
     }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.put(
+        `http://pharmadistiprobe.fun/api/Order/UpdateOrderStatus/${orderId}/0`,
+        null,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        message.success("Hủy đơn hàng thành công!");
+        onUpdate({ ...selectedOrder!, status: 0 });
+        setFilteredOrders((prev) =>
+          prev.map((order) => (order.orderId === orderId ? { ...order, status: 0 } : order))
+        );
+      } else {
+        message.error(response.data.message || "Không thể hủy đơn hàng!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi hủy đơn hàng:", error);
+      message.error("Lỗi khi hủy đơn hàng!");
+    }
+  };
+
+  const showCancelConfirm = (order: Order) => {
+    Modal.confirm({
+      title: "Xác nhận hủy đơn hàng",
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc chắn muốn hủy đơn hàng "${order.orderCode}" không?`,
+      okText: "Hủy đơn hàng",
+      okType: "danger",
+      cancelText: "Thoát",
+      onOk: () => handleCancelOrder(order.orderId),
+    });
   };
 
   const columns = [
@@ -208,22 +161,19 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: string, record: Order) => (
-        <Select value={status} onChange={(newStatus) => handleStatusChange(record, newStatus)}>
-          {orderStatuses.map((status) => (
-            <Option key={status} value={status}>
-              {status}
-            </Option>
-          ))}
-        </Select>
-      ),
+      render: (status: number) => orderStatuses[status],
     },
-    { title: "Khách hàng", dataIndex: "customerId", key: "customerId" },
+    {
+      title: "Khách hàng",
+      dataIndex: "customer",
+      key: "customer",
+      render: (customer: Order["customer"]) => `${customer.firstName} ${customer.lastName}`,
+    },
     {
       title: "Ngày tạo",
       dataIndex: "createdDate",
       key: "createdDate",
-      render: (date: Date) => new Date(date).toLocaleDateString("vi-VN"),
+      render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
     },
     {
       title: "Tổng tiền",
@@ -232,18 +182,26 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
       render: (amount: number) => `${amount.toLocaleString()} VND`,
     },
     {
-      title: <UnorderedListOutlined />,
+      title: "",
       key: "actions",
       render: (_: any, record: Order) => (
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item key="edit" onClick={() => openEditModal(record)}>
-                <EditOutlined /> Chỉnh sửa
+              <Menu.Item
+                key="view"
+                onClick={() => {
+                  setSelectedOrder(record);
+                  fetchOrderDetails(record.orderId);
+                }}
+              >
+                <EyeOutlined /> Xem chi tiết
               </Menu.Item>
-              <Menu.Item key="delete" onClick={() => showDeleteConfirm(record)} danger>
-                <DeleteOutlined /> Xóa
-              </Menu.Item>
+              {record.status === 1 && (
+                <Menu.Item key="cancel" onClick={() => showCancelConfirm(record)} danger>
+                  <ExclamationCircleOutlined /> Hủy đơn hàng
+                </Menu.Item>
+              )}
             </Menu>
           }
           trigger={["click"]}
@@ -257,26 +215,18 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <div className="flex gap-4 mb-4">
-        <Input placeholder="Tìm kiếm theo mã đơn hàng" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: 200 }} />
-        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>Lọc</Button>
+        <Input
+          placeholder="Tìm kiếm theo mã đơn hàng"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: 200 }}
+          allowClear
+        />
+        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
+          Lọc
+        </Button>
         <Button type="primary" onClick={() => handleChangePage("Tạo đơn hàng")}>
           + Tạo đơn hàng mới
-        </Button>
-        <Button
-          type="primary"
-          icon={<FileExcelOutlined />}
-          onClick={exportToExcel}
-          style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}
-        >
-          Xuất Excel
-        </Button>
-        <Button
-          type="primary"
-          icon={<PrinterOutlined />}
-          onClick={printTable}
-          style={{ marginLeft: 8 }}
-        >
-          In danh sách
         </Button>
       </div>
 
@@ -285,49 +235,36 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
           <Panel header="Bộ lọc nâng cao" key="1">
             <div className="grid grid-cols-3 gap-4">
               <Select
-                placeholder="Trạng thái"
-                value={statusFilter}
-                onChange={setStatusFilter}
+                placeholder="Chọn trạng thái"
+                value={statusFilter ?? undefined}
+                onChange={(value) => setStatusFilter(value)}
                 style={{ width: "100%" }}
+                allowClear
               >
-                <Option value="">Chọn trạng thái</Option>
-                {orderStatuses.map((status) => (
-                  <Option key={status} value={status}>{status}</Option>
+                {orderStatuses.map((status, index) => (
+                  <Option key={index} value={index}>
+                    {status}
+                  </Option>
                 ))}
               </Select>
               <div className="col-span-3">
-                <span style={{ marginRight: 8, marginBottom: 8 }}>Lọc theo ngày tạo</span>
-                <RangePicker onChange={(_: RangeValue, dateStrings: [string, string]) => setDateRange(dateStrings)} style={{ width: "100%" }} />
+                <span style={{ marginRight: 8 }}>Lọc theo ngày tạo:</span>
+                <RangePicker
+                  onChange={(_, dateStrings) =>
+                    setDateRange(dateStrings.length === 2 ? (dateStrings as [string, string]) : null)
+                  }
+                  style={{ width: "100%" }}
+                />
               </div>
               <div className="col-span-3">
-                <span style={{ marginRight: 8, marginBottom: 8 }}>Lọc theo tổng tiền</span>
-                <Input.Group compact style={{ width: "100%" }}>
-                  <Input
-                    type="number"
-                    placeholder="Từ"
-                    value={minTotal}
-                    onChange={(e) => setMinTotal(e.target.value)}
-                    style={{ width: "50%" }}
-                  />
-                  <Input
-                    type="number"
-                    placeholder="đến"
-                    value={maxTotal}
-                    onChange={(e) => setMaxTotal(e.target.value)}
-                    style={{ width: "50%" }}
-                  />
-                </Input.Group>
-              </div>
-              <div className="col-span-2">
                 <Button
                   onClick={() => {
                     setSearchTerm("");
-                    setStatusFilter("");
-                    setMinTotal("");
-                    setMaxTotal("");
+                    setStatusFilter(null);
                     setDateRange(null);
                   }}
-                  style={{ width: "100%", marginTop: "10px" }}
+                  style={{ width: "100%" }}
+                  danger
                 >
                   Xóa bộ lọc
                 </Button>
@@ -337,42 +274,33 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, orderDetails, onUpdate,
         </Collapse>
       )}
 
-      <div id="printableArea">
-        <Table columns={columns} dataSource={filteredOrders} rowKey="orderId" />
-      </div>
+      <Table columns={columns} dataSource={filteredOrders} rowKey="orderId" />
 
       {selectedOrder && (
         <Modal
-          title={`Chỉnh Sửa Đơn Hàng: ${selectedOrder.orderCode}`}
-          open={isEditModalOpen}
-          onCancel={closeEditModal}
-          onOk={handleSave}
+          title={`Chi tiết đơn hàng: ${selectedOrder.orderCode}`}
+          open={isDetailModalOpen}
+          onCancel={() => setIsDetailModalOpen(false)}
+          footer={null}
           width={800}
         >
-          <Form form={form} layout="vertical">
-            <Form.Item label="Mã đơn hàng" name="orderCode">
-              <Input />
-            </Form.Item>
-            <Form.Item label="Trạng thái" name="status">
-              <Input />
-            </Form.Item>
-            <Form.Item label="Khách hàng" name="customerId">
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item label="Tổng tiền" name="totalAmount">
-              <Input type="number" />
-            </Form.Item>
-          </Form>
-
           <Table
-            title={() => "Chi tiết đơn hàng"}
             columns={[
-              { title: "Tên sản phẩm", dataIndex: "productName", key: "productName" },
+              { title: "Tên sản phẩm", dataIndex: ["product", "productName"], key: "productName" },
               { title: "Số lượng", dataIndex: "quantity", key: "quantity" },
-              { title: "Giá bán", dataIndex: "price", key: "price", render: (price: number) => `${price.toLocaleString()} VND` },
-              { title: "Tổng giá", key: "total", render: (record: OrderDetail) => `${(record.quantity * record.price).toLocaleString()} VND` },
+              {
+                title: "Giá bán",
+                dataIndex: ["product", "sellingPrice"],
+                key: "sellingPrice",
+                render: (price: number) => `${price.toLocaleString()} VND`,
+              },
+              {
+                title: "Tổng giá",
+                key: "total",
+                render: (record: OrderDetail) => `${(record.quantity * record.product.sellingPrice).toLocaleString()} VND`,
+              },
             ]}
-            dataSource={orderDetails?.filter((detail) => detail.orderId === selectedOrder.orderId)}
+            dataSource={orderDetails}
             rowKey="orderDetailId"
             pagination={false}
           />

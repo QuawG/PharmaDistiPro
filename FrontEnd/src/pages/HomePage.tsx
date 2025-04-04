@@ -1,3 +1,5 @@
+// src/pages/HomePage.tsx
+import  { useState, useEffect } from "react";
 import Sidebar from "../components/global/Sidebar";
 import ProductListPage from "./Home/ProductList";
 import ProductAdd from "../components/Product/AddProduct";
@@ -7,29 +9,42 @@ import SubCategoryList from "./Home/SubCategoryList";
 import SubAddCategory from "../components/Category/SubAddCategory";
 import CustomerAdd from "../components/Customer/AddCustomer";
 import CustomerListPage from "./Home/CustomerList";
-import UserListPage from "./Home/UserList"; // Import UserListPage
-import UserAdd from "../components/User/AddUser"; // Import UserAdd
-import SupplierListPage from "./Home/SupplierList"; // Import SupplierListPage
-import SupplierAdd from "../components/Supplier/AddSupplier"; 
-import PurchaseOrderListPage from "./Home/PurchaseOrderList"; 
-import PurchaseOrderAdd from "../components/PurchaseOrder/AddPurchaseOrder"; // Import PurchaseOrderAdd
+import UserListPage from "./Home/UserList";
+import UserAdd from "../components/User/AddUser";
+import SupplierListPage from "./Home/SupplierList";
+import SupplierAdd from "../components/Supplier/AddSupplier";
+import PurchaseOrderListPage from "./Home/PurchaseOrderList";
+import PurchaseOrderAdd from "../components/PurchaseOrder/AddPurchaseOrder";
 import Navbar from "../components/global/Navbar";
 import LotListPage from "./Home/LotList";
 import ReceivedNoteListPage from "./Home/ReceivedNoteList";
-import AddLot from "../components/Lot/AddLot"; // Import trang AddLot
+import AddLot from "../components/Lot/AddLot";
 import MyComponent from "./Dashboard/Dashboard/Dashboard";
-import StorageRoomListPage from "./Home/StorageRoom"; // Import trang danh sách kho
-import StorageRoomAdd from "../components/StorageRoom/AddStorageRoom"; 
-import AddReceivedNote from "../components/ReceivedNote/AddReceivedNote"; 
-import OrderListPage from "./Home/OrderList"; // Import OrderListPage
+import StorageRoomListPage from "./Home/StorageRoom";
+import StorageRoomAdd from "../components/StorageRoom/AddStorageRoom";
+import AddReceivedNote from "../components/ReceivedNote/AddReceivedNote";
+import OrderListPage from "./Home/OrderList";
 import NewOrder from "../components/Order/NewOrder";
 import IssueNoteListPage from "./Home/IssueNoteList";
 import UpdateProduct from "../components/Product/UpdateProduct";
-import { useState } from "react";
 import OrderListForSalesManager from "./Home/OrderListForSalesManager";
+import OrderListForWarehouseManager from "./Home/OrderListForWarehouseManager"; // Import mới
+import { useAuth } from "./Home/AuthContext";
+
 const HomePage = () => {
-  const [activePage, setActivePage] = useState<string>("Danh sách sản phẩm");
+  const { user } = useAuth();
+  const [activePage, setActivePage] = useState<string>("");
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      if (user.roleName === "Customer") {
+        setActivePage("Danh sách đơn hàng");
+      } else {
+        setActivePage("Dashboard");
+      }
+    }
+  }, [user]);
 
   const handleChangePage = (page: string, productId?: number) => {
     setActivePage(page);
@@ -39,45 +54,49 @@ const HomePage = () => {
   };
 
   const handleAddNote = () => {
-    // Khi thêm thành công, quay lại danh sách phiếu nhập
     setActivePage("Danh sách phiếu nhập");
   };
+
   console.log("📄 Trang hiện tại:", activePage);
-  
+
   return (
     <div className="w-screen h-screen flex">
       <Sidebar activeSidebar={activePage} handleChangePage={handleChangePage} />
       <div className="flex-grow">
         <Navbar />
-        {activePage === 'Dashboard' && <MyComponent />}
-        {activePage === 'Danh sách sản phẩm' && <ProductListPage handleChangePage={handleChangePage} />}       
-        {activePage === 'Chủng loại' && <CategoryList handleChangePage={handleChangePage} />}
-        {activePage === 'Tạo sản phẩm' && <ProductAdd handleChangePage={handleChangePage} />}
-        {activePage === 'Chỉnh sửa sản phẩm' && selectedProductId !== null && (
-  <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
-)}
-        {activePage === 'Tạo chủng loại' && <CategoryAdd handleChangePage={handleChangePage} />}
-        {activePage === 'Danh sách danh mục thuốc' && <SubCategoryList handleChangePage={handleChangePage} />}
-        {activePage === 'Tạo danh mục thuốc' && <SubAddCategory handleChangePage={handleChangePage} />}
-        {activePage === 'Danh sách nhà thuốc' && <CustomerListPage handleChangePage={handleChangePage} />}
-        {activePage === 'Tạo nhà thuốc' && <CustomerAdd />}
-        {activePage === 'Danh sách người dùng' && <UserListPage handleChangePage={handleChangePage} />}
-        {activePage === 'Tạo người dùng' && <UserAdd />}
-        {activePage === 'Danh sách nhà cung cấp' && <SupplierListPage handleChangePage={handleChangePage} />}
-        {activePage === 'Tạo nhà cung cấp' && <SupplierAdd />}
-        {activePage === 'Danh sách đơn đặt hàng(PO)' && <PurchaseOrderListPage handleChangePage={handleChangePage} />} {/* Tạo PurchaseOrderListPage */}
-        {activePage === 'Tạo đơn đặt hàng(PO)' && <PurchaseOrderAdd />}
+        {activePage === "Dashboard" && <MyComponent />}
+        {activePage === "Danh sách sản phẩm" && <ProductListPage handleChangePage={handleChangePage} />}
+        {activePage === "Chủng loại" && <CategoryList handleChangePage={handleChangePage} />}
+        {activePage === "Tạo sản phẩm" && <ProductAdd handleChangePage={handleChangePage} />}
+        {activePage === "Chỉnh sửa sản phẩm" && selectedProductId !== null && (
+          <UpdateProduct productId={selectedProductId} handleChangePage={handleChangePage} />
+        )}
+        {activePage === "Tạo chủng loại" && <CategoryAdd handleChangePage={handleChangePage} />}
+        {activePage === "Danh sách danh mục thuốc" && <SubCategoryList handleChangePage={handleChangePage} />}
+        {activePage === "Tạo danh mục thuốc" && <SubAddCategory handleChangePage={handleChangePage} />}
+        {activePage === "Danh sách nhà thuốc" && <CustomerListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo nhà thuốc" && <CustomerAdd />}
+        {activePage === "Danh sách người dùng" && <UserListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo người dùng" && <UserAdd />}
+        {activePage === "Danh sách nhà cung cấp" && <SupplierListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo nhà cung cấp" && <SupplierAdd />}
+        {activePage === "Danh sách đơn đặt hàng(PO)" && <PurchaseOrderListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo đơn đặt hàng(PO)" && <PurchaseOrderAdd />}
         {activePage === "Danh sách lô hàng" && <LotListPage handleChangePage={setActivePage} />}
         {activePage === "Tạo lô hàng" && <AddLot handleChangePage={setActivePage} />}
-        {activePage === "Danh sách phiếu nhập" && <ReceivedNoteListPage  handleChangePage={handleChangePage} />}
-        {activePage === "Tạo phiếu nhập kho" && <AddReceivedNote handleChangePage={handleChangePage}  handleAddNote={handleAddNote}/>}
-        {activePage === 'Danh sách kho' && <StorageRoomListPage handleChangePage={handleChangePage} />}
-        {activePage === 'Tạo kho mới' && <StorageRoomAdd/>}
-        {activePage === 'Danh sách đơn hàng' && <OrderListPage handleChangePage={handleChangePage} />}
-        {activePage === 'Tạo đơn hàng' && <NewOrder />}
-        {activePage === 'Đơn hàng (Sales Manager)' && <OrderListForSalesManager handleChangePage={handleChangePage} />}
-        {activePage === 'Danh sách phiếu xuất kho' && <IssueNoteListPage handleChangePage={handleChangePage} />}
-        
+        {activePage === "Danh sách phiếu nhập" && <ReceivedNoteListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo phiếu nhập kho" && (
+          <AddReceivedNote handleChangePage={handleChangePage} handleAddNote={handleAddNote} />
+        )}
+        {activePage === "Danh sách kho" && <StorageRoomListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo kho mới" && <StorageRoomAdd />}
+        {activePage === "Danh sách đơn hàng" && <OrderListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo đơn hàng" && <NewOrder />}
+        {activePage === "Đơn hàng (Sales Manager)" && <OrderListForSalesManager handleChangePage={handleChangePage} />}
+        {activePage === "Danh sách đơn hàng (Warehouse Manager)" && (
+          <OrderListForWarehouseManager handleChangePage={handleChangePage} />
+        )}
+        {activePage === "Danh sách phiếu xuất kho" && <IssueNoteListPage handleChangePage={handleChangePage} />}
       </div>
     </div>
   );
