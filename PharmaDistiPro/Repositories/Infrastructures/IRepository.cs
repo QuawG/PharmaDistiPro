@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Storage;
+using PharmaDistiPro.Models;
 
 namespace PharmaDistiPro.Repositories.Infrastructures
 {
@@ -28,6 +29,7 @@ namespace PharmaDistiPro.Repositories.Infrastructures
         Task<int> CountAsync(Expression<Func<T, bool>> expression);
         Task<int> SaveAsync();
         Task<IDbContextTransaction> BeginTransactionAsync();
+       
     }
 
 }

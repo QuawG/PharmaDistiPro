@@ -36,10 +36,10 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ customers, setCustomers }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const openViewModal = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setIsViewModalOpen(true);
-  };
+  // const openViewModal = (customer: Customer) => {
+  //   setSelectedCustomer(customer);
+  //   setIsViewModalOpen(true);
+  // };
 
   // Xử lý xóa khách hàng
   const handleDelete = (customer: Customer) => {

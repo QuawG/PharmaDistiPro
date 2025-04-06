@@ -6,10 +6,11 @@ import axios from "axios";
 const { Option } = Select;
 
 // Ánh xạ giữa userId và tên người dùng
-const userMap : { [key: number]: string } ={
-  1: "Giám đốc",
-  2: "Nhân viên",
-  // Thêm các userId và tên tương ứng
+const userMap: { [key: number]: string } = {
+  1: 'Giám đốc',
+  2: 'Quản lí kho',
+  3: 'Trưởng phòng kinh doanh',
+  4: 'Nhân viên bán hàng',
 };
 
 export default function UpdateSupplierDetail({
@@ -30,7 +31,7 @@ export default function UpdateSupplierDetail({
     supplierName: "",
     supplierAddress: "",
     supplierPhone: "",
-    status: "",
+    status: 1, // Sử dụng 1 cho "Hoạt động" và 0 cho "Không hoạt động"
     createdBy: "",
     createdDate: "",
   });
@@ -69,23 +70,38 @@ export default function UpdateSupplierDetail({
       return;
     }
 
+    const formPayload = new FormData();
+    formPayload.append('Id', supplier.id.toString());
+    formPayload.append('SupplierCode', formData.supplierCode);
+    formPayload.append('SupplierName', formData.supplierName);
+    formPayload.append('SupplierAddress', formData.supplierAddress);
+    formPayload.append('SupplierPhone', formData.supplierPhone);
+    formPayload.append('Status', formData.status.toString());
+    formPayload.append('CreatedBy', supplier.createdBy ? supplier.createdBy.toString() : "");
+    formPayload.append('CreatedDate', supplier.createdDate || new Date().toISOString());
+
     try {
-      const response = await axios.put('http://pharmadistiprobe.fun/api/Supplier/UpdateSupplier', {
-        ...formData,
-        createdBy: supplier.createdBy, // Giữ nguyên ID người tạo
+      const response = await axios.put('http://pharmadistiprobe.fun/api/Supplier/UpdateSupplier', formPayload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (response.data.success) {
         message.success("Cập nhật thông tin thành công!");
-        onSave(formData); // Gọi hàm onSave để cập nhật dữ liệu ở nơi khác
+        onSave(formData);
         onClose();
       } else {
         message.error(response.data.message || "Cập nhật không thành công!");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        // If it's an Axios error, safely access error.response
+        console.error(error.response); // In ra phản hồi từ server
         message.error(error.response?.data.message || "Có lỗi xảy ra!");
       } else {
+        // Handle non-Axios errors
+        console.error(error);
         message.error("Vui lòng điền đầy đủ thông tin!");
       }
     }
@@ -106,6 +122,9 @@ export default function UpdateSupplierDetail({
         <p className="text-sm text-gray-500 mb-6">Cập nhật thông tin nhà cung cấp theo form bên dưới</p>
 
         <Form layout="vertical" onFinish={handleSubmit}>
+          <Form.Item label="ID nhà cung cấp">
+            <Input value={supplier.id} disabled />
+          </Form.Item>
           <Form.Item
             label="Mã nhà cung cấp"
             name="supplierCode"
@@ -153,14 +172,13 @@ export default function UpdateSupplierDetail({
             />
           </Form.Item>
 
-          <Form.Item label="Trạng thái" name="status" initialValue={formData?.status ? 'Hoạt động' : 'Không hoạt động'}>
+          <Form.Item label="Trạng thái" name="status" initialValue={formData?.status === 1 ? 'active' : 'inactive'}>
             <Select
-              value={formData?.status ? 'Hoạt động' : 'Không hoạt động'} 
-              onChange={(value) => handleChange(value, "status")}
+              value={formData?.status === 1 ? 'active' : 'inactive'}
+              onChange={(value) => handleChange(value === 'active' ? 1 : 0, "status")}
             >
               <Option value="active">Hoạt động</Option>
               <Option value="inactive">Không hoạt động</Option>
-              <Option value="pending">Đang chờ</Option>
             </Select>
           </Form.Item>
 

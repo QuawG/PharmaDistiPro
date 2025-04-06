@@ -18,9 +18,12 @@
 
     public class IssueNoteDetailRequestDto
     {
-        public int IssueNoteDetailId { get; set; }
-        public int? IssueNoteId { get; set; }
+        public int NoteCheckDetailId { get; set; }
+        public int? NoteCheckId { get; set; }
         public int? ProductLotId { get; set; }
-        public int? Quantity { get; set; }
+        public int? StorageQuantity { get; set; }
+        public int? ActualQuantity { get; set; }
+        public int? ErrorQuantity { get; set; }
+        public int? Status { get; set; }
     }
 }

@@ -1,199 +1,213 @@
-import { useState } from "react";
-import { Form, Input, Button, Select, Upload, message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import React, { useState } from "react";
+import { Form, Input, Button, Select, message } from "antd";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import $ from "jquery"; // Import jQuery nếu bạn cần dùng nó
+
+
+const { Option } = Select;
+
+// Define role mapping
+const roles = {
+  1: "Giám đốc",
+  2: "Quản lí kho",
+  3: "Trưởng phòng kinh doanh",
+  4: "Nhân viên bán hàng",
+};
 
 export default function AddUser() {
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    const [user, setUser] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        address: '',
-        role: '',
-        employeeId: '',
-        status: '',
-        password: '',
-        avatar: '' // Add avatar to the initial state
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null); // Specify the type as string | null
+  const [form] = Form.useForm(); // Sử dụng Form instance của Ant Design để quản lý form
+  const [file, setFile] = useState<File | null>(null); // Specify the type as File | null
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileInput = e.target as HTMLInputElement;
+
+    if (fileInput.files && fileInput.files[0]) {
+      const selectedFile = fileInput.files[0];
+      setFile(selectedFile); // TypeScript will now know that 'file' can be a File or null
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setAvatarPreview(event.target.result as string); // 'avatarPreview' is now a string or null
+        }
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (values:any) => {
+    const formData = new FormData();
+    formData.append("UserName", values.userName);
+    formData.append("FirstName", values.firstName);
+    formData.append("LastName", values.lastName);
+    formData.append("Phone", values.phone);
+    formData.append("Email", values.email);
+    formData.append("Password", values.password);
+    formData.append("Address", values.address);
+    formData.append("Age", values.age.toString()); // Chuyển số thành chuỗi
+    formData.append("RoleId", values.roleId.toString());
+    formData.append("Status", values.status.toString());
+    if (file) {
+      formData.append("avatar", file); // Thêm file avatar nếu có
+    }
+    $.ajax({
+        async: false,
+        type: "POST",
+        url: 'http://pharmadistiprobe.fun/api/User/CreateUser',
+        data: formData,
+        processData: false, // không xử lý dữ liệu
+        contentType: false, // không gửi content type mặc định
+        success: function (receivedData) {
+            // remove localStorage
+            console.log(receivedData);
+           message.success("Đã tạo người dùng thành công!");
+        form.resetFields(); // Reset form sau khi thành công
+        setAvatarPreview(null);
+        setFile(null);        },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        error: function (xhr) {
+            console.error(xhr.responseText);
+            $('#errorMessage').removeClass('d-none');
+            $('#errorMessage').fadeIn().delay(3000).fadeOut();
+        }
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setUser((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
+    
+  };
 
-    const handleAvatarChange = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            if (e.target?.result) {
-                setAvatarPreview(e.target.result as string);
-                setUser({ ...user, avatar: e.target.result as string });
-            }
-        };
-        reader.readAsDataURL(file);
-        return false; // Prevent uploading to the server
-    };
+  return (
+    <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-900">Tạo người dùng mới</h1>
+        <p className="text-sm text-gray-500">Tạo một người dùng mới theo form bên dưới</p>
+      </div>
 
-    const handleSubmit = async () => {
-        try {
-            console.log("User data:", user);
-            message.success("Đã tạo người dùng thành công!");
-        } catch (error) {
-            message.error("Vui lòng điền đầy đủ thông tin!");
-        }
-    };
+      <div className="p-5 bg-white rounded-lg shadow w-full max-w-7xl mx-auto">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{ status: true }} // Giá trị mặc định cho status
+        >
+          <Form.Item label="Avatar">
+            <Input
+              id="avatarInput"
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+            />
+            {avatarPreview && (
+              <img
+                src={avatarPreview}
+                alt="Avatar Preview"
+                className="w-24 h-24 rounded-full object-cover mt-2"
+              />
+            )}
+          </Form.Item>
 
-    return (
-        <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
-            {/* Header */}
-            <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Tạo người dùng mới</h1>
-                <p className="text-sm text-gray-500">Tạo một người dùng mới</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Form.Item
+              label="Tên đăng nhập"
+              name="userName"
+              rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập!" }]}
+            >
+              <Input placeholder="Nhập tên đăng nhập" />
+            </Form.Item>
 
-            <div className="p-5 bg-white rounded-lg shadow w-full max-w-7xl mx-auto">
-                {/* Form */}
-                <Form
-                    layout="vertical"
-                    onFinish={handleSubmit}
-                    className="space-y-6 p-5 w-full bg-white rounded-lg shadow"
-                >
-                    {/* Avatar */}
-                    <Form.Item label="Avatar" valuePropName="fileList" getValueFromEvent={handleAvatarChange}>
-                        <Upload
-                            name="avatar"
-                            showUploadList={false}
-                            beforeUpload={handleAvatarChange}
-                            accept="image/*"
-                        >
-                            {avatarPreview ? (
-                                <img src={avatarPreview} alt="Avatar Preview" className="w-24 h-24 rounded-full object-cover" />
-                            ) : (
-                                <div>
-                                    <UploadOutlined />
-                                    <div>Upload</div>
-                                </div>
-                            )}
-                        </Upload>
-                    </Form.Item>
+            <Form.Item
+              label="Tên riêng"
+              name="firstName"
+              rules={[{ required: true, message: "Vui lòng nhập tên riêng!" }]}
+            >
+              <Input placeholder="Nhập tên riêng" />
+            </Form.Item>
 
-                    {/* Form Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Form.Item
+              label="Tên họ"
+              name="lastName"
+              rules={[{ required: true, message: "Vui lòng nhập tên họ!" }]}
+            >
+              <Input placeholder="Nhập tên họ" />
+            </Form.Item>
 
-                        <Form.Item label="Mã số nhân viên" name="employeeId" required>
-                            <Input
-                                name="employeeId"
-                                value={user.employeeId}
-                                onChange={handleChange}
-                                placeholder="Nhập mã số nhân viên"
-                            />
-                        </Form.Item>
+            <Form.Item
+              label="Số điện thoại"
+              name="phone"
+              rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
+            >
+              <Input type="tel" placeholder="Nhập số điện thoại" />
+            </Form.Item>
 
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: "Vui lòng nhập email!" }]}
+            >
+              <Input type="email" placeholder="Nhập email" />
+            </Form.Item>
 
-                        <Form.Item label="Tên riêng" name="firstName" required>
-                            <Input
-                                name="firstName"
-                                value={user.firstName}
-                                onChange={handleChange}
-                                placeholder="Nhập tên riêng"
-                            />
-                        </Form.Item>
+            <Form.Item
+              label="Tuổi"
+              name="age"
+              rules={[{ required: true, message: "Vui lòng nhập tuổi!" }]}
+            >
+              <Input type="number" placeholder="Nhập tuổi" />
+            </Form.Item>
 
-                        <Form.Item label="Tên họ" name="lastName" required>
-                            <Input
-                                name="lastName"
-                                value={user.lastName}
-                                onChange={handleChange}
-                                placeholder="Nhập tên họ"
-                            />
-                        </Form.Item>
+            <Form.Item
+              label="Địa chỉ"
+              name="address"
+              rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
+            >
+              <Input placeholder="Nhập địa chỉ" />
+            </Form.Item>
 
-                        <Form.Item label="Email" name="email" required>
-                            <Input
-                                type="email"
-                                name="email"
-                                value={user.email}
-                                onChange={handleChange}
-                                placeholder="Nhập email"
-                            />
-                        </Form.Item>
+            <Form.Item
+              label="Vai trò"
+              name="roleId"
+              rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
+            >
+              <Select placeholder="Chọn vai trò">
+                {Object.entries(roles).map(([id, name]) => (
+                  <Option key={id} value={id}>
+                    {name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-                        <Form.Item label="Số điện thoại" name="phone" required>
-                            <Input
-                                type="tel"
-                                name="phone"
-                                value={user.phone}
-                                onChange={handleChange}
-                                placeholder="Nhập số điện thoại"
-                            />
-                        </Form.Item>
+            <Form.Item
+              label="Trạng thái tài khoản"
+              name="status"
+              rules={[{ required: true, message: "Vui lòng chọn trạng thái tài khoản!" }]}
+            >
+              <Select placeholder="Chọn trạng thái tài khoản">
+                <Option value={true}>Kích hoạt</Option>
+                <Option value={false}>Vô hiệu hóa</Option>
+              </Select>
+            </Form.Item>
 
-                        <Form.Item label="Địa chỉ" name="address" required>
-                            <Input
-                                name="address"
-                                value={user.address}
-                                onChange={handleChange}
-                                placeholder="Nhập địa chỉ"
-                            />
-                        </Form.Item>
+            <Form.Item
+              label="Mật khẩu"
+              name="password"
+              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+            >
+              <Input.Password placeholder="Nhập mật khẩu" />
+            </Form.Item>
+          </div>
 
-                        <Form.Item label="Vai trò" name="role" required>
-                            <Select
-                                value={user.role}
-                                onChange={(value) => setUser({ ...user, role: value })}
-                                placeholder="Chọn vai trò"
-                            >
-                                <Select.Option value="warehouse_manager">Quản lý kho</Select.Option>
-                                <Select.Option value="sales_staff">Nhân viên bán hàng</Select.Option>
-                                <Select.Option value="sales_manager">Quản lý bán hàng</Select.Option>
-                            </Select>
-                        </Form.Item>
-
-
-                        <Form.Item label="Trạng thái tài khoản" name="status" required>
-                            <Select
-                                value={user.status}
-                                onChange={(value) => setUser({ ...user, status: value })}
-                                placeholder="Chọn trạng thái tài khoản"
-                            >
-                                <Select.Option value="active">Kích hoạt</Select.Option>
-                                <Select.Option value="inactive">Vô hiệu hóa</Select.Option>
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item label="Mật khẩu" name="password" required>
-                            <Input.Password
-                                name="password"
-                                value={user.password}
-                                onChange={handleChange}
-                                placeholder="Nhập mật khẩu"
-                            />
-                        </Form.Item>
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex gap-4">
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            className="px-6 py-3 bg-blue-500 text-white rounded-md font-semibold text-sm hover:bg-blue-600 focus:ring-2 focus:ring-blue-500"
-                        >
-                            Tạo
-                        </Button>
-                        <Button
-                            type="default"
-                            onClick={() => console.log('Cancel action')}
-                            className="px-6 py-3 bg-gray-500 text-white rounded-md font-semibold text-sm hover:bg-gray-600 focus:ring-2 focus:ring-gray-500"
-                        >
-                            Hủy
-                        </Button>
-                    </div>
-                </Form>
-            </div>
-
-        </div>
-    );
+          <div className="flex gap-4 justify-end">
+            <Button type="default" onClick={() => message.info("Đã hủy!")}>
+              Hủy
+            </Button>
+            <Button type="primary" htmlType="submit">
+              Tạo
+            </Button>
+          </div>
+        </Form>
+      </div>
+    </div>
+  );
 }

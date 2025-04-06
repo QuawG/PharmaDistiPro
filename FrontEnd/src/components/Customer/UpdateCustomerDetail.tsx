@@ -1,7 +1,8 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Button, Input, Avatar, Typography, Row, Col, Form, Select, Upload, message } from "antd";
 import { XCircle } from "lucide-react";
 import { UploadOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 const { Title, Text } = Typography;
 
@@ -20,6 +21,7 @@ export default function UpdateCustomerDetail({
   const [visible, setVisible] = useState(false);
   const [formData, setFormData] = useState(customer);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [fileList, setFileList] = useState<any[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,6 +41,7 @@ export default function UpdateCustomerDetail({
   useEffect(() => {
     setFormData(customer);
     setPreviewImage(customer?.avatar || "https://via.placeholder.com/150");
+    setFileList([]);
   }, [customer]);
 
   if (!mounted) return null;
@@ -59,16 +62,43 @@ export default function UpdateCustomerDetail({
       }
     };
     reader.readAsDataURL(file);
-    return false; // Prevent uploading to the server
+    return false;
   };
 
   const handleSubmit = async () => {
+    const formPayload = new FormData();
+    formPayload.append('LastName', formData?.lastName || "");
+    formPayload.append('EmployeeCode', formData?.employeeCode || "");
+    formPayload.append('Email', formData?.email || "");
+    formPayload.append('Phone', formData?.phone || "");
+    formPayload.append('Address', formData?.address || "");
+    formPayload.append('TaxCode', formData?.taxCode || "");
+    formPayload.append('Status', formData?.status === "active" ? "1" : "0");
+    formPayload.append('Avatar', formData?.avatar || "");
+    formPayload.append('RoleId', '5');
+
     try {
-      onSave(formData);
-      message.success("Cập nhật thông tin thành công!");
-      onClose();
+      const response = await axios.put('http://pharmadistiprobe.fun/api/User/UpdateUser', formPayload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        message.success("Cập nhật thông tin thành công!");
+        onSave(formData);
+        onClose();
+      } else {
+        message.error(response.data.message || "Cập nhật không thành công!");
+      }
     } catch (error) {
-      message.error("Vui lòng điền đầy đủ thông tin!");
+      if (axios.isAxiosError(error)) {
+        console.error(error.response); // Safe access after type guard
+        message.error(error.response?.data.message || "Có lỗi xảy ra!");
+      } else {
+        console.error(error);
+        message.error("Vui lòng điền đầy đủ thông tin!");
+      }
     }
   };
 
@@ -80,7 +110,6 @@ export default function UpdateCustomerDetail({
       width="90%"
       className="customer-detail-modal"
       centered
-      styles={{ body: { padding: 0 } }}
       closeIcon={<XCircle size={24} />}
     >
       <div className="p-6">
@@ -94,10 +123,14 @@ export default function UpdateCustomerDetail({
             {/* Left Section */}
             <Col xs={24} lg={12}>
               <div className="p-4 border rounded-lg">
-                <Form.Item label="Tên nhà thuốc" name="firstName" initialValue={formData?.firstName}>
+                <Form.Item label="ID" name="userId" initialValue={customer?.userId}>
+                  <Input value={customer?.userId || "N/A"} disabled />
+                </Form.Item>
+
+                <Form.Item label="Tên nhà thuốc" name="lastName" initialValue={formData?.lastName}>
                   <Input
-                    value={formData?.firstName || ""}
-                    onChange={(e) => handleChange(e.target.value, "firstName")}
+                    value={formData?.lastName || ""}
+                    onChange={(e) => handleChange(e.target.value, "lastName")}
                   />
                 </Form.Item>
 
@@ -143,7 +176,6 @@ export default function UpdateCustomerDetail({
                   >
                     <Select.Option value="active">Hoạt động</Select.Option>
                     <Select.Option value="inactive">Không hoạt động</Select.Option>
-                    <Select.Option value="pending">Đang chờ</Select.Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -159,15 +191,17 @@ export default function UpdateCustomerDetail({
                   className="border border-gray-300 mb-2"
                 />
 
-                <Form.Item name="avatar">
-                  <Upload
-                    showUploadList={false}
-                    beforeUpload={handleAvatarChange}
-                    accept="image/*"
-                  >
-                    <Button icon={<UploadOutlined />}  style={{ marginTop: '20px' }}>Chọn ảnh</Button>
-                  </Upload>
-                </Form.Item>
+<Form.Item name="avatar">
+  <Upload
+    fileList={fileList}  // Use fileList prop instead of value
+    showUploadList={false}
+    beforeUpload={handleAvatarChange}
+    accept="image/*"
+    onChange={({ fileList: newFileList }) => setFileList(newFileList)} // Update fileList state
+  >
+    <Button icon={<UploadOutlined />} style={{ marginTop: '20px' }}>Chọn ảnh</Button>
+  </Upload>
+</Form.Item>
               </div>
             </Col>
           </Row>

@@ -142,7 +142,8 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<ILotRepository, LotRepository>();
             builder.Services.AddScoped<IProductLotRepository, ProductLotRepository>();
             builder.Services.AddScoped<IReceivedNoteRepository, ReceivedNoteRepository>();
-
+            builder.Services.AddScoped<INoteCheckRepository, NoteCheckRepository>();
+            builder.Services.AddScoped<INoteCheckDetailsRepository, NoteCheckDetailsRepository>();
             #endregion
 
             #region Add DI for services
@@ -159,7 +160,7 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<ILotService, LotService>();
             builder.Services.AddScoped<IProductLotService, ProductLotService>();
             builder.Services.AddScoped<IReceivedNoteService, ReceivedNoteService>();
-
+            builder.Services.AddScoped<INoteCheckService,NoteCheckService>();
             #endregion
 
             // Register AutoMapper

@@ -12,7 +12,7 @@ namespace PharmaDistiPro.Repositories.Impl
 
         public async Task InsertRangeAsync(List<IssueNoteDetail> issueNoteDetailsList)
         {
-           await _context.IssueNoteDetails.AddRangeAsync(issueNoteDetailsList);
+            await _context.IssueNoteDetails.AddRangeAsync(issueNoteDetailsList);
         }
     }
 }

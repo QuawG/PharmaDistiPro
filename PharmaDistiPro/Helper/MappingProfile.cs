@@ -87,38 +87,39 @@ namespace PharmaDistiPro.Helper
             CreateMap<User, UserInputRequest>();
             CreateMap<UserInputRequest, User>();
             #endregion
-
             #region Product
+
+            // Mapping Product -> ProductDTO
             CreateMap<Product, ProductDTO>()
                 .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.Unit))
-                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category))
-                .ForMember(dest => dest.CreatedByNavigation, opt => opt.MapFrom(src => src.CreatedByNavigation))
-
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : string.Empty)) // ✅ Tránh null
+                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.ImageProducts != null && src.ImageProducts.Any() ? src.ImageProducts.First().Image : string.Empty)) // ✅ Tránh null
                 .ReverseMap();
-               
 
+            // Mapping ProductInputRequest -> ProductDTO
             CreateMap<ProductInputRequest, ProductDTO>().ReverseMap();
 
+            // Mapping ProductInputRequest -> Product (Chỉ cập nhật nếu có dữ liệu)
             CreateMap<ProductInputRequest, Product>()
-                .ForMember(dest => dest.ProductName, opt => opt.Condition(src => !string.IsNullOrEmpty(src.ProductName)))
-                .ForMember(dest => dest.ProductCode, opt => opt.Condition(src => !string.IsNullOrEmpty(src.ProductCode)))
-                .ForMember(dest => dest.ManufactureName, opt => opt.Condition(src => !string.IsNullOrEmpty(src.ManufactureName)))
-                .ForMember(dest => dest.Description, opt => opt.Condition(src => !string.IsNullOrEmpty(src.Description)))
+                .ForMember(dest => dest.ProductName, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ProductName)))
+                .ForMember(dest => dest.ProductCode, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ProductCode)))
+                .ForMember(dest => dest.ManufactureName, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ManufactureName)))
+                .ForMember(dest => dest.Description, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.Description)))
                 .ForMember(dest => dest.Storageconditions, opt => opt.Condition(src => src.Storageconditions.HasValue))
-                .ForMember(dest => dest.Unit, opt => opt.Condition(src => !string.IsNullOrEmpty(src.Unit)))
+                .ForMember(dest => dest.Unit, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.Unit)))
                 .ForMember(dest => dest.CategoryId, opt => opt.Condition(src => src.CategoryId.HasValue))
                 .ForMember(dest => dest.Vat, opt => opt.Condition(src => src.Vat.HasValue))
                 .ForMember(dest => dest.SellingPrice, opt => opt.Condition(src => src.SellingPrice.HasValue))
                 .ForMember(dest => dest.Weight, opt => opt.Condition(src => src.Weight.HasValue))
-                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()) 
                 .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
-                .ForMember(dest => dest.Status, opt => opt.Ignore());
-          
+                .ForMember(dest => dest.Status, opt => opt.Ignore()); 
 
+            // Mapping Product <-> ProductOrderDto
             CreateMap<Product, ProductOrderDto>();
             CreateMap<ProductOrderDto, Product>();
-            #endregion
 
+            #endregion
             #region ImageProduct
             CreateMap<ImageProduct, ImageProductDTO>()
                 .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product)) 
@@ -127,29 +128,36 @@ namespace PharmaDistiPro.Helper
             #endregion
 
             #region NoteCheck
-            CreateMap<NoteCheck, CheckNoteRequestDTO>().ReverseMap()
-                .ForMember(dest => dest.NoteCheckDetails, opt => opt.Ignore())
-                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore());
 
-            CreateMap<NoteCheck, CheckNoteResponseDTO>()
-                .ForMember(dest => dest.CheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
-                .ReverseMap()
-                .ForMember(dest => dest.NoteCheckDetails, opt => opt.Ignore())
-                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore());
 
-            CreateMap<ApproveCheckNoteRequestDTO, NoteCheck>().ReverseMap();
-            CreateMap<ApproveCheckNoteResponseDTO, NoteCheck>().ReverseMap();
-            #endregion
+            // Ánh xạ từ Model -> DTO
+            CreateMap<NoteCheck, NoteCheckDTO>()
+                .ForMember(dest => dest.NoteCheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
+                .ReverseMap(); // Cho phép ánh xạ ngược từ DTO -> Model
 
-            #region NoteCheckDetail
-            CreateMap<NoteCheckDetail, CheckNoteDetailDTO>().ReverseMap()
-                .ForMember(dest => dest.NoteCheck, opt => opt.Ignore())
-                .ForMember(dest => dest.ProductLot, opt => opt.Ignore());
+            // Ánh xạ từ RequestDTO -> Model
+            CreateMap<NoteCheckRequestDTO, NoteCheck>()
+                .ForMember(dest => dest.NoteCheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
+                .ReverseMap(); // Cho phép ánh xạ ngược từ Model -> RequestDTO
 
-            CreateMap<NoteCheckDetail, CheckNoteDetailResponseDTO>().ReverseMap()
-                .ForMember(dest => dest.NoteCheck, opt => opt.Ignore())
-                .ForMember(dest => dest.ProductLot, opt => opt.Ignore());
-            #endregion
+            // Ánh xạ giữa NoteCheckDetail và DTO
+            CreateMap<NoteCheckDetail, NoteCheckDetailsDTO>()
+                .ForMember(dest => dest.ProductLot, opt => opt.MapFrom(src => src.ProductLot))
+                .ReverseMap();
+
+            // Ánh xạ từ RequestDTO -> Model cho NoteCheckDetail
+            CreateMap<NoteCheckDetailRequestDTO, NoteCheckDetail>()
+                .ReverseMap();
+
+            // Ánh xạ ProductLot -> ProductLotCheckNoteDetailsDTO
+            CreateMap<ProductLot, ProductLotCheckNoteDetailsDTO>()
+                .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product))
+                .ReverseMap();
+
+           
+
+
+#endregion
 
             #region productlot
             CreateMap<ProductLot, ProductLotIssueNoteDetailsDto>().ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))

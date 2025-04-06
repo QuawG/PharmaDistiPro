@@ -3,7 +3,12 @@ import { Modal, Button, Typography } from "antd";
 import { X } from "lucide-react";
 
 const { Title, Text } = Typography;
-
+const userRoles: { [key: number]: string } = {
+  1: 'Giám đốc',
+  2: 'Quản lí kho',
+  3: 'Trưởng phòng kinh doanh',
+  4: 'Nhân viên bán hàng',
+};
 export default function StorageRoomDetail({
   isOpen,
   onClose,
@@ -44,15 +49,18 @@ export default function StorageRoomDetail({
     >
       <div className="p-4">
         <Title level={5}>Xem thông tin kho hàng ở dưới đây</Title>
-
+        <div className="mb-4">
+          <Text strong>ID:</Text>
+          <div className="mt-1 p-2 bg-gray-100 rounded">{room?. storageRoomId || "N/A"}</div>
+        </div>
         <div className="mb-4">
           <Text strong>Mã kho:</Text>
-          <div className="mt-1 p-2 bg-gray-100 rounded">{room?.code || "N/A"}</div>
+          <div className="mt-1 p-2 bg-gray-100 rounded">{room?.storageRoomCode || "N/A"}</div>
         </div>
 
         <div className="mb-4">
           <Text strong>Tên kho:</Text>
-          <div className="mt-1 p-2 bg-gray-100 rounded">{room?.name || "N/A"}</div>
+          <div className="mt-1 p-2 bg-gray-100 rounded">{room?.storageRoomName || "N/A"}</div>
         </div>
 
         <div className="mb-4">
@@ -74,7 +82,15 @@ export default function StorageRoomDetail({
           <Text strong>Sức chứa:</Text>
           <div className="mt-1 p-2 bg-gray-100 rounded">{room?.capacity || "N/A"}</div>
         </div>
+        <div className="mb-4">
+          <Text strong>Tạo bởi:</Text>
+          <div className="mt-1 p-2 bg-gray-100 rounded">{userRoles[room?.createdBy]|| "N/A"}</div>
+        </div>
 
+        <div className="mb-4">
+          <Text strong>Thời điểm tạo:</Text>
+          <div className="mt-1 p-2 bg-gray-100 rounded">{room?.createdDate || "N/A"}</div>
+        </div>
         <div className="flex justify-end">
           <Button type="primary" onClick={onClose}>
             Đóng

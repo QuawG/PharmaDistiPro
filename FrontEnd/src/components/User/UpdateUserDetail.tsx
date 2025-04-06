@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal, Button, Input, Avatar, Typography, Row, Col, Form, Select, Upload, message } from "antd";
 import { XCircle } from "lucide-react";
 import { UploadOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 const { Title, Text } = Typography;
 
@@ -20,6 +21,7 @@ export default function UpdateUserDetail({
   const [visible, setVisible] = useState(false);
   const [formData, setFormData] = useState(user);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [, setFileList] = useState<any[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,6 +41,7 @@ export default function UpdateUserDetail({
   useEffect(() => {
     setFormData(user);
     setPreviewImage(user?.avatar || "https://via.placeholder.com/150");
+    setFileList([]);
   }, [user]);
 
   if (!mounted) return null;
@@ -63,12 +66,41 @@ export default function UpdateUserDetail({
   };
 
   const handleSubmit = async () => {
+    const formPayload = new FormData();
+    formPayload.append("UserId", user.id); // Assuming user.id is the user ID
+    formPayload.append("FirstName", formData.firstName || "");
+    formPayload.append("LastName", formData.lastName || "");
+    formPayload.append("Email", formData.email || "");
+    formPayload.append("Phone", formData.phone || "");
+    formPayload.append("Address", formData.address || "");
+    formPayload.append("Avatar", formData.avatar || ""); // If avatar is a file, handle it appropriately
+    formPayload.append("RoleId", "5"); // Assuming this is a constant value
+    formPayload.append("EmployeeCode", formData.employeeCode || "");
+    formPayload.append("TaxCode", formData.taxCode || "");
+    formPayload.append("Status", formData.status === "active" ? "1" : "0");
+
     try {
-      onSave(formData);
-      message.success("Cập nhật thông tin thành công!");
-      onClose();
+      const response = await axios.put("http://pharmadistiprobe.fun/api/User/UpdateUser", formPayload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        message.success("Cập nhật thông tin thành công!");
+        onSave(formData);
+        onClose();
+      } else {
+        message.error(response.data.message || "Cập nhật không thành công!");
+      }
     } catch (error) {
-      message.error("Vui lòng điền đầy đủ thông tin!");
+      if (axios.isAxiosError(error)) {
+        console.error(error.response); // Safe access after type guard
+        message.error(error.response?.data.message || "Có lỗi xảy ra!");
+      } else {
+        console.error(error);
+        message.error("Có lỗi xảy ra!");
+      }
     }
   };
 
@@ -128,13 +160,6 @@ export default function UpdateUserDetail({
                   />
                 </Form.Item>
 
-                <Form.Item label="Vai trò" name="role" initialValue={formData?.role}>
-                  <Input
-                    value={formData?.role || ""}
-                    onChange={(e) => handleChange(e.target.value, "role")}
-                  />
-                </Form.Item>
-
                 <Form.Item label="Mã số nhân viên" name="employeeCode" initialValue={formData?.employeeCode}>
                   <Input
                     value={formData?.employeeCode || ""}
@@ -169,6 +194,7 @@ export default function UpdateUserDetail({
                     showUploadList={false}
                     beforeUpload={handleAvatarChange}
                     accept="image/*"
+                    onChange={({ fileList: newFileList }) => setFileList(newFileList)}
                   >
                     <Button icon={<UploadOutlined />} style={{ marginTop: "20px" }}>
                       Chọn ảnh

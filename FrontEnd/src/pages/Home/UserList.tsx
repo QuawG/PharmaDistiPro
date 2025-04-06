@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { FileText, Table, Printer } from 'lucide-react';
 import axios from 'axios';
 import UserTable from '../../components/User/UserTable';
 
@@ -19,7 +18,7 @@ interface User {
   employeeCode: string;
   createdBy: string;
   createdDate: string;
-  status: string;
+  status: boolean;
 }
 
 const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
@@ -39,14 +38,6 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
 
     fetchUsers();
   }, []);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedStatus(e.target.value);
-  };
 
   // const filteredUsers = users.filter(user => {
   //   const matchesSearch = 
@@ -90,11 +81,12 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
               placeholder="Tìm kiếm..."
               className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
               value={searchTerm}
-              onChange={handleSearch}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <p>Lọc theo trạng thái</p>
             <select
               value={selectedStatus}
-              onChange={handleStatusChange}
+              onChange={(e) => setSelectedStatus(e.target.value)}
               className="border rounded p-1"
             >
               <option value="">Tất cả trạng thái</option>

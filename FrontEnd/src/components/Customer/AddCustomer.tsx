@@ -1,19 +1,22 @@
 import { useState } from "react";
 import { Form, Input, Button, Select, Upload, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 export default function AddCustomer() {
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [customer, setCustomer] = useState({
-        firstName: '',
+        lastName: '',
+        userName: '',
         email: '',
         phone: '',
         address: '',
-        status: '',
+        status: false, // Sử dụng kiểu boolean cho status
         password: '',
-        pharmacyCode: '',
+        employeeCode: '',
         taxCode: '',
-        avatar: '' // Add avatar to the initial state
+        avatar: '',
+        roleId: 5,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -33,15 +36,49 @@ export default function AddCustomer() {
             }
         };
         reader.readAsDataURL(file);
-        return false; // Prevent uploading to the server
+        return false; // Ngăn chặn upload tự động
     };
 
     const handleSubmit = async () => {
+        const formData = new FormData();
+        formData.append('UserName', customer.userName);
+        formData.append('FirstName', customer.userName); // Sử dụng userName cho FirstName
+        formData.append('LastName', customer.lastName);
+        formData.append('Phone', customer.phone);
+        formData.append('Email', customer.email);
+        formData.append('Password', customer.password);
+        formData.append('Address', customer.address);
+        formData.append('RoleId', customer.roleId.toString());
+        formData.append('EmployeeCode', customer.employeeCode);
+        formData.append('TaxCode', customer.taxCode);
+        formData.append('Status', customer.status ? 'true' : 'false'); // Chuyển đổi thành chuỗi
+        if (avatarPreview) {
+            // Chuyển đổi avatar từ base64 sang File nếu cần
+            const response = await fetch(avatarPreview);
+            const blob = await response.blob();
+            const file = new File([blob], 'avatar.png', { type: 'image/png' });
+            formData.append('Avatar', file);
+        }
+
         try {
-            console.log("Customer data:", customer);
-            message.success("Đã tạo nhà thuốc thành công!");
+            const response = await axios.post('http://pharmadistiprobe.fun/api/User/CreateUser', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            if (response.data.success) {
+                message.success("Đã tạo nhà thuốc thành công!");
+                // Reset form hoặc làm gì đó sau khi thành công
+            } else {
+                message.error(response.data.message || "Có lỗi xảy ra!");
+            }
         } catch (error) {
-            message.error("Vui lòng điền đầy đủ thông tin!");
+            if (axios.isAxiosError(error)) {
+                message.error(error.response?.data.message || "Có lỗi xảy ra!");
+            } else {
+                message.error("Lỗi không xác định!");
+            }
         }
     };
 
@@ -53,15 +90,9 @@ export default function AddCustomer() {
                 <p className="text-sm text-gray-500">Tạo nhà thuốc mới</p>
             </div>
 
-
-
             {/* Form */}
             <div className="p-5 bg-white rounded-lg shadow w-full max-w-7xl mx-auto">
-                <Form
-                    layout="vertical"
-                    onFinish={handleSubmit}
-                    className="space-y-6 p-5 w-full bg-white rounded-lg shadow"
-                >
+                <Form layout="vertical" onFinish={handleSubmit}>
                     {/* Avatar */}
                     <Form.Item label="Avatar" valuePropName="fileList" getValueFromEvent={handleAvatarChange}>
                         <Upload
@@ -83,25 +114,22 @@ export default function AddCustomer() {
 
                     {/* Form Fields */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Form.Item label="Tên nhà thuốc" name="firstName" required>
+                        <Form.Item label="Tên nhà thuốc" name="lastName" required>
                             <Input
-                                name="firstName"
-                                value={customer.firstName}
+                                name="lastName"
+                                value={customer.lastName}
                                 onChange={handleChange}
                                 placeholder="Nhập tên nhà thuốc"
                             />
                         </Form.Item>
-
-                        <Form.Item label="Mã nhà thuốc" name="pharmacyCode" required>
+                        <Form.Item label="Tên đăng nhập" name="userName" required>
                             <Input
-                                type="text"
-                                name="pharmacyCode"
-                                value={customer.pharmacyCode}
+                                name="userName"
+                                value={customer.userName}
                                 onChange={handleChange}
-                                placeholder="Nhập mã nhà thuốc"
+                                placeholder="Nhập tên đăng nhập"
                             />
                         </Form.Item>
-
                         <Form.Item label="Số điện thoại" name="phone" required>
                             <Input
                                 type="tel"
@@ -144,8 +172,8 @@ export default function AddCustomer() {
 
                         <Form.Item label="Trạng thái" required>
                             <Select
-                                value={customer.status}
-                                onChange={(value) => setCustomer({ ...customer, status: value })}
+                                value={customer.status ? "active" : "inactive"}
+                                onChange={(value) => setCustomer({ ...customer, status: value === "active" })}
                                 placeholder="Chọn trạng thái"
                             >
                                 <Select.Option value="active">Hoạt động</Select.Option>
@@ -182,7 +210,6 @@ export default function AddCustomer() {
                     </div>
                 </Form>
             </div>
-
         </div>
     );
 }

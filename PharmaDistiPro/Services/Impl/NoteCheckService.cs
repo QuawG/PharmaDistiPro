@@ -1,158 +1,128 @@
-﻿//using AutoMapper;
-//using PharmaDistiPro.DTO.NoteChecks;
-//using PharmaDistiPro.Models;
-//using PharmaDistiPro.Repositories.Interface;
-//using PharmaDistiPro.Services.Interface;
+﻿using AutoMapper;
+using PharmaDistiPro.DTO.NoteChecks;
+using PharmaDistiPro.DTO.NoteCheckDetails;
+using PharmaDistiPro.Helper.Enums;
+using PharmaDistiPro.Models;
+using PharmaDistiPro.Repositories.Interface;
+using PharmaDistiPro.Services.Interface;
 
-//namespace PharmaDistiPro.Services.Impl
-//{
-//    public class NoteCheckService : INoteCheckService
+namespace PharmaDistiPro.Services.Impl
+{
+    public class NoteCheckService : INoteCheckService
 
-//    {
-//        private readonly INoteCheckRepository _noteCheckRepository;
-//        private readonly IMapper _mapper;
+    {
+        private readonly INoteCheckRepository _noteCheckRepository;
+        private readonly IMapper _mapper;
+        private readonly IProductLotRepository _productLotRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-//        public NoteCheckService(INoteCheckRepository noteCheckRepository, IMapper mapper)
-//        {
-//            _noteCheckRepository = noteCheckRepository;
-//            _mapper = mapper;
-//        }
+        public NoteCheckService(
+            INoteCheckRepository noteCheckRepository,
+            IMapper mapper,
+            IProductLotRepository productLotRepository,
+            IUserRepository userRepository,
+            IHttpContextAccessor httpContextAccessor)
+        {
+            _noteCheckRepository = noteCheckRepository;
+            _mapper = mapper;
+            _productLotRepository = productLotRepository;
+            _userRepository = userRepository;
+            _httpContextAccessor = httpContextAccessor;
+        }
 
+        public async Task<NoteCheckDTO> CreateNoteCheckAsync(NoteCheckRequestDTO request)
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.Identity?.Name;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                request.CreatedBy = int.Parse(userId);
+            }
 
-//        public async Task<CheckNoteResponseDTO> CreateCheckNote(CheckNoteRequestDTO request, int userId)
-//        {
-//            // Kiểm tra StorageRoomId có tồn tại không
-//            if (!await _noteCheckRepository.StorageRoomExists(request.StorageRoomId))
-//            {
-//                throw new Exception($"StorageRoom with ID {request.StorageRoomId} does not exist.");
-//            }
+            var noteCheck = _mapper.Map<NoteCheck>(request);
+            noteCheck.CreatedDate = request.CreatedDate ?? DateTime.UtcNow;
+            noteCheck.Status = false;
 
-//            // Tính tổng số lượng chênh lệch
-//            int totalDifference = 0;
-//            var checkDetails = new List<NoteCheckDetail>();
+            int totalDifference = 0;
+            var details = new List<NoteCheckDetail>();
+            var resultDetails = new List<string>();
 
-//            foreach (var detailDto in request.CheckDetails)
-//            {
-//                var productLot = await _noteCheckRepository.GetProductLotById(detailDto.ProductLotId);
-//                if (productLot == null)
-//                {
-//                    throw new Exception($"ProductLot with ID {detailDto.ProductLotId} not found.");
-//                }
+            foreach (var detailDto in request.NoteCheckDetails)
+            {
+                var productLot = await _productLotRepository.GetSingleByConditionAsync(p => p.ProductLotId == detailDto.ProductLotId);
+                if (productLot == null)
+                {
+                    throw new Exception($"ProductLotId {detailDto.ProductLotId} không tồn tại.");
+                }
 
-//                int storageQuantity = productLot.Quantity;
-//                int actualQuantity = detailDto.ActualQuantity;
-//                int errorQuantity = Math.Abs(storageQuantity - actualQuantity);
-//                totalDifference += errorQuantity;
+                var detail = _mapper.Map<NoteCheckDetail>(detailDto);
+                detail.StorageQuantity = productLot.Quantity;
+                detail.ErrorQuantity ??= 0;
 
-//                var detail = _mapper.Map<NoteCheckDetail>(detailDto);
-//                detail.StorageQuantity = storageQuantity;
-//                detail.ErrorQuantity = errorQuantity;
-//                detail.Status = (int)CheckStatus.Pending; // Trạng thái mặc định: Đang Duyệt
-//                checkDetails.Add(detail);
-//            }
+                int difference = detail.StorageQuantity.Value - detail.ActualQuantity.Value;
+                totalDifference += difference;
 
-//            // Tạo phiếu kiểm tra
-//            var noteCheck = _mapper.Map<NoteCheck>(request);
-//            noteCheck.DifferenceQuatity = totalDifference;
-//            noteCheck.Result = totalDifference == 0 ? "Pass" : "Fail";
-//            noteCheck.CreatedBy = userId;
-//            noteCheck.CreatedDate = DateTime.Now;
-//            noteCheck.Status = CheckStatus.Pending.ToString(); // Trạng thái mặc định: Đang Duyệt
+                int actualShortage = difference - detail.ErrorQuantity.Value;
+                string shortageText = actualShortage >= 0 ? $"thiếu {actualShortage}" : $"thừa {Math.Abs(actualShortage)}";
+                resultDetails.Add($"Lô {productLot.LotId} {shortageText} (hỏng {detail.ErrorQuantity})");
 
-//            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
-//            using (var transaction = await _noteCheckRepository.BeginTransactionAsync())
-//            {
-//                try
-//                {
-//                    // Lưu phiếu kiểm tra và lấy ID
-//                    int noteCheckId = await _noteCheckRepository.CreateCheckNote(noteCheck);
+                detail.Status = (detail.ErrorQuantity > 0) ? 0 : null;
+                details.Add(detail);
+            }
 
-//                    // Gán NoteCheckId cho các chi tiết kiểm tra
-//                    foreach (var detail in checkDetails)
-//                    {
-//                        detail.NoteCheckId = noteCheckId;
-//                    }
+            noteCheck.NoteCheckDetails = details;
+            noteCheck.DifferenceQuatity = totalDifference;
+            noteCheck.Result = string.Join(", ", resultDetails);
 
-//                    // Lưu chi tiết kiểm tra
-//                    await _noteCheckRepository.CreateCheckNoteDetails(checkDetails);
+            await _noteCheckRepository.InsertNoteCheckAsync(noteCheck);
+            return _mapper.Map<NoteCheckDTO>(noteCheck);
+        }
 
-//                    await transaction.CommitAsync();
+        public async Task<NoteCheckDetailsDTO> MarkDamagedItemProcessedAsync(int noteCheckDetailId)
+        {
+            var noteCheckDetail = await _noteCheckRepository.GetDetailByIdAsync(noteCheckDetailId);
+            if (noteCheckDetail == null)
+                throw new Exception("NoteCheckDetail not found");
 
-//                    // Tạo response
-//                    return _mapper.Map<CheckNoteResponseDTO>(noteCheck);
-//                }
-//                catch
-//                {
-//                    await transaction.RollbackAsync();
-//                    throw;
-//                }
-//            }
-//        }
+            if (noteCheckDetail.Status != 0)
+                throw new Exception("Item is not marked as damaged or already processed");
 
-//        public async Task<ApproveCheckNoteResponseDTO> ApproveCheckNote(ApproveCheckNoteRequestDTO request)
-//        {
-//            // Lấy thông tin phiếu kiểm tra
-//            var noteCheck = await _noteCheckRepository.GetCheckNoteById(request.NoteCheckId);
-//            if (noteCheck == null)
-//            {
-//                throw new Exception($"CheckNote with ID {request.NoteCheckId} not found.");
-//            }
+            noteCheckDetail.Status = 1;
+            await _noteCheckRepository.UpdateDetailAsync(noteCheckDetail);
 
-//            // Kiểm tra trạng thái hiện tại
-//            if (noteCheck.Status != CheckStatus.Pending.ToString())
-//            {
-//                throw new Exception($"CheckNote with ID {request.NoteCheckId} is not in Pending status.");
-//            }
+            return _mapper.Map<NoteCheckDetailsDTO>(noteCheckDetail);
+        }
 
-//            // Lấy chi tiết kiểm tra
-//            var checkDetails = await _noteCheckRepository.GetCheckNoteDetailsByCheckNoteId(request.NoteCheckId);
-//            if (checkDetails == null || !checkDetails.Any())
-//            {
-//                throw new Exception($"No details found for CheckNote with ID {request.NoteCheckId}.");
-//            }
+        public async Task<List<NoteCheckDetailsDTO>> GetUnprocessedDamagedItemsAsync(int noteCheckId)
+        {
+            var noteCheck = await _noteCheckRepository.GetByIdAsync(noteCheckId);
+            if (noteCheck == null)
+                throw new Exception("NoteCheck not found");
 
-//            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
-//            using (var transaction = await _noteCheckRepository.BeginTransactionAsync())
-//            {
-//                try
-//                {
-//                    // Cập nhật số lượng thực tế trong ProductLot
-//                    foreach (var detail in checkDetails)
-//                    {
-//                        var productLot = await _noteCheckRepository.GetProductLotById(detail.ProductLotId.Value);
-//                        if (productLot == null)
-//                        {
-//                            throw new Exception($"ProductLot with ID {detail.ProductLotId} not found.");
-//                        }
+            var unprocessedItems = noteCheck.NoteCheckDetails
+                .Where(d => d.Status == 0)
+                .ToList();
 
-//                        // Cập nhật số lượng thực tế
-//                        productLot.Quantity = detail.ActualQuantity.Value;
-//                        await _noteCheckRepository.UpdateProductLot(productLot);
+            return _mapper.Map<List<NoteCheckDetailsDTO>>(unprocessedItems);
+        }
 
-//                        // Cập nhật trạng thái của chi tiết kiểm tra
-//                        detail.Status = (int)CheckStatus.Approved;
-//                    }
+        // Phương thức mới: Lấy danh sách tất cả hàng hỏng từ các lần kiểm kho
+        public async Task<List<NoteCheckDetailsDTO>> GetAllDamagedItemsAsync()
+        {
+            // Lấy tất cả NoteCheck từ repository
+            var allNoteChecks = await _noteCheckRepository.GetAllAsync();
+            if (allNoteChecks == null || !allNoteChecks.Any())
+                throw new Exception("No NoteChecks found");
 
-//                    // Cập nhật trạng thái của CheckNote
-//                    noteCheck.Status = CheckStatus.Approved.ToString();
-//                    await _noteCheckRepository.UpdateCheckNote(noteCheck);
+            // Lọc tất cả NoteCheckDetails có ErrorQuantity > 0
+            var damagedItems = allNoteChecks
+                .SelectMany(nc => nc.NoteCheckDetails)
+                .Where(d => d.ErrorQuantity > 0)
+                .ToList();
 
-//                    // Cập nhật trạng thái của các chi tiết kiểm tra
-//                    await _noteCheckRepository.UpdateCheckNoteDetails(checkDetails);
-
-//                    await transaction.CommitAsync();
-
-//                    // Tạo response
-//                    return _mapper.Map<ApproveCheckNoteResponseDTO>(noteCheck);
-//                }
-//                catch
-//                {
-//                    await transaction.RollbackAsync();
-//                    throw;
-//                }
-//            }
-//        }
+            return _mapper.Map<List<NoteCheckDetailsDTO>>(damagedItems);
+        }
 
 
-//    }
-//}
+    }
+}

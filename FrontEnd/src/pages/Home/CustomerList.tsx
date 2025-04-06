@@ -1,30 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import * as XLSX from "xlsx";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { saveAs } from "file-saver";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { FileText, Table, Printer } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import CustomerTable from '../../components/Customer/CustomerTable'; 
+import CustomerTable from '../../components/Customer/CustomerTable';
 import axios from 'axios';
 
 interface Customer {
-    userId: number;
-    avatar: string;
-    lastName: string;
-    employeeCode: string;
-    email: string;
-    phone: string;
-    address: string;
-    age: number;  
-    createdBy: string;
-    createdDate: string; 
-    taxCode: number;
-    status: string;
+  userId: number;
+  avatar: string;
+  lastName: string;
+  employeeCode: string;
+  email: string;
+  phone: string;
+  address: string;
+  age: number;
+  createdBy: string;
+  createdDate: string;
+  taxCode: number;
+  status: boolean;
 }
 
 const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
-  const [allCustomers, setAllCustomers] = useState<Customer[]>([]); // Giữ danh sách gốc
+  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
@@ -34,21 +29,21 @@ const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
         const response = await axios.get('http://pharmadistiprobe.fun/api/User/GetCustomerList');
         setAllCustomers(response.data.data);
       } catch (error) {
-        console.error("Error fetching customers:", error);
+        console.error("Lỗi khi lấy danh sách khách hàng:", error);
       }
     };
     fetchCustomers();
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const filteredCustomers = allCustomers.filter(customer => {
     const matchesSearch =
-    customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm);
+      customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm);
     const matchesStatus = !selectedStatus || (selectedStatus === 'Active' ? customer.status : !customer.status);
     return matchesSearch && matchesStatus;
   });
+
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
       <div className="flex justify-between items-center mb-[25px]">
@@ -56,10 +51,11 @@ const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
           <h1 className="text-xl font-semibold text-gray-900">Danh sách khách hàng</h1>
           <p className="text-sm text-gray-500">Quản lí khách hàng</p>
         </div>
-        <button 
+        <button
           onClick={() => handleChangePage('Tạo khách hàng')}
-          className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Tạo khách hàng mới
+          className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2"
+        >
+          <PlusIcon className='w-5 h-5 font-bold' /> Tạo khách hàng mới
         </button>
       </div>
 
@@ -76,7 +72,7 @@ const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-             <p>Lọc theo trạng thái</p>
+            <p>Lọc theo trạng thái</p>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
@@ -89,7 +85,7 @@ const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
           </div>
         </div>
 
-        <CustomerTable customers={filteredCustomers} />
+        <CustomerTable customers={filteredCustomers} setCustomers={setAllCustomers} />
       </div>
     </div>
   );
