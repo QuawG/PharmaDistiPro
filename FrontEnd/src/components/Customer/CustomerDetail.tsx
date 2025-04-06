@@ -114,6 +114,14 @@ export default function CustomerDetail({
                   disabled
                 />
               </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                <Input
+                  value={customer?.status ? 'Hoạt động' : 'Không hoạt động'}
+                  readOnly
+                  className="mt-1"
+                />
+              </div>
             </div>
           </Col>
 
@@ -131,6 +139,7 @@ export default function CustomerDetail({
         </Row>
 
         <div className="mt-4">
+          
           <div className="mb-4">
             <Text strong>Tạo bởi</Text>
             <Input

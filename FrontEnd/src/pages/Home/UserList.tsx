@@ -40,14 +40,6 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
     fetchUsers();
   }, []);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedStatus(e.target.value);
-  };
-
   // const filteredUsers = users.filter(user => {
   //   const matchesSearch = 
   //     user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -90,11 +82,12 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
               placeholder="Tìm kiếm..."
               className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
               value={searchTerm}
-              onChange={handleSearch}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <p>Lọc theo trạng thái</p>
             <select
               value={selectedStatus}
-              onChange={handleStatusChange}
+              onChange={(e) => setSelectedStatus(e.target.value)}
               className="border rounded p-1"
             >
               <option value="">Tất cả trạng thái</option>

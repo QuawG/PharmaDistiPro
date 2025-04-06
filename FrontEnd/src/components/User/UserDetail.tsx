@@ -3,7 +3,12 @@ import { Modal, Button, Input, Avatar, Typography, Row, Col } from "antd";
 import { XCircle } from "lucide-react";
 
 const { Title, Text } = Typography;
-
+const userRoles: { [key: number]: string } = {
+  1: 'Giám đốc',
+  2: 'Quản lí kho',
+  3: 'Trưởng phòng kinh doanh',
+  4: 'Nhân viên bán hàng',
+};
 export default function UserDetail({
   isOpen,
   onClose,
@@ -74,15 +79,19 @@ export default function UserDetail({
               </div>
               <div className="mb-4">
                 <Text strong>Vai trò</Text>
-                <Input className="mt-1" value={user?.role || "N/A"} disabled />
+                <Input className="mt-1" value={userRoles[user?.roleId] || "N/A"} disabled />
               </div>
               <div className="mb-4">
                 <Text strong>Mã số nhân viên</Text>
                 <Input className="mt-1" value={user?.employeeCode || "N/A"} disabled />
               </div>
               <div className="mb-4">
-                <Text strong>Trạng thái</Text>
-                <Input className="mt-1" value={user?.status || "N/A"} disabled />
+                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                <Input
+                  value={user?.status ? 'Hoạt động' : 'Không hoạt động'}
+                  readOnly
+                  className="mt-1"
+                />
               </div>
             </div>
           </Col>
@@ -105,7 +114,7 @@ export default function UserDetail({
         <div className="mt-4">
           <div className="mb-4">
             <Text strong>Tạo bởi</Text>
-            <Input className="mt-1" value={user?.createdBy || "N/A"} disabled />
+            <Input className="mt-1" value={userRoles[user?.createdBy] || "N/A"} disabled />
           </div>
           <div className="mb-4">
             <Text strong>Thời điểm tạo</Text>
