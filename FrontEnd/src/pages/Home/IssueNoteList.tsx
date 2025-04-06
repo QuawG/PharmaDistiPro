@@ -23,7 +23,7 @@ const IssueNoteListPage: React.FC<IssueNoteListPageProps> = ({ handleChangePage 
   const { user } = useAuth();
   const [filteredNotes, setFilteredNotes] = useState<IssueNote[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading , setLoading] = useState(false);
 
   // Gọi API để lấy danh sách phiếu xuất kho
   const fetchIssueNotes = async () => {
@@ -75,6 +75,9 @@ const IssueNoteListPage: React.FC<IssueNoteListPageProps> = ({ handleChangePage 
       </div>
 
       <div className="bg-white rounded-lg shadow p-5">
+      {loading ? (
+        <div>Loading...</div> // You can replace this with a spinner or better UI
+      ) : (
         <div id="printableArea">
           <IssueNoteTable
             notes={filteredNotes}
@@ -91,7 +94,8 @@ const IssueNoteListPage: React.FC<IssueNoteListPageProps> = ({ handleChangePage 
             }}
           />
         </div>
-      </div>
+      )}
+    </div>
     </div>
   );
 };
