@@ -1,5 +1,4 @@
-// src/pages/HomePage.tsx
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/global/Sidebar";
 import ProductListPage from "./Home/ProductList";
 import ProductAdd from "../components/Product/AddProduct";
@@ -28,7 +27,8 @@ import NewOrder from "../components/Order/NewOrder";
 import IssueNoteListPage from "./Home/IssueNoteList";
 import UpdateProduct from "../components/Product/UpdateProduct";
 import OrderListForSalesManager from "./Home/OrderListForSalesManager";
-import OrderListForWarehouseManager from "./Home/OrderListForWarehouseManager"; // Import mới
+import OrderListForWarehouseManager from "./Home/OrderListForWarehouseManager";
+import IssueNoteListPageForWarehouseManager from "./Home/IssueNoteListPageForWarehouseManager"; // Import mới
 import { useAuth } from "./Home/AuthContext";
 
 const HomePage = () => {
@@ -40,6 +40,8 @@ const HomePage = () => {
     if (user) {
       if (user.roleName === "Customer") {
         setActivePage("Danh sách đơn hàng");
+      } else if (user.roleName === "WarehouseManager") {
+        setActivePage("Danh sách đơn hàng (Warehouse Manager)"); // Mặc định cho Warehouse Manager
       } else {
         setActivePage("Dashboard");
       }
@@ -97,6 +99,9 @@ const HomePage = () => {
           <OrderListForWarehouseManager handleChangePage={handleChangePage} />
         )}
         {activePage === "Danh sách phiếu xuất kho" && <IssueNoteListPage handleChangePage={handleChangePage} />}
+        {activePage === "Danh sách phiếu xuất kho (Warehouse Manager)" && (
+          <IssueNoteListPageForWarehouseManager handleChangePage={handleChangePage} />
+        )}
       </div>
     </div>
   );

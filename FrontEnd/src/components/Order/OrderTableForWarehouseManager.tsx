@@ -1,8 +1,7 @@
-// src/components/Order/OrderTableForWarehouseManager.tsx
 import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, message } from "antd";
 import axios from "axios";
-import { useAuth } from "../../pages/Home/AuthContext"; // Để lấy thông tin user và token
+import { useAuth } from "../../pages/Home/AuthContext";
 
 interface Order {
   orderId: number;
@@ -41,11 +40,10 @@ interface OrderTableProps {
 }
 
 const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
-  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Lấy danh sách đơn hàng cần tạo phiếu xuất kho
   const fetchOrders = async () => {
     setLoading(true);
     try {
@@ -55,7 +53,6 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      // Lọc đơn hàng theo assignTo của user hiện tại
       const filteredOrders = response.data.data.filter((order: Order) => order.assignTo === user?.customerId);
       setOrders(filteredOrders || []);
     } catch (error) {
@@ -71,7 +68,6 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
     }
   }, [user]);
 
-  // Tạo phiếu xuất kho
   const handleCreateIssueNote = async (orderId: number) => {
     Modal.confirm({
       title: "Tạo phiếu xuất kho",
@@ -82,8 +78,8 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
         try {
           const token = localStorage.getItem("accessToken");
           const response = await axios.post(
-            "http://pharmadistiprobe.fun/api/Order/CreateIssueNote",
-            { orderId },
+            `http://pharmadistiprobe.fun/api/IssueNote/CreateIssueNote/${orderId}`, // Truyền orderId qua URL
+            null, // Không cần body
             {
               headers: {
                 "Content-Type": "application/json",
@@ -93,14 +89,16 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
           );
           if (response.data.data) {
             message.success("Tạo phiếu xuất kho thành công!");
-            // Xóa đơn hàng đã tạo phiếu khỏi danh sách
             setOrders((prev) => prev.filter((order) => order.orderId !== orderId));
           } else {
             message.error("Không thể tạo phiếu xuất kho!");
           }
         } catch (error: any) {
           console.error("Lỗi khi tạo phiếu xuất kho:", error);
-          message.error(error.response?.data?.message || "Lỗi khi tạo phiếu xuất kho!");
+          if (error.response?.status === 404) {
+          } else {
+            message.error(error.response?.data?.message || "Lỗi khi tạo phiếu xuất kho!");
+          }
         }
       },
     });
@@ -145,7 +143,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
         <Button
           type="primary"
           onClick={() => handleCreateIssueNote(record.orderId)}
-          disabled={record.status !== 2} // Chỉ cho phép tạo khi status = 2 (Xác nhận)
+          disabled={record.status !== 2}
         >
           Tạo phiếu xuất kho
         </Button>

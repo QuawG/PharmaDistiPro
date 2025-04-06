@@ -49,7 +49,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     }
   };
 
+  // Lọc menu "Phiếu xuất kho" dựa trên vai trò
+  const getIssueNoteMenuItems = () => {
+    if (user?.roleName === "WarehouseManager") {
+      return ["Danh sách phiếu xuất kho (Warehouse Manager)", "Tạo phiếu xuất kho"];
+    } else {
+      return ["Danh sách phiếu xuất kho", "Tạo phiếu xuất kho"];
+    }
+  };
+
   const orderMenuItems = getOrderMenuItems();
+  const issueNoteMenuItems = getIssueNoteMenuItems();
 
   // Nếu là Customer, chỉ hiển thị menu "Đơn hàng"
   const filteredMenus = user?.roleName === "Customer"
@@ -104,17 +114,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                 <ChevronRightIcon className={`w-4 h-4 transition-transform ${openMenu === menuKey ? "rotate-90" : ""}`} />
               </div>
               <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${openMenu === menuKey ? "max-h-[500px]" : "max-h-0"}`}>
-                {(menuKey === "Đơn hàng" ? orderMenuItems : menuItems).map((item, index) => (
-                  <li
-                    key={index}
-                    className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
-                      transition-all cursor-pointer hover:text-amber-400
-                      ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                    onClick={() => handleItemClick(item)}
-                  >
-                    {item}
-                  </li>
-                ))}
+              {(menuKey === "Đơn hàng" ? orderMenuItems : menuKey === "Phiếu xuất kho" ? issueNoteMenuItems : menuItems).map(
+                  (item, index) => (
+                    <li
+                      key={index}
+                      className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
+                        transition-all cursor-pointer hover:text-amber-400
+                        ${activeItem === item ? "text-[#1b2850]" : ""}`}
+                      onClick={() => handleItemClick(item)}
+                    >
+                      {item}
+                    </li>
+                  )
+                )}
               </ul>
             </div>
           );

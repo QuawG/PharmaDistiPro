@@ -2,8 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu } from "antd";
 const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
-import { EyeOutlined, EditOutlined, DeleteOutlined, FilterOutlined,  FileExcelOutlined, PrinterOutlined, MoreOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  FilterOutlined,
+  FileExcelOutlined,
+  PrinterOutlined,
+  MoreOutlined,
+} from "@ant-design/icons";
 import * as XLSX from "xlsx";
+import axios from "axios";
 
 interface IssueNote {
   id: number;
@@ -12,17 +21,16 @@ interface IssueNote {
   customerId: number;
   updatedStatusDate: Date;
   totalAmount: number;
-  createdBy: string;
+  createdBy: number;
   createdDate: Date;
-  status: string;
-  details: IssueNoteDetail[];
+  status: number;
 }
 
-interface IssueNoteDetail {
-  id: number;
-  issueNoteId: number;
-  productId: number;
-  quantity: number;
+interface User {
+  userId: number;
+  userName: string;
+  firstName: string;
+  lastName: string;
 }
 
 interface IssueNoteTableProps {
@@ -36,40 +44,72 @@ interface IssueNoteTableProps {
   };
 }
 
-const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage, onDelete }) => {
+const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
+  notes,
+  handleChangePage,
+  onDelete,
+  onUpdate,
+  rowSelection,
+}) => {
   const [filteredNotes, setFilteredNotes] = useState<IssueNote[]>(notes);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<IssueNote | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
+  const [users, setUsers] = useState<User[]>([]); // State để lưu danh sách người dùng
 
-  const uniqueStatuses = Array.from(new Set(notes.map(note => note.status)));
+  // Lấy danh sách người dùng từ API
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get("http://pharmadistiprobe.fun/api/User/GetUserList", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const userList = response.data.data.map((user: any) => ({
+        userId: user.userId,
+        userName: user.userName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      }));
+      setUsers(userList);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách người dùng:", error);
+    }
+  };
+
+  // Gọi API khi component mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Hàm ánh xạ createdBy sang userName
+  const getUserNameById = (userId: number) => {
+    const user = users.find((u) => u.userId === userId);
+    return user ? `${user.firstName} ${user.lastName}` : `ID: ${userId}`; // Hiển thị ID nếu không tìm thấy
+  };
 
   // Filter notes
   const filterNotes = () => {
     let filteredData = [...notes];
-
     if (searchTerm.trim()) {
       filteredData = filteredData.filter((note) =>
         note.issueNoteCode.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (statusFilter) {
-      filteredData = filteredData.filter((note) => note.status === statusFilter);
+      filteredData = filteredData.filter((note) => String(note.status) === statusFilter);
     }
-
     if (dateRange) {
       filteredData = filteredData.filter((note) => {
         const createdDate = new Date(note.createdDate);
         return createdDate >= new Date(dateRange[0]) && createdDate <= new Date(dateRange[1]);
       });
     }
-
     setFilteredNotes(filteredData);
   };
 
@@ -77,16 +117,15 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
     filterNotes();
   }, [searchTerm, statusFilter, dateRange, notes]);
 
-  const handleRowSelectionChange = (selectedRowKeys: React.Key[]) => {
-    setSelectedRowKeys(selectedRowKeys as number[]);
-  };
-
   const handleStatusChange = (noteId: number, newStatus: string) => {
-    setFilteredNotes((prevNotes) =>
-      prevNotes.map((note) =>
-        note.id === noteId ? { ...note, status: newStatus } : note
-      )
-    );
+    const updatedNote = filteredNotes.find((note) => note.id === noteId);
+    if (updatedNote) {
+      const newNote = { ...updatedNote, status: Number(newStatus) };
+      setFilteredNotes((prevNotes) =>
+        prevNotes.map((note) => (note.id === noteId ? newNote : note))
+      );
+      onUpdate(newNote);
+    }
   };
 
   const handleDelete = () => {
@@ -98,16 +137,21 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
   };
 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredNotes);
+    const dataToExport = filteredNotes.map((note) => ({
+      ...note,
+      createdBy: getUserNameById(note.createdBy), // Thay ID bằng tên trong file Excel
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachPhieuXuatNhap");
-    XLSX.writeFile(workbook, "DanhSachPhieuXuatNhap.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachPhieuXuatKho");
+    XLSX.writeFile(workbook, "DanhSachPhieuXuatKho.xlsx");
   };
 
   const printTable = () => {
-    const selectedNotes = selectedRowKeys.length > 0
-      ? filteredNotes.filter((note) => selectedRowKeys.includes(note.id))
-      : filteredNotes;
+    const selectedNotes =
+      rowSelection && rowSelection.selectedRowKeys.length > 0
+        ? filteredNotes.filter((note) => rowSelection.selectedRowKeys.includes(note.id))
+        : filteredNotes;
 
     if (selectedNotes.length === 0) {
       alert("Không có phiếu nào được chọn để in.");
@@ -116,7 +160,7 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
 
     const printContents = `
       <div style="text-align: center; margin-bottom: 20px;">
-        <h2>Danh sách phiếu xuất nhập</h2>
+        <h2>Danh sách phiếu xuất kho</h2>
       </div>
       <table border="1" style="width: 100%; border-collapse: collapse;">
         <thead>
@@ -130,16 +174,18 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
         </thead>
         <tbody>
           ${selectedNotes
-        .map((note) => `
+            .map(
+              (note) => `
             <tr>
               <td>${note.issueNoteCode}</td>
-              <td>${note.status}</td>
-              <td>${note.createdBy}</td>
+              <td>${["Chờ xử lý", "Đã xử lý", "Hoàn thành"][note.status] || note.status}</td>
+              <td>${getUserNameById(note.createdBy)}</td>
               <td>${note.totalAmount.toLocaleString()} VND</td>
               <td>${new Date(note.createdDate).toLocaleDateString("vi-VN")}</td>
             </tr>
-          `)
-        .join("")}
+          `
+            )
+            .join("")}
         </tbody>
       </table>
     `;
@@ -156,30 +202,39 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
 
   const columns = [
     { title: "Mã Phiếu", dataIndex: "issueNoteCode", key: "issueNoteCode" },
-    { 
-      title: "Trạng Thái", 
-      dataIndex: "status", 
+    {
+      title: "Trạng Thái",
+      dataIndex: "status",
       key: "status",
-      render: (status: string, record: IssueNote) => (
+      render: (status: number, record: IssueNote) => (
         <Select
-          value={status}
+          value={String(status)}
           onChange={(value) => handleStatusChange(record.id, value)}
           style={{ width: 120 }}
         >
-          <Select.Option value="Nhập">Nhập</Select.Option>
-          <Select.Option value="Xuất">Xuất</Select.Option>
+          <Select.Option value="0">Chờ xử lý</Select.Option>
+          <Select.Option value="1">Đã xử lý</Select.Option>
+          <Select.Option value="2">Hoàn thành</Select.Option>
         </Select>
       ),
     },
-    { title: "Người Tạo", dataIndex: "createdBy", key: "createdBy" },
-    { title: "Số Sản Phẩm", key: "TotalProducts", render: (_: any, record: IssueNote) => record.details.length },
-    { title: "Số lượng", key: "TotalQuantity", render: (_: any, record: IssueNote) => record.details.reduce((total, detail) => total + detail.quantity, 0) },
-    { title: "Tổng Tiền", dataIndex: "totalAmount", key: "totalAmount", render: (amount: number) => `${amount.toLocaleString()} VND` },
-    { 
-      title: "Ngày Tạo", 
-      dataIndex: "createdDate", 
-      key: "createdDate", 
-      render: (date: Date) => date ? new Date(date).toLocaleDateString("vi-VN") : "Không có dữ liệu" 
+    {
+      title: "Người Tạo",
+      dataIndex: "createdBy",
+      key: "createdBy",
+      render: (createdBy: number) => getUserNameById(createdBy), // Hiển thị tên thay vì ID
+    },
+    {
+      title: "Tổng Tiền",
+      dataIndex: "totalAmount",
+      key: "totalAmount",
+      render: (amount: number) => `${amount.toLocaleString()} VND`,
+    },
+    {
+      title: "Ngày Tạo",
+      dataIndex: "createdDate",
+      key: "createdDate",
+      render: (date: Date) => (date ? new Date(date).toLocaleDateString("vi-VN") : "Không có dữ liệu"),
     },
     {
       title: "",
@@ -188,13 +243,32 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => { setSelectedNote(record); setIsOpen(true); }}>
+              <Menu.Item
+                key="view"
+                icon={<EyeOutlined />}
+                onClick={() => {
+                  setSelectedNote(record);
+                  setIsOpen(true);
+                }}
+              >
                 Xem chi tiết
               </Menu.Item>
-              <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => handleChangePage("Chỉnh sửa phiếu", record.id)}>
+              <Menu.Item
+                key="edit"
+                icon={<EditOutlined />}
+                onClick={() => handleChangePage("Chỉnh sửa phiếu", record.id)}
+              >
                 Sửa
               </Menu.Item>
-              <Menu.Item key="delete" icon={<DeleteOutlined />} danger onClick={() => { setSelectedNote(record); setIsDeleteModalOpen(true); }}>
+              <Menu.Item
+                key="delete"
+                icon={<DeleteOutlined />}
+                danger
+                onClick={() => {
+                  setSelectedNote(record);
+                  setIsDeleteModalOpen(true);
+                }}
+              >
                 Xóa
               </Menu.Item>
             </Menu>
@@ -210,9 +284,16 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <div className="flex gap-4 mb-4">
-        <Input placeholder="Tìm kiếm theo mã phiếu" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: 200 }} />
-        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>Lọc</Button>
-        <Button type="primary" onClick={() => handleChangePage("Tạo phiếu nhập kho")}>
+        <Input
+          placeholder="Tìm kiếm theo mã phiếu"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: 200 }}
+        />
+        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
+          Lọc
+        </Button>
+        <Button type="primary" onClick={() => handleChangePage("Tạo phiếu xuất kho")}>
           + Tạo phiếu mới
         </Button>
         <Button
@@ -237,15 +318,23 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
         <Collapse defaultActiveKey={["1"]}>
           <Panel header="Bộ lọc nâng cao" key="1">
             <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
-              <Select placeholder="Trạng thái" value={statusFilter} onChange={setStatusFilter} style={{ width: "100%" }}>
+              <Select
+                placeholder="Trạng thái"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: "100%" }}
+              >
                 <Select.Option value="">Chọn trạng thái</Select.Option>
-                {uniqueStatuses.map((status) => (
-                  <Select.Option key={status} value={status}>{status}</Select.Option>
-                ))}
+                <Select.Option value="0">Chờ xử lý</Select.Option>
+                <Select.Option value="1">Đã xử lý</Select.Option>
+                <Select.Option value="2">Hoàn thành</Select.Option>
               </Select>
               <div className="col-span-3">
                 <span style={{ marginRight: 8, marginBottom: 8 }}>Lọc theo ngày tạo</span>
-                <RangePicker onChange={(_, dateStrings) => setDateRange(dateStrings as [string, string])} style={{ width: "100%" }} />
+                <RangePicker
+                  onChange={(_, dateStrings) => setDateRange(dateStrings as [string, string])}
+                  style={{ width: "100%" }}
+                />
               </div>
               <div className="col-span-2">
                 <Button
@@ -266,18 +355,9 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
       )}
 
       <div id="printableArea">
-        <Table
-          columns={columns}
-          dataSource={filteredNotes}
-          rowKey="id"
-          rowSelection={{
-            selectedRowKeys,
-            onChange: handleRowSelectionChange,
-          }}
-        />
+        <Table columns={columns} dataSource={filteredNotes} rowKey="id" rowSelection={rowSelection} />
       </div>
 
-      {/* Modal xác nhận xóa */}
       <Modal
         title="Xác nhận xóa"
         open={isDeleteModalOpen}
@@ -289,7 +369,6 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
         <p>Bạn có chắc chắn muốn xóa phiếu này không?</p>
       </Modal>
 
-      {/* Modal chi tiết phiếu */}
       <Modal
         title={`Chi tiết Phiếu: ${selectedNote?.issueNoteCode}`}
         open={isOpen}
@@ -300,20 +379,17 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({ notes, handleChangePage
         {selectedNote && (
           <div>
             <p><strong>Mã Phiếu:</strong> {selectedNote.issueNoteCode}</p>
-            <p><strong>Trạng Thái:</strong> {selectedNote.status}</p>
-            <p><strong>Người Tạo:</strong> {selectedNote.createdBy}</p>
+            <p>
+              <strong>Trạng Thái:</strong>{" "}
+              {["Chờ xử lý", "Đã xử lý", "Hoàn thành"][selectedNote.status] || selectedNote.status}
+            </p>
+            <p><strong>Người Tạo:</strong> {getUserNameById(selectedNote.createdBy)}</p>
             <p><strong>Tổng Tiền:</strong> {selectedNote.totalAmount.toLocaleString()} VND</p>
-            <p><strong>Ngày Tạo:</strong> {new Date(selectedNote.createdDate).toLocaleDateString("vi-VN")}</p>
-            <h3>Chi tiết sản phẩm:</h3>
-            <Table
-              columns={[
-                { title: "Mã Sản Phẩm", dataIndex: "productId", key: "productId" },
-                { title: "Số Lượng", dataIndex: "quantity", key: "quantity" },
-              ]}
-              dataSource={selectedNote.details}
-              rowKey="id"
-              pagination={false}
-            />
+            <p>
+              <strong>Ngày Tạo:</strong>{" "}
+              {new Date(selectedNote.createdDate).toLocaleDateString("vi-VN")}
+            </p>
+            <p><strong>Chi tiết sản phẩm:</strong> Không có dữ liệu chi tiết từ API.</p>
           </div>
         )}
       </Modal>
