@@ -1,273 +1,317 @@
-import React, { useState } from "react";
-import { Trash } from "lucide-react"; // Import the Trash icon
+import React, { useState, useEffect } from "react";
+import { Form, Select, Button, Table, message, InputNumber, Input } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
+import axios from "axios";
 
-interface Product {
-    id: number;
-    name: string;
-}
+// Hàm loại bỏ dấu tiếng Việt
+const removeVietnameseTones = (str: string) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+};
 
 interface Supplier {
-    id: number;
-    name: string;
-    price: number; 
-    tax: number; 
+  id: number;
+  supplierName: string;
+  supplierCode: string;
+  supplierAddress: string;
+  supplierPhone: string;
+  status: boolean;
+  createdBy: number;
+  createdDate: string;
+}
+
+interface Product {
+  productId: number;
+  productCode: string;
+  manufactureName: string;
+  productName: string;
+  unit: string;
+  categoryName: string;
+  description: string;
+  sellingPrice: number;
+  createdBy: number;
+  createdDate: string | null;
+  status: boolean;
+  vat: number;
+  storageconditions: number;
+  weight: number;
+  images: string[];
+}
+
+interface SelectedProduct {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number; // Để hiển thị trên giao diện
+  tax: number;   // Để tính totalAmount
+  totalPrice: number; // Để tính totalAmount
 }
 
 const PurchaseOrderModal: React.FC = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
-    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-    const [products] = useState<Product[]>([
-        { id: 1, name: "Sản phẩm A" },
-        { id: 2, name: "Sản phẩm B" },
-        { id: 3, name: "Sản phẩm C" },
+  const [form] = Form.useForm();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const token = localStorage.getItem("accessToken") || "your-default-token";
+
+      try {
+        const supplierResponse = await axios.get("http://pharmadistiprobe.fun/api/Supplier/GetSupplierList", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Danh sách nhà cung cấp từ API:", supplierResponse.data);
+        setSuppliers(supplierResponse.data.data || []);
+
+        const productResponse = await axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Danh sách sản phẩm từ API:", productResponse.data);
+        setProducts(productResponse.data.data || []);
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu:", error);
+        message.error("Không thể tải danh sách nhà cung cấp hoặc sản phẩm!");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+  };
+
+  const handleAddProduct = (product: Product) => {
+    if (!selectedSupplier) {
+      message.error("Vui lòng chọn nhà cung cấp trước!");
+      return;
+    }
+    const totalPrice = quantity * product.sellingPrice * (1 + product.vat / 100);
+    setSelectedProducts((prev) => [
+      ...prev,
+      {
+        id: product.productId,
+        name: product.productName,
+        quantity,
+        price: product.sellingPrice,
+        tax: product.vat,
+        totalPrice,
+      },
     ]);
-    const [quantity, setQuantity] = useState<number>(1);
-    const [errorMessage, setErrorMessage] = useState<string>(""); // State for error messages
+    setSearchTerm("");
+    setQuantity(1);
+  };
 
-    const suppliers: Supplier[] = [
-        { id: 1, name: "Nhà cung cấp 1", price: 100, tax: 10 },
-        { id: 2, name: "Nhà cung cấp 2", price: 200, tax: 15 },
-        { id: 3, name: "Nhà cung cấp 3", price: 300, tax: 5 },
-    ];
-
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
-    };
-
-    const handleAddProduct = (product: Product) => {
-        if (selectedSupplier) {
-            const totalPrice = quantity * selectedSupplier.price * (1 + selectedSupplier.tax / 100);
-            setSelectedProducts((prev) => [
-                ...prev,
-                {
-                    ...product,
-                    quantity: quantity,
-                    price: selectedSupplier.price,
-                    tax: selectedSupplier.tax,
-                    totalPrice: totalPrice,
-                },
-            ]);
-            setSearchTerm("");
-            setQuantity(1);
-            setErrorMessage(""); // Clear error message
-        } else {
-            setErrorMessage("Vui lòng chọn nhà cung cấp trước!"); // Set error message
-        }
-    };
-
-    const handleSupplierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const supplierId = parseInt(e.target.value);
-        const supplier = suppliers.find(s => s.id === supplierId) || null;
-        setSelectedSupplier(supplier);
-        setErrorMessage(""); // Clear error message when supplier is selected
-    };
-
-    const incrementQuantity = () => setQuantity(prev => prev + 1);
-    const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
-
-    const handleDeleteProduct = (id: number) => {
-        setSelectedProducts(prev => prev.filter(product => product.id !== id));
-    };
-
-    const totalAmount = selectedProducts.reduce((sum, product) => sum + product.totalPrice, 0);
-
-    const formatCurrency = (amount: number) => {
-        return amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-    };
-
-    return (
-        <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
-            <div className="mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">Tạo đơn đặt hàng (PO)</h1>
-                <p className="text-sm text-gray-500">Tạo đơn đặt hàng mới</p>
-            </div>
-
-            {/* Error Message */}
-            {errorMessage && <div className="mb-4 text-red-600">{errorMessage}</div>}
-
-            {/* Chọn nhà cung cấp */}
-            <div className="mb-4">
-                <label className="block text-[14px] mb-2 text-gray-700">Chọn nhà cung cấp</label>
-                <select
-                    onChange={handleSupplierChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Chọn nhà cung cấp</option>
-                    {suppliers.map(supplier => (
-                        <option key={supplier.id} value={supplier.id}>
-                            {supplier.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Quantity Input Section */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Nhập số lượng sản phẩm</label>
-                <div className="flex items-center mt-1">
-                    <button onClick={decrementQuantity} className="px-4 py-2 bg-blue-500 text-white rounded-l-md hover:bg-blue-600 focus:outline-none">
-                        -
-                    </button>
-                    <input
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-16 text-center border-t border-b border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        min="1"
-                    />
-                    <button onClick={incrementQuantity} className="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 focus:outline-none">
-                        +
-                    </button>
-                </div>
-            </div>
-
-            {/* Thanh tìm kiếm sản phẩm */}
-            <div className="mb-4">
-                <label className="block text-[14px] mb-2 text-gray-700">Tìm kiếm sản phẩm</label>
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Nhập tên sản phẩm"
-                />
-                <ul className="mt-2 border border-gray-300 rounded-md">
-                    {products
-                        .filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                        .map(product => (
-                            <li key={product.id} className="p-2 hover:bg-gray-200 cursor-pointer" onClick={() => handleAddProduct(product)}>
-                                {product.name}
-                            </li>
-                        ))}
-                </ul>
-            </div>
-
-            {/* Form */}
-            <div className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
-                {/* Row 1 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Mã đơn đặt hàng</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập mã đơn đặt hàng"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Nhà cung cấp</label>
-                        <input
-                            type="text"
-                            value={selectedSupplier ? selectedSupplier.name : ""}
-                            readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Ngày đặt hàng</label>
-                        <input
-                            type="date"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Ngày giao hàng</label>
-                        <input
-                            type="date"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                </div>
-
-                {/* Row 2 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Tổng số tiền</label>
-                        <input
-                            type="text"
-                            value={formatCurrency(totalAmount) || "0.000 VNĐ"}
-                            readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Phí vận chuyển</label>
-                        <input
-                            type="number"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập phí vận chuyển"
-                        />
-                    </div>
-
-                    <div className="space-y-1">
-                        <label className="block text-[14px] mb-2 text-gray-700">Địa chỉ giao hàng</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nhập địa chỉ giao hàng"
-                        />
-                    </div>
-                </div>
-
-                {/* Row 3 - Danh sách sản phẩm đã chọn */}
-                <div>
-                    <h2 className="text-lg font-semibold text-gray-800">Sản phẩm đã chọn:</h2>
-                    <table className="min-w-full mt-2 border border-gray-300">
-                        <thead>
-                            <tr className="bg-gray-100">
-                                <th className="px-4 py-2">Sản phẩm</th>
-                                <th className="px-4 py-2">Số lượng</th>
-                                <th className="px-4 py-2">Giá nhập</th>
-                                <th className="px-4 py-2">Thuế (%)</th>
-                                <th className="px-4 py-2">Tổng giá</th>
-                                <th className="px-4 py-2">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {selectedProducts.map(product => (
-                                <tr key={product.id} className="border-b">
-                                    <td className="px-4 py-2">{product.name}</td>
-                                    <td className="px-4 py-2">{product.quantity}</td>
-                                    <td className="px-4 py-2">{formatCurrency(product.price)}</td>
-                                    <td className="px-4 py-2">{product.tax}</td>
-                                    <td className="px-4 py-2">{formatCurrency(product.totalPrice)}</td>
-                                    <td className="px-4 py-2">
-                                        <button 
-                                            className="text-red-500 hover:text-red-600" 
-                                            onClick={() => handleDeleteProduct(product.id)}
-                                        >
-                                            <Trash size={20} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Row 4 */}
-                <div className="flex gap-4">
-                    <button
-                        type="submit"
-                        className="px-9 py-3.5 bg-amber-500 text-white rounded-sm font-bold text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                        Lưu
-                    </button>
-                    <button
-                        type="button"
-                        className="px-9 py-3.5 bg-gray-500 text-white rounded-sm font-bold text-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                    >
-                        Hủy
-                    </button>
-                </div>
-            </div>
-        </div>
+  const handleQuantityChange = (id: number, newQuantity: number | null) => {
+    setSelectedProducts((prev) =>
+      prev.map((product) =>
+        product.id === id
+          ? {
+              ...product,
+              quantity: newQuantity || 1,
+              totalPrice: (newQuantity || 1) * product.price * (1 + product.tax / 100),
+            }
+          : product
+      )
     );
+  };
+
+  const handleDeleteProduct = (id: number) => {
+    setSelectedProducts((prev) => prev.filter((product) => product.id !== id));
+  };
+
+  const totalAmount = selectedProducts.reduce((sum, product) => sum + product.totalPrice, 0);
+
+  const formatCurrency = (amount: number) =>
+    amount.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+
+  const columns = [
+    { title: "Sản phẩm", dataIndex: "name", key: "name" },
+    {
+      title: "Số lượng",
+      dataIndex: "quantity",
+      key: "quantity",
+      render: (quantity: number, record: SelectedProduct) => (
+        <InputNumber
+          min={1}
+          value={quantity}
+          onChange={(value) => handleQuantityChange(record.id, value)}
+          className="w-20"
+        />
+      ),
+    },
+    // {
+    //   title: "Giá nhập",
+    //   dataIndex: "price",
+    //   key: "price",
+    //   render: (price: number) => formatCurrency(price),
+    // },
+    { title: "Thuế (%)", dataIndex: "tax", key: "tax" },
+    // {
+    //   title: "Tổng giá",
+    //   dataIndex: "totalPrice",
+    //   key: "totalPrice",
+    //   render: (totalPrice: number) => formatCurrency(totalPrice),
+    // },
+    {
+      title: "Hành động",
+      key: "action",
+      render: (_: any, record: SelectedProduct) => (
+        <Button
+          type="link"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => handleDeleteProduct(record.id)}
+        />
+      ),
+    },
+  ];
+
+  const handleSubmit = async () => {
+    if (!selectedSupplier) {
+      message.error("Vui lòng chọn nhà cung cấp!");
+      return;
+    }
+    if (selectedProducts.length === 0) {
+      message.error("Vui lòng thêm ít nhất một sản phẩm!");
+      return;
+    }
+
+    const purchaseOrderData = {
+      supplierId: selectedSupplier.id,
+      totalAmount,
+      purchaseOrdersDetails: selectedProducts.map((p) => ({
+        productId: p.id,
+        quantity: p.quantity,
+      })),
+    };
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.post(
+        "http://pharmadistiprobe.fun/api/PurchaseOrders/CreatePurchaseOrders",
+        purchaseOrderData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Phản hồi từ API:", response.data);
+      message.success(`Đơn hàng ${response.data.data.purchaseOrderCode} đã được tạo thành công!`);
+      form.resetFields();
+      setSelectedProducts([]);
+      setSelectedSupplier(null);
+    } catch (error) {
+      console.error("Lỗi khi tạo đơn hàng:", error);
+      message.error("Tạo đơn hàng thất bại!");
+    }
+  };
+
+  return (
+    <div className="p-6 mt-[60px] w-full bg-[#fafbfe]">
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-900">Tạo đơn đặt hàng (PO)</h1>
+        <p className="text-sm text-gray-500">Tạo đơn đặt hàng mới</p>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow">
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Form.Item
+              label="Nhà cung cấp"
+              name="supplier"
+              rules={[{ required: true, message: "Vui lòng chọn nhà cung cấp!" }]}
+            >
+              <Select
+                showSearch
+                placeholder="Chọn nhà cung cấp"
+                loading={loading}
+                onChange={(value) => {
+                  const supplier = suppliers.find((s) => s.id === value) || null;
+                  setSelectedSupplier(supplier);
+                }}
+                filterOption={(input, option) =>
+                  removeVietnameseTones(option?.children?.toString() || "").includes(
+                    removeVietnameseTones(input)
+                  )
+                }
+                notFoundContent={suppliers.length === 0 ? "Không có dữ liệu" : null}
+              >
+                {suppliers.map((supplier) => (
+                  <Select.Option key={supplier.id} value={supplier.id}>
+                    {supplier.supplierName}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item label="Tổng số tiền" name="totalAmount">
+              <Input value={formatCurrency(totalAmount)} disabled />
+            </Form.Item>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Thêm sản phẩm</h2>
+            <div className="flex gap-4 mb-4">
+              <Select
+                showSearch
+                value={searchTerm}
+                onSearch={handleSearchChange}
+                onChange={(value) => {
+                  const product = products.find((p) => p.productName === value);
+                  if (product) handleAddProduct(product);
+                }}
+                placeholder="Tìm kiếm sản phẩm"
+                style={{ width: 200 }}
+                loading={loading}
+                filterOption={(input, option) =>
+                  removeVietnameseTones(option?.children?.toString() || "").includes(
+                    removeVietnameseTones(input)
+                  )
+                }
+                notFoundContent={products.length === 0 ? "Không có dữ liệu" : null}
+              >
+                {products.map((product) => (
+                  <Select.Option key={product.productId} value={product.productName}>
+                    {product.productName}
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+
+            <Table
+              columns={columns}
+              dataSource={selectedProducts}
+              rowKey="id"
+              pagination={false}
+              bordered
+            />
+          </div>
+
+          <div className="mt-6 flex justify-end gap-4">
+            <Button onClick={() => form.resetFields()}>Hủy</Button>
+            <Button type="primary" htmlType="submit" loading={loading}>
+              Lưu
+            </Button>
+          </div>
+        </Form>
+      </div>
+    </div>
+  );
 };
 
 export default PurchaseOrderModal;

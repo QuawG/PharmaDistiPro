@@ -1,302 +1,547 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu, Form, message } from "antd";
 import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  SortingState,
-  RowSelectionState,
-} from '@tanstack/react-table';
-import { Pencil, Trash2, ChevronUp, ChevronDown, Eye } from 'lucide-react';
-import DeleteConfirmation from '../Confirm/DeleteConfirm';
-import PurchaseOrderDetailsModal from './PurchaseOrderDetail'; 
-import UpdatePurchaseOrderDetailsModal from './UpdatePurchaseOrderDetail'; 
-import UpdateConfirm from '../Confirm/UpdateConfirm'; // Modal xác nhận
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  FilterOutlined,
+  FileExcelOutlined,
+  PrinterOutlined,
+  MoreOutlined,
+} from "@ant-design/icons";
+import * as XLSX from "xlsx";
+import axios from "axios";
+import dayjs from "dayjs";
+
+const { RangePicker } = DatePicker;
+const { Panel } = Collapse;
+const { Option } = Select;
+
+// Interface cho PurchaseOrder từ API
+interface Supplier {
+  id: number;
+  supplierName: string;
+  supplierCode: string;
+  supplierAddress: string;
+  supplierPhone: string;
+  status: boolean;
+  createdBy: number;
+  createdDate: string;
+}
 
 interface PurchaseOrder {
   purchaseOrderId: number;
   purchaseOrderCode: string;
-  supplierName: string;
-  date: string;
-  goodsIssueDate: string;
+  supplierId: number | null;
+  updatedStatusDate: string;
   totalAmount: number;
-  createdBy: string;
-  createdDate: string; 
-  status: string; // Thêm thuộc tính status
-  deliveryFee: number;
-  address: string;
+  status: number;
+  createdBy: string | null;
+  createDate: string;
+  amountPaid: number | null;
+  supplier: Supplier | null;
+  products?: PurchaseOrderDetail[]; // Thêm trường products để lưu chi tiết
+}
+
+// Interface cho PurchaseOrderDetail từ API
+interface Product {
+  productId: number;
+  productCode: string;
+  manufactureName: string;
+  productName: string;
+  unitId: number | null;
+  categoryId: number;
+  description: string;
+  sellingPrice: number;
+  createdBy: number;
+  createdDate: string | null;
+  status: boolean;
+  vat: number;
+  storageconditions: number;
+  weight: number;
+}
+
+interface PurchaseOrderDetail {
+  purchaseOrderDetailId: number;
+  purchaseOrderId: number;
+  productId: number;
+  quantity: number;
+  product: Product;
 }
 
 interface PurchaseOrderTableProps {
-  PURCHASE_ORDERS_DATA: PurchaseOrder[];
+  handleChangePage: (page: string, purchaseOrderId?: number) => void;
+  onDelete: (id: number) => void;
+  onUpdate: (updatedOrder: PurchaseOrder) => void;
+  rowSelection?: {
+    selectedRowKeys: React.Key[];
+    onChange: (selectedRowKeys: React.Key[], selectedRows: PurchaseOrder[]) => void;
+  };
 }
 
-const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({ PURCHASE_ORDERS_DATA }) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [globalFilter, setGlobalFilter] = useState<string>('');
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
+  handleChangePage,
+  onDelete,
+  onUpdate,
+  rowSelection,
+}) => {
+  const [filteredOrders, setFilteredOrders] = useState<PurchaseOrder[]>([]);
+  const [allOrders, setAllOrders] = useState<PurchaseOrder[]>([]);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Modal xác nhận
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
-  const [newStatus, setNewStatus] = useState<string>(''); // Trạng thái mới
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [form] = Form.useForm();
 
-  const handleDelete = () => {
-    setIsDeleteModalOpen(false);
-    // Thực hiện xóa đơn hàng ở đây
-  };
+  // Lấy danh sách đơn đặt hàng
+  useEffect(() => {
+    const fetchPurchaseOrders = async () => {
+      try {
+        const token = localStorage.getItem("accessToken"); // Lấy token từ localStorage nếu cần
+        const response = await axios.get("http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Dữ liệu từ API PurchaseOrders:", response.data);
+        setAllOrders(response.data.data || []);
+        setFilteredOrders(response.data.data || []);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách đơn đặt hàng:", error);
+        message.error("Không thể tải danh sách đơn đặt hàng!");
+      }
+    };
 
-  const handleSave = (updatedOrder: PurchaseOrder) => {
-    console.log('Order saved:', updatedOrder);
-    // Cập nhật danh sách đơn hàng nếu cần
-  };
+    fetchPurchaseOrders();
+  }, []);
 
-  const handleViewDetail = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
-    setIsViewModalOpen(true);
-  };
+  // Lọc dữ liệu
+  useEffect(() => {
+    let filteredData = [...allOrders];
 
-  const handleEdit = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
-    setIsEditModalOpen(true); 
-  };
-
-  const handleStatusChange = (index: number, newStatus: string) => {
-    setSelectedOrder(PURCHASE_ORDERS_DATA[index]); 
-    setNewStatus(newStatus); 
-    setIsConfirmModalOpen(true); // Mở modal xác nhận
-  };
-
-  const confirmStatusChange = () => {
-    // Cập nhật trạng thái đơn hàng ở đây
-    const updatedOrders = [...PURCHASE_ORDERS_DATA];
-    const index = updatedOrders.findIndex(order => order.purchaseOrderId === selectedOrder?.purchaseOrderId);
-    if (index !== -1) {
-      updatedOrders[index].status = newStatus;
-      // Cập nhật lại dữ liệu đơn hàng nếu cần
+    if (searchTerm.trim()) {
+      filteredData = filteredData.filter((order) =>
+        order.purchaseOrderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (order.supplier?.supplierName || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-    setIsConfirmModalOpen(false);
+
+    if (statusFilter) {
+      filteredData = filteredData.filter((order) => String(order.status) === statusFilter);
+    }
+
+    if (dateRange) {
+      filteredData = filteredData.filter((order) => {
+        const orderDate = new Date(order.createDate);
+        return orderDate >= new Date(dateRange[0]) && orderDate <= new Date(dateRange[1]);
+      });
+    }
+
+    setFilteredOrders(filteredData);
+  }, [searchTerm, statusFilter, dateRange, allOrders]);
+
+  // Lấy chi tiết đơn hàng
+  const fetchOrderDetail = async (id: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Chi tiết đơn hàng:", response.data);
+      const orderDetails = allOrders.find((order) => order.purchaseOrderId === id);
+      if (orderDetails) {
+        setSelectedOrder({ ...orderDetails, products: response.data.data || [] });
+        setIsDetailModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      message.error("Không thể tải chi tiết đơn hàng!");
+    }
   };
 
-  const columns: ColumnDef<PurchaseOrder>[] = [
+  const openEditModal = (order: PurchaseOrder) => {
+    setSelectedOrder(order);
+    form.setFieldsValue({
+      ...order,
+      date: dayjs(order.createDate),
+      goodsIssueDate: dayjs(order.updatedStatusDate),
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredOrders);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachDonDatHang");
+    XLSX.writeFile(workbook, "DanhSachDonDatHang.xlsx");
+  };
+
+  const printTable = () => {
+    const selectedOrders = rowSelection?.selectedRowKeys.length
+      ? filteredOrders.filter((order) => rowSelection.selectedRowKeys.includes(order.purchaseOrderId))
+      : filteredOrders;
+
+    if (selectedOrders.length === 0) {
+      alert("Không có đơn hàng nào được chọn để in.");
+      return;
+    }
+
+    const printContents = `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2>Danh sách đơn đặt hàng</h2>
+      </div>
+      <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Mã Đơn</th>
+            <th>Nhà Cung Cấp</th>
+            <th>Ngày Đặt</th>
+            <th>Tổng Tiền</th>
+            <th>Trạng Thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${selectedOrders
+            .map(
+              (order) => `
+            <tr>
+              <td>${order.purchaseOrderCode}</td>
+              <td>${order.supplier?.supplierName || "N/A"}</td>
+              <td>${new Date(order.createDate).toLocaleDateString("vi-VN")}</td>
+              <td>${order.totalAmount.toLocaleString("vi-VN")} VND</td>
+              <td>${["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][order.status] || "Không xác định"}</td>
+            </tr>
+          `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+
+    const printWindow = window.open("", "", "height=800,width=1000");
+    if (printWindow) {
+      printWindow.document.write("<html><head><title>Print</title></head><body>");
+      printWindow.document.write(printContents);
+      printWindow.document.write("</body></html>");
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("vi-VN");
+
+  const columns = [
+    { title: "Mã Đơn", dataIndex: "purchaseOrderCode", key: "purchaseOrderCode" },
     {
-      id: 'select',
-      header: ({ table }) => (
-        <input
-          type="checkbox"
-          className="w-4 h-4 rounded border-gray-300 custom-checkbox"
-          checked={table.getIsAllRowsSelected()}
-          onChange={table.getToggleAllRowsSelectedHandler()}
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          className="w-4 h-4 rounded border-gray-300 custom-checkbox"
-          checked={row.getIsSelected()}
-          onChange={row.getToggleSelectedHandler()}
-        />
-      ),
-      enableSorting: false,
+      title: "Nhà Cung Cấp",
+      dataIndex: "supplier",
+      key: "supplier",
+      render: (supplier: Supplier | null) => supplier?.supplierName || "N/A",
     },
-    { accessorKey: 'purchaseOrderId', header: 'ID Đơn Đặt Hàng' },
-    { accessorKey: 'purchaseOrderCode', header: 'Mã Đơn Đặt Hàng' },
-    { accessorKey: 'supplierName', header: 'Nhà Cung Cấp' },
-    { accessorKey: 'date', header: 'Ngày Đặt Hàng' },
-    { accessorKey: 'goodsIssueDate', header: 'Ngày Giao Hàng' },
     {
-      id: 'status',
-      header: 'Trạng thái',
-      cell: ({ row }) => (
-        <select
-          value={row.original.status} // Đảm bảo giá trị này được liên kết với trạng thái của đơn hàng
-          onChange={(e) => handleStatusChange(row.index, e.target.value)}
-          className="border rounded p-1"
+      title: "Ngày Đặt",
+      dataIndex: "createDate",
+      key: "createDate",
+      render: (date: string) => formatDate(date),
+    },
+    {
+      title: "Tổng Tiền",
+      dataIndex: "totalAmount",
+      key: "totalAmount",
+      render: (amount: number) => `${amount.toLocaleString("vi-VN")} VND`,
+    },
+    {
+      title: "Trạng Thái",
+      dataIndex: "status",
+      key: "status",
+      render: (status: number) => ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][status] || "Không xác định",
+    },
+    {
+      title: "",
+      key: "actions",
+      render: (_: any, record: PurchaseOrder) => (
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item
+                key="view"
+                icon={<EyeOutlined />}
+                onClick={() => fetchOrderDetail(record.purchaseOrderId)}
+              >
+                Xem chi tiết
+              </Menu.Item>
+              <Menu.Item
+                key="edit"
+                icon={<EditOutlined />}
+                onClick={() => openEditModal(record)}
+              >
+                Cập nhật
+              </Menu.Item>
+              <Menu.Item
+                key="delete"
+                icon={<DeleteOutlined />}
+                onClick={() => {
+                  Modal.confirm({
+                    title: "Xác nhận xóa",
+                    content: "Bạn có chắc chắn muốn xóa đơn hàng này?",
+                    onOk: () => onDelete(record.purchaseOrderId),
+                  });
+                }}
+              >
+                Xóa
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={["click"]}
         >
-          <option value="Completed">Hoàn thành</option>
-          <option value="Pending">Đang chờ</option>
-          <option value="Cancelled">Đã hủy</option>
-        </select>
+          <Button shape="circle" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
-    },
-    {
-      id: 'actions',
-      header: 'Tính năng',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <button
-            className="cursor-pointer p-1 hover:bg-blue-50 rounded text-blue-500"
-            onClick={() => handleViewDetail(row.original)}
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            className="cursor-pointer p-1 hover:bg-green-50 rounded text-green-500"
-            onClick={() => handleEdit(row.original)}
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            className="cursor-pointer p-1 hover:bg-red-50 rounded text-red-500"
-            onClick={() => {
-              setSelectedOrder(row.original);
-              setIsDeleteModalOpen(true);
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
-      enableSorting: false,
     },
   ];
 
-  const table = useReactTable({
-    data: PURCHASE_ORDERS_DATA,
-    columns,
-    state: {
-      sorting,
-      rowSelection,
-      globalFilter,
-      pagination: {
-        pageSize,
-        pageIndex: 0,
-      },
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
+  const handleUpdateSubmit = async (values: any) => {
+    if (!selectedOrder) return;
+    const updatedOrder = {
+      ...selectedOrder,
+      ...values,
+      createDate: values.date.format("YYYY-MM-DD"),
+      updatedStatusDate: values.goodsIssueDate.format("YYYY-MM-DD"),
+    };
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.put(`http://pharmadistiprobe.fun/api/PurchaseOrders/${updatedOrder.purchaseOrderId}`, updatedOrder, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      onUpdate(updatedOrder);
+      message.success("Cập nhật đơn hàng thành công!");
+      setIsEditModalOpen(false);
+      const updatedOrders = allOrders.map((order) =>
+        order.purchaseOrderId === updatedOrder.purchaseOrderId ? updatedOrder : order
+      );
+      setAllOrders(updatedOrders);
+      setFilteredOrders(updatedOrders);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật đơn hàng:", error);
+      message.error("Cập nhật đơn hàng thất bại!");
+    }
+  };
 
   return (
-    <div className="bg-white">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-none bg-gray-50">
-                {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-4 py-3 text-left text-[14px] font-bold">
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className="flex items-center gap-2 cursor-pointer select-none"
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{
-                          asc: <ChevronUp className="w-4 h-4" />,
-                          desc: <ChevronDown className="w-4 h-4" />,
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border-b border-b-gray-200 hover:bg-gray-50 transition-colors">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-800 opacity-90">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="bg-white p-6 rounded-lg shadow">
+      <div className="flex gap-4 mb-4">
+        <Input
+          placeholder="Tìm kiếm theo mã đơn hoặc nhà cung cấp"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: 250 }}
+        />
+        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
+          Lọc
+        </Button>
+        <Button type="primary" onClick={() => handleChangePage("Tạo đơn đặt hàng(PO)")}>
+          + Tạo đơn mới
+        </Button>
+        <Button
+          type="primary"
+          icon={<FileExcelOutlined />}
+          onClick={exportToExcel}
+          style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}
+        >
+          Xuất Excel
+        </Button>
+        <Button
+          type="primary"
+          icon={<PrinterOutlined />}
+          onClick={printTable}
+          style={{ marginLeft: 8 }}
+        >
+          In danh sách
+        </Button>
       </div>
 
-      <div className="flex items-center justify-between px-4 py-3 border-t">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Hiển thị</span>
-          <select
-            value={pageSize}
-            onChange={e => {
-              setPageSize(Number(e.target.value));
-              table.setPageSize(Number(e.target.value));
-            }}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {[10, 20, 30, 40, 50].map(size => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <span className="text-sm text-gray-600">mục</span>
-        </div>
+      {showFilters && (
+        <Collapse defaultActiveKey={["1"]}>
+          <Panel header="Bộ lọc nâng cao" key="1">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+              <Select
+                placeholder="Trạng thái"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: "100%" }}
+              >
+                <Option value="">Tất cả trạng thái</Option>
+                <Option value="0">Hủy</Option>
+                <Option value="1">Chờ xác nhận</Option>
+                <Option value="2">Xác nhận</Option>
+                <Option value="3">Vận chuyển</Option>
+                <Option value="4">Hoàn thành</Option>
+              </Select>
+              <div className="col-span-2">
+                <span style={{ marginRight: 8 }}>Lọc theo ngày đặt hàng</span>
+                <RangePicker
+                  onChange={(_, dateStrings) => setDateRange(dateStrings as [string, string])}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div className="col-span-2">
+                <Button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("");
+                    setDateRange(null);
+                  }}
+                  style={{ width: "100%", marginTop: "10px" }}
+                >
+                  Xóa bộ lọc
+                </Button>
+              </div>
+            </div>
+          </Panel>
+        </Collapse>
+      )}
 
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-gray-600">
-            Trang{' '}
-            <strong>
-              {table.getState().pagination.pageIndex + 1} of{' '}
-              {table.getPageCount()}
-            </strong>
-          </div>
-          <div className="flex gap-1">
-            <button
-              className={`px-3 py-1 text-sm rounded ${
-                !table.getCanPreviousPage()
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-[#FF9F43] text-white hover:bg-[#ff8f20]'
-              }`}
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Trước
-            </button>
-            <button
-              className={`px-3 py-1 text-sm rounded ${
-                !table.getCanNextPage()
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-[#FF9F43] text-white hover:bg-[#ff8f20]'
-              }`}
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Sau
-            </button>
-          </div>
-        </div>
-      </div>
+      <Table
+        columns={columns}
+        dataSource={filteredOrders}
+        rowKey="purchaseOrderId"
+        rowSelection={rowSelection}
+      />
 
-      <DeleteConfirmation
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-      />
-      <PurchaseOrderDetailsModal 
-        isOpen={isViewModalOpen} 
-        onClose={() => setIsViewModalOpen(false)} 
-        order={selectedOrder} 
-      />
-      <UpdatePurchaseOrderDetailsModal 
-        isOpen={isEditModalOpen} 
-        onClose={() => setIsEditModalOpen(false)} 
-        order={selectedOrder} 
-        onSave={handleSave} 
-      />
-      
-      {/* Modal xác nhận */}
-      <UpdateConfirm
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={confirmStatusChange}
-        message="Bạn có chắc chắn muốn đổi trạng thái?"
-      />
+      {/* Modal Chi tiết đơn hàng */}
+      <Modal
+        title={`Chi tiết Đơn hàng: ${selectedOrder?.purchaseOrderCode}`}
+        open={isDetailModalOpen}
+        onCancel={() => setIsDetailModalOpen(false)}
+        footer={null}
+        width={800}
+      >
+        {selectedOrder && (
+          <div>
+            <p><strong>Mã Đơn:</strong> {selectedOrder.purchaseOrderCode}</p>
+            <p><strong>Nhà Cung Cấp:</strong> {selectedOrder.supplier?.supplierName || "N/A"}</p>
+            <p><strong>Ngày Đặt:</strong> {formatDate(selectedOrder.createDate)}</p>
+            <p><strong>Ngày Cập Nhật Trạng Thái:</strong> {formatDate(selectedOrder.updatedStatusDate)}</p>
+            <p><strong>Tổng Tiền:</strong> {selectedOrder.totalAmount.toLocaleString("vi-VN")} VND</p>
+            {/* <p><strong>Số Tiền Đã Thanh Toán:</strong> {selectedOrder.amountPaid?.toLocaleString("vi-VN") || "Chưa thanh toán"} VND</p> */}
+            <p><strong>Trạng Thái:</strong> {["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][selectedOrder.status] || "Không xác định"}</p>
+            <p><strong>Tạo Bởi:</strong> {selectedOrder.createdBy || "N/A"}</p>
+
+            <h3 className="mt-4 font-semibold">Danh sách sản phẩm</h3>
+            <Table
+              columns={[
+                { title: "Tên Sản Phẩm", dataIndex: ["product", "productName"], key: "productName" },
+                { title: "Số Lượng", dataIndex: "quantity", key: "quantity" },
+                {title: "amountPaid?", dataIndex:"amountPaid", key:"amountPaid"},
+                // {
+                //   title: "Giá Nhập",
+                //   dataIndex: ["product", "sellingPrice"],
+                //   key: "sellingPrice",
+                //   render: (price: number) => `${price.toLocaleString("vi-VN")} VND`,
+                // },
+                // {
+                //   title: "Thuế (VAT)",
+                //   dataIndex: ["product", "vat"],
+                //   key: "vat",
+                //   render: (vat: number) => `${vat}%`,
+                // },
+                // // {
+                // //   title: "Tổng Giá",
+                // //   key: "total",
+                // //   render: (_: any, record: PurchaseOrderDetail) =>
+                // //     `${(record.quantity * record.product.sellingPrice * (1 + record.product.vat / 100)).toLocaleString("vi-VN")} VND`,
+                // // },
+              ]}
+              dataSource={selectedOrder.products || []}
+              rowKey="purchaseOrderDetailId"
+              pagination={false}
+            />
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal Cập nhật đơn hàng */}
+      <Modal
+        title={`Cập nhật Đơn hàng: ${selectedOrder?.purchaseOrderCode}`}
+        open={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        footer={null}
+        width={800}
+      >
+        {selectedOrder && (
+          <Form form={form} layout="vertical" onFinish={handleUpdateSubmit}>
+            <Form.Item label="Mã Đơn" name="purchaseOrderCode" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item label="Nhà Cung Cấp" name={["supplier", "supplierName"]}>
+              <Input disabled /> {/* Nhà cung cấp chỉ hiển thị, không chỉnh sửa */}
+            </Form.Item>
+            <Form.Item label="Ngày Đặt" name="date" rules={[{ required: true }]}>
+              <DatePicker style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item label="Ngày Cập Nhật Trạng Thái" name="goodsIssueDate" rules={[{ required: true }]}>
+              <DatePicker style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item label="Tổng Tiền" name="totalAmount" rules={[{ required: true }]}>
+              <Input type="number" />
+            </Form.Item>
+            <Form.Item label="Số Tiền Đã Thanh Toán" name="amountPaid">
+              <Input type="number" />
+            </Form.Item>
+            <Form.Item label="Trạng Thái" name="status" rules={[{ required: true }]}>
+              <Select>
+                <Option value={0}>Hủy</Option>
+                <Option value={1}>Chờ xác nhận</Option>
+                <Option value={2}>Xác nhận</Option>
+                <Option value={3}>Vận chuyển</Option>
+                <Option value={4}>Hoàn thành</Option>
+              </Select>
+            </Form.Item>
+
+            <h3 className="mt-4 font-semibold">Danh sách sản phẩm</h3>
+            <Table
+              columns={[
+                { title: "Tên Sản Phẩm", dataIndex: ["product", "productName"], key: "productName" },
+                { title: "Số Lượng", dataIndex: "quantity", key: "quantity" },
+                {
+                  title: "Giá Nhập",
+                  dataIndex: ["product", "sellingPrice"],
+                  key: "sellingPrice",
+                  render: (price: number) => `${price.toLocaleString("vi-VN")} VND`,
+                },
+                {
+                  title: "Thuế (VAT)",
+                  dataIndex: ["product", "vat"],
+                  key: "vat",
+                  render: (vat: number) => `${vat}%`,
+                },
+                {
+                  title: "Tổng Giá",
+                  key: "total",
+                  render: (_: any, record: PurchaseOrderDetail) =>
+                    `${(record.quantity * record.product.sellingPrice * (1 + record.product.vat / 100)).toLocaleString("vi-VN")} VND`,
+                },
+              ]}
+              dataSource={selectedOrder.products || []}
+              rowKey="purchaseOrderDetailId"
+              pagination={false}
+            />
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button onClick={() => setIsEditModalOpen(false)}>Hủy</Button>
+              <Button type="primary" htmlType="submit">Lưu</Button>
+            </div>
+          </Form>
+        )}
+      </Modal>
     </div>
   );
 };

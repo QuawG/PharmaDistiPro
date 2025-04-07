@@ -11,7 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ApexOptions } from "apexcharts";
 import Chart from "react-apexcharts";
-import ProductTable from "../../../components/Product/ProductTable";
+// import ProductTable from "../../../components/Product/ProductTable";
 import ProductTableMini from "./ProductTableMini";
 
 const MyComponent: React.FC = () => {
@@ -29,48 +29,48 @@ const MyComponent: React.FC = () => {
     { name: "Bán Hàng", data: [50, 90, 55, 30, 79] },
   ];
 
-  const PRODUCTS_DATA = [
-    {
-      ProductId: 1,
-      ProductCode: "SP_001",
-      ManufactureName: "manufacturer1",
-      ProductName: "Vương Niệu Đan",
-      UnitId: 1,
-      CategoryId: 1,
-      Description: "",
-      SellingPrice: 100000,
-      CreatedBy: "admin",
-      CreatedDate: "",
-      Status: "Đang bán",
-      VAT: 0,
-      StorageConditions: "Nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp",
-      Weight: 0.1,
-      Image: "https://cdn.nhathuoclongchau.com.vn/unsafe/375x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/DSC_04675_87dec747f2.jpg",
-      CategoryName: "Thực phẩm chức năng",
-      SubCategoryName: "Hỗ trợ điều trị",
-      UnitName: "Hộp",
-    },
-    {
-      ProductId: 2,
-      ProductCode: "SP_002",
-      ManufactureName: "manufacturer1",
-      ProductName: "Khương Thảo Đan",
-      UnitId: 1,
-      CategoryId: 1,
-      Description: "",
-      SellingPrice: 200000,
-      CreatedBy: "admin",
-      CreatedDate: "",
-      Status: "Đang bán",
-      VAT: 0,
-      StorageConditions: "Nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp",
-      Weight: 0.1,
-      Image: "https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/TUK_07336_8459e5acf0.jpg",
-      CategoryName: "Thực phẩm chức năng",
-      SubCategoryName: "Hỗ trợ điều trị",
-      UnitName: "Hộp",
-    },
-  ];
+  // const PRODUCTS_DATA = [
+  //   {
+  //     ProductId: 1,
+  //     ProductCode: "SP_001",
+  //     ManufactureName: "manufacturer1",
+  //     ProductName: "Vương Niệu Đan",
+  //     UnitId: 1,
+  //     CategoryId: 1,
+  //     Description: "",
+  //     SellingPrice: 100000,
+  //     CreatedBy: "admin",
+  //     CreatedDate: "",
+  //     Status: "Đang bán",
+  //     VAT: 0,
+  //     StorageConditions: "Nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp",
+  //     Weight: 0.1,
+  //     Image: "https://cdn.nhathuoclongchau.com.vn/unsafe/375x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/DSC_04675_87dec747f2.jpg",
+  //     CategoryName: "Thực phẩm chức năng",
+  //     SubCategoryName: "Hỗ trợ điều trị",
+  //     UnitName: "Hộp",
+  //   },
+  //   {
+  //     ProductId: 2,
+  //     ProductCode: "SP_002",
+  //     ManufactureName: "manufacturer1",
+  //     ProductName: "Khương Thảo Đan",
+  //     UnitId: 1,
+  //     CategoryId: 1,
+  //     Description: "",
+  //     SellingPrice: 200000,
+  //     CreatedBy: "admin",
+  //     CreatedDate: "",
+  //     Status: "Đang bán",
+  //     VAT: 0,
+  //     StorageConditions: "Nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp",
+  //     Weight: 0.1,
+  //     Image: "https://cdn.nhathuoclongchau.com.vn/unsafe/768x0/filters:quality(90)/https://cms-prod.s3-sgn09.fptcloud.com/TUK_07336_8459e5acf0.jpg",
+  //     CategoryName: "Thực phẩm chức năng",
+  //     SubCategoryName: "Hỗ trợ điều trị",
+  //     UnitName: "Hộp",
+  //   },
+  // ];
 
   const PRODUCTS_DATA_MINI = [
     {
@@ -142,9 +142,9 @@ const MyComponent: React.FC = () => {
       </div>
 
       {/* Danh sách sản phẩm */}
-      <div className="mt-4">
+      {/* <div className="mt-4">
         <ProductTable PRODUCTS_DATA={PRODUCTS_DATA} handleChangePage={handleChangePage} />
-      </div>
+      </div> */}
     </div>
   );
 };

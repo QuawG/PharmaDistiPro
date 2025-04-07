@@ -408,7 +408,7 @@ const NewSale: React.FC = () => {
                   >
                     <div onClick={() => addToCart(product)} style={{ textAlign: "center", padding: "8px 0", cursor: "pointer" }}>
                       <Title level={5} ellipsis={{ tooltip: product.productName }}>{product.productName}</Title>
-                      <Text strong>Giá: {product.sellingPrice}00 VND</Text>
+                      <Text strong>Giá: {product.sellingPrice} VND</Text>
                     </div>
                   </Card>
                 </Col>
@@ -431,7 +431,7 @@ const NewSale: React.FC = () => {
                   />
                   <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
                     <Text>{item.productName}</Text>
-                    <Text>Giá: {item.price}00 VND</Text>
+                    <Text>Giá: {item.price} VND</Text>
                     <div>
                       <InputNumber min={1} value={item.quantity} onChange={(value) => updateQuantity(item.productId, value || 1)} />
                       <Button danger onClick={() => removeItem(item.productId)} icon={<DeleteOutlined />} style={{ marginLeft: 8 }} />
@@ -500,9 +500,9 @@ const NewSale: React.FC = () => {
             {shippingFee && <Text strong style={{ marginTop: "16px" }}>Phí vận chuyển: {shippingFee} VND</Text>}
             {estimatedDeliveryTime && <Text strong style={{ marginTop: "8px" }}>Thời gian giao hàng ước tính: {estimatedDeliveryTime}</Text>}
             <Space direction="vertical" style={{ marginTop: "24px", width: "100%" }}>
-              <Text strong style={{ fontSize: 16 }}>Tạm tính: {subtotal.toFixed(0)}00 VND</Text>
-              <Text strong style={{ fontSize: 16 }}>Thuế: {tax.toFixed(0)}00 VND</Text>
-              <Text strong style={{ fontSize: 16 }}>Tổng: {total.toFixed(0)}00 VND</Text>
+              <Text strong style={{ fontSize: 16 }}>Tạm tính: {subtotal.toFixed(0)} VND</Text>
+              <Text strong style={{ fontSize: 16 }}>Thuế: {tax.toFixed(0)} VND</Text>
+              <Text strong style={{ fontSize: 16 }}>Tổng: {total.toFixed(0)} VND</Text>
               <Button
                 type="primary"
                 onClick={handleCheckout}
