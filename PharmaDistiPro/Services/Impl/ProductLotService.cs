@@ -17,6 +17,10 @@ namespace PharmaDistiPro.Services.Impl
 
         public async Task<Response<List<ProductLotResponse>>> CreateProductLot(List<ProductLotRequest> productLots)
         {
+            try
+            {
+
+           
             if (productLots == null || productLots.Count == 0)
             {
                 return new Response<List<ProductLotResponse>>
@@ -102,6 +106,15 @@ namespace PharmaDistiPro.Services.Impl
             };
 
             return response;
+            }
+            catch (Exception ex)
+            {
+                return new Response<List<ProductLotResponse>>
+                {
+                    StatusCode = 500,
+                    Message = $"Lỗi hệ thống: {ex.Message}"
+                };
+            }
         }
 
 

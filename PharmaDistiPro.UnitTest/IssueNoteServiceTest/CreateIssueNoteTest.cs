@@ -204,15 +204,15 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
                 TotalAmount = 1000,
                 AssignTo = 1,
                 OrdersDetails = new List<OrdersDetail>
-                {          
-                    new OrdersDetail { OrderDetailId = 1, OrderId = 1, ProductId = 1, Quantity = 5 }       
+                {
+                    new OrdersDetail { OrderDetailId = 1, OrderId = 1, ProductId = 1, Quantity = 5 }
                 }
             };
             var productLots = new List<ProductLot>
-    
+
             {
                 new ProductLot { ProductLotId = 1, ProductId = 1, Quantity = 0 }
-    
+
             };
             var issueNoteRequestDto = new IssueNoteRequestDto
             {
@@ -239,6 +239,72 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
             Assert.False(response.Success);
             Assert.Null(response.Data);
             Assert.True(response.Message.Contains("Lỗi kết nối database"));
+
+        }
+
+        [Fact]
+        public async Task CreateIssueNote_WhenProductLotNotFound_ReturnFail()
+        {
+            int orderId = 1;
+            var order = new Order
+            {
+                OrderId = orderId,
+                CreatedDate = DateTime.Now,
+                Status = 2,
+                CustomerId = 101,
+                TotalAmount = 1000,
+                AssignTo = 1,
+                OrdersDetails = new List<OrdersDetail>
+        {
+            new OrdersDetail { OrderDetailId = 1, OrderId = 1, ProductId = 1000, Quantity = 5 }
+        }
+            };
+
+            var productLots = new List<ProductLot>
+    {
+        new ProductLot { ProductLotId = 1, ProductId = 1000, Quantity = 0 }
+    };
+
+            var issueNoteRequestDto = new IssueNoteRequestDto
+            {
+                OrderId = orderId,
+                CreatedDate = DateTime.Now,
+                Status = 2,
+                CustomerId = order.CustomerId,
+                TotalAmount = order.TotalAmount,
+                CreatedBy = order.AssignTo
+            };
+
+            var issueNote = new IssueNote
+            {
+                IssueNoteId = 1,
+                OrderId = orderId
+            };
+
+            _orderRepositoryMock.Setup(repo => repo.GetByIdAsync(orderId)).ReturnsAsync(order);
+            _orderRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Order>()));
+
+            _ordersDetailRepositoryMock.Setup(repo => repo.GetByConditionAsync(It.IsAny<Expression<Func<OrdersDetail, bool>>>(), null, null))
+                .ReturnsAsync(order.OrdersDetails);
+            _productLotRepositoryMock.Setup(repo => repo.GetProductLotsByProductIds(It.IsAny<List<int>>()))
+                .ThrowsAsync(new Exception("Không tìm thấy sản phẩm trong kho"));
+            _issueNoteRepositoryMock.Setup(repo => repo.CountAsync(It.IsAny<Expression<Func<IssueNote, bool>>>())).ReturnsAsync(5);
+            _issueNoteRepositoryMock.Setup(repo => repo.CreateIssueNote(It.IsAny<IssueNote>())).
+                ThrowsAsync(new Exception("Không tìm thấy sản phẩm trong kho")); ;
+            _orderRepositoryMock.Setup(repo => repo.SaveAsync()).
+                ThrowsAsync(new Exception("Không tìm thấy sản phẩm trong kho")); ;
+
+
+
+            // Giả lập Mapper
+            _mapperMock.Setup(m => m.Map<IssueNote>(It.IsAny<IssueNoteRequestDto>())).Returns(issueNote);
+            _mapperMock.Setup(m => m.Map<IssueNoteDto>(It.IsAny<IssueNote>())).Returns(new IssueNoteDto { IssueNoteId = issueNote.IssueNoteId });
+
+            var response = await _issueNoteService.CreateIssueNote(orderId);
+
+            Assert.False(response.Success);
+            Assert.Null(response.Data);
+            Assert.True(response.Message.Contains("Không tìm thấy sản phẩm trong kho"));
 
         }
 
@@ -323,8 +389,8 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
             // 2 lô hàng, lô đầu tiên chỉ có 4 đơn vị, lô thứ hai có 10 đơn vị (đủ hàng)
             var productLots = new List<ProductLot>
         {
-        new ProductLot { ProductLotId = 1, ProductId = 1, Quantity = 4, ExpiredDate = DateTime.Today.AddDays(5) },  
-        new ProductLot { ProductLotId = 2, ProductId = 1, Quantity = 10, ExpiredDate = DateTime.Today.AddDays(10) } 
+        new ProductLot { ProductLotId = 1, ProductId = 1, Quantity = 4, ExpiredDate = DateTime.Today.AddDays(5) },
+        new ProductLot { ProductLotId = 2, ProductId = 1, Quantity = 10, ExpiredDate = DateTime.Today.AddDays(10) }
         };
 
             var issueNoteRequestDto = new IssueNoteRequestDto
@@ -372,6 +438,8 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
             _productLotRepositoryMock.Verify(repo => repo.UpdateAsync(It.Is<ProductLot>(p => p.ProductLotId == 1 && p.Quantity == 0)), Times.Once);
             _productLotRepositoryMock.Verify(repo => repo.UpdateAsync(It.Is<ProductLot>(p => p.ProductLotId == 2 && p.Quantity == 4)), Times.Once);
         }
+
+
 
 
     }

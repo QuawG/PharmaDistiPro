@@ -143,6 +143,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
 
             _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
                 .Returns(Task.CompletedTask);
+
             _orderRepositoryMock.Setup(repo => repo.SaveAsync())
                 .Returns(Task.FromResult(1));
 
@@ -375,7 +376,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
         }
 
         [Fact]
-        public async Task CreatePurchaseOrder_WhenProductQuantityIsZero_ReturnsError()
+        public async Task CheckOut_WhenProductQuantityIsZero_ReturnsError()
         {
 
             var orderRequestDto = new OrderRequestDto
@@ -447,6 +448,381 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             Assert.Null(result.Data);
             Assert.False(result.Success);
             Assert.Equal("Lỗi khi tạo đơn hàng: Số lượng sản phẩm phải lớn hơn 0", result.Message);
+
+        }
+
+        [Fact]
+        public async Task CheckOut_WhenProductQuantityIsNull_ReturnsError()
+        {
+
+            var orderRequestDto = new OrderRequestDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+                OrdersDetails = new List<OrdersDetailsRequestDto>
+        {
+            new OrdersDetailsRequestDto { ProductId = 1, Quantity = null }
+        }
+            };
+
+            var order = new Models.Order
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            var ordersDetails = new List<Models.OrdersDetail>
+
+    {
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
+        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+    };
+
+            var orderDto = new OrderDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
+                .Returns(order);
+
+            _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
+                .Throws(new Exception("Số lượng sản phẩm không được để trống"));
+
+            _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
+                .Returns(Task.CompletedTask);
+            _orderRepositoryMock.Setup(repo => repo.SaveAsync())
+                .Returns(Task.FromResult(1));
+
+            _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
+                .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
+
+
+            // Act: Gọi phương thức CheckOut
+            var result = await _orderService.CheckOut(orderRequestDto);
+
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Lỗi khi tạo đơn hàng: Số lượng sản phẩm không được để trống", result.Message);
+
+        }
+
+        [Fact]
+        public async Task CheckOut_WhenProductIsNull_ReturnsError()
+        {
+
+            var orderRequestDto = new OrderRequestDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+                OrdersDetails = new List<OrdersDetailsRequestDto>
+        {
+            new OrdersDetailsRequestDto { ProductId = null, Quantity = null }
+        }
+            };
+
+            var order = new Models.Order
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            var ordersDetails = new List<Models.OrdersDetail>
+
+    {
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
+        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+    };
+
+            var orderDto = new OrderDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
+                .Returns(order);
+
+            _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
+                .Throws(new Exception("Sản phẩm không được để trống"));
+
+            _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
+                .Returns(Task.CompletedTask);
+            _orderRepositoryMock.Setup(repo => repo.SaveAsync())
+                .Returns(Task.FromResult(1));
+
+            _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
+                .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
+
+
+            // Act: Gọi phương thức CheckOut
+            var result = await _orderService.CheckOut(orderRequestDto);
+
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Lỗi khi tạo đơn hàng: Sản phẩm không được để trống", result.Message);
+
+        }
+
+        [Fact]
+        public async Task CheckOut_WhenProductIsInvalid_ReturnsError()
+        {
+
+            var orderRequestDto = new OrderRequestDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+                OrdersDetails = new List<OrdersDetailsRequestDto>
+        {
+            new OrdersDetailsRequestDto { ProductId = 1000, Quantity = null }
+        }
+            };
+
+            var order = new Models.Order
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            var ordersDetails = new List<Models.OrdersDetail>
+
+    {
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
+        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+    };
+
+            var orderDto = new OrderDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
+                .Returns(order);
+
+            _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
+                .Throws(new Exception("Sản phẩm không tồn tại"));
+
+            _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
+                .Returns(Task.CompletedTask);
+            _orderRepositoryMock.Setup(repo => repo.SaveAsync())
+                .Returns(Task.FromResult(1));
+
+            _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
+                .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
+
+
+            // Act: Gọi phương thức CheckOut
+            var result = await _orderService.CheckOut(orderRequestDto);
+
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Lỗi khi tạo đơn hàng: Sản phẩm không tồn tại", result.Message);
+
+        }
+
+        [Fact]
+        public async Task CheckOut_WhenCityIsInvalid_ReturnsError()
+        {
+
+            var orderRequestDto = new OrderRequestDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = null,
+                WardCode = "11010",
+                OrdersDetails = new List<OrdersDetailsRequestDto>
+        {
+            new OrdersDetailsRequestDto { ProductId = 1000, Quantity = null }
+        }
+            };
+
+            var order = new Models.Order
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            var ordersDetails = new List<Models.OrdersDetail>
+
+    {
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
+        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+    };
+
+            var orderDto = new OrderDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
+                .Returns(order);
+
+            _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
+                .Throws(new Exception("Thành phố để giao hàng không tồn tại"));
+
+            _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
+                .Returns(Task.CompletedTask);
+            _orderRepositoryMock.Setup(repo => repo.SaveAsync())
+                .Returns(Task.FromResult(1));
+
+            _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
+                .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
+
+
+            // Act: Gọi phương thức CheckOut
+            var result = await _orderService.CheckOut(orderRequestDto);
+
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Lỗi khi tạo đơn hàng: Thành phố để giao hàng không tồn tại", result.Message);
+
+        }
+
+        [Fact]
+        public async Task CheckOut_WhenWardCodeIsInvalid_ReturnsError()
+        {
+
+            var orderRequestDto = new OrderRequestDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = null,
+                WardCode = "11010",
+                OrdersDetails = new List<OrdersDetailsRequestDto>
+        {
+            new OrdersDetailsRequestDto { ProductId = 1000, Quantity = null }
+        }
+            };
+
+            var order = new Models.Order
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = null
+            };
+
+            var ordersDetails = new List<Models.OrdersDetail>
+
+    {
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
+        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+    };
+
+            var orderDto = new OrderDto
+            {
+                OrderId = 1,
+                OrderCode = "ORD001",
+                CreatedDate = DateTime.Now,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                UpdatedStatusDate = DateTime.Now,
+                CustomerId = 1,
+                DistrictId = 1482,
+                WardCode = "11010",
+            };
+
+            _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
+                .Returns(order);
+
+            _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
+                .Throws(new Exception("Quận huyện để giao hàng không tồn tại"));
+
+            _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
+                .Returns(Task.CompletedTask);
+            _orderRepositoryMock.Setup(repo => repo.SaveAsync())
+                .Returns(Task.FromResult(1));
+
+            _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
+                .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
+
+
+            // Act: Gọi phương thức CheckOut
+            var result = await _orderService.CheckOut(orderRequestDto);
+
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Lỗi khi tạo đơn hàng: Quận huyện để giao hàng không tồn tại", result.Message);
 
         }
     }

@@ -261,7 +261,7 @@ namespace PharmaDistiPro.Services.Impl
                 // Log lỗi chi tiết và thông báo lỗi thân thiện người dùng
                 // logger.LogError(ex, "Lỗi khi cập nhật người dùng");
                 response.Success = false;
-                response.Message = "Đã xảy ra lỗi trong quá trình cập nhật người dùng.";
+                response.Message = ex.Message;
             }
 
             return response;

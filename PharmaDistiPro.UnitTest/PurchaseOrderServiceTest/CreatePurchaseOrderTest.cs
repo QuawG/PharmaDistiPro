@@ -181,6 +181,131 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
         }
 
         [Fact]
+        public async Task CreatePurchaseOrder_WhenProductNull_ReturnsError()
+        {
+            var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
+            {
+                SupplierId = 1,
+                PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
+        {
+            new PurchaseOrdersDetailsRequestDto { ProductId = null }
+        }
+            };
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrder>(It.IsAny<PurchaseOrdersRequestDto>()))
+                       .Returns(new PurchaseOrder());
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrdersDetail>(It.IsAny<PurchaseOrdersDetailsRequestDto>()))
+                       .Throws(new Exception("Không tồn tại sản phẩm đó"));
+
+            _purchaseOrderRepositoryMock.Setup(r => r.InsertPurchaseOrderAsync(It.IsAny<PurchaseOrder>()))
+                                        .Returns(Task.CompletedTask);
+
+            _purchaseOrderRepositoryMock.Setup(r => r.SaveAsync());
+
+            var result = await _purchaseOrderService.CreatePurchaseOrder(purchaseOrderRequestDto);
+
+            Assert.NotNull(result);
+            Assert.False(result.Success);
+            Assert.Contains("Không tồn tại sản phẩm đó", result.Message);
+        }
+
+        [Fact]
+        public async Task CreatePurchaseOrder_WhenCodeNull_ReturnsError()
+        {
+            var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
+            {
+                SupplierId = 1,
+                PurchaseOrderCode = null,
+                PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
+        {
+            new PurchaseOrdersDetailsRequestDto { ProductId = null }
+        }
+            };
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrder>(It.IsAny<PurchaseOrdersRequestDto>()))
+                       .Returns(new PurchaseOrder());
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrdersDetail>(It.IsAny<PurchaseOrdersDetailsRequestDto>()))
+                       .Throws(new Exception("Code đơn hàng không được trống"));
+
+            _purchaseOrderRepositoryMock.Setup(r => r.InsertPurchaseOrderAsync(It.IsAny<PurchaseOrder>()))
+                                        .Returns(Task.CompletedTask);
+
+            _purchaseOrderRepositoryMock.Setup(r => r.SaveAsync());
+
+            var result = await _purchaseOrderService.CreatePurchaseOrder(purchaseOrderRequestDto);
+
+            Assert.NotNull(result);
+            Assert.False(result.Success);
+            Assert.Contains("Code đơn hàng không được trống", result.Message);
+        }
+
+        [Fact]
+        public async Task CreatePurchaseOrder_WhenTotalAmountNull_ReturnsError()
+        {
+            var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
+            {
+                SupplierId = 1,
+                TotalAmount = null,
+                PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
+
+        {
+            new PurchaseOrdersDetailsRequestDto { ProductId = null }
+        }
+            };
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrder>(It.IsAny<PurchaseOrdersRequestDto>()))
+                       .Returns(new PurchaseOrder());
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrdersDetail>(It.IsAny<PurchaseOrdersDetailsRequestDto>()))
+                       .Throws(new Exception("Tổng giá đang để trống"));
+
+            _purchaseOrderRepositoryMock.Setup(r => r.InsertPurchaseOrderAsync(It.IsAny<PurchaseOrder>()))
+                                        .Returns(Task.CompletedTask);
+
+            _purchaseOrderRepositoryMock.Setup(r => r.SaveAsync());
+
+            var result = await _purchaseOrderService.CreatePurchaseOrder(purchaseOrderRequestDto);
+
+            Assert.NotNull(result);
+            Assert.False(result.Success);
+            Assert.Contains("Tổng giá đang để trống", result.Message);
+        }
+
+        [Fact]
+        public async Task CreatePurchaseOrder_WhenTotalAmountLessthanZero_ReturnsError()
+        {
+            var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
+            {
+                SupplierId = 1,
+                TotalAmount = null,
+                PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
+
+{
+    new PurchaseOrdersDetailsRequestDto { ProductId = null }
+}
+            };
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrder>(It.IsAny<PurchaseOrdersRequestDto>()))
+                       .Returns(new PurchaseOrder());
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrdersDetail>(It.IsAny<PurchaseOrdersDetailsRequestDto>()))
+                       .Throws(new Exception("Tổng giá phải lớn hơn 0"));
+
+            _purchaseOrderRepositoryMock.Setup(r => r.InsertPurchaseOrderAsync(It.IsAny<PurchaseOrder>()))
+                                        .Returns(Task.CompletedTask);
+
+            _purchaseOrderRepositoryMock.Setup(r => r.SaveAsync());
+
+            var result = await _purchaseOrderService.CreatePurchaseOrder(purchaseOrderRequestDto);
+
+            Assert.NotNull(result);
+            Assert.False(result.Success);
+            Assert.Contains("Tổng giá phải lớn hơn 0", result.Message);
+        }
+
+        [Fact]
         public async Task CreatePurchaseOrder_WhenSupplierIdInvalid_ReturnsError()
         {
             
@@ -234,6 +359,38 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             Assert.False(result.Success);
             Assert.NotNull(result.Message);
             Assert.Contains("Số lượng sản phẩm phải lớn hơn 0", result.Message);
+        }
+
+        [Fact]
+        public async Task CreatePurchaseOrder_WhenProductQuantityIsString_ReturnsError()
+        {
+
+            var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
+            {
+                SupplierId = 1,
+                PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
+                {
+                    new PurchaseOrdersDetailsRequestDto { ProductId = 10, Quantity = null }
+                }
+            };
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrder>(It.IsAny<PurchaseOrdersRequestDto>()))
+           .Returns(new PurchaseOrder());
+
+            _mapperMock.Setup(m => m.Map<PurchaseOrdersDetail>(It.IsAny<PurchaseOrdersDetailsRequestDto>()))
+                       .Throws(new Exception("Số lượng sản phẩm phải là số"));
+
+            _purchaseOrderRepositoryMock.Setup(r => r.InsertPurchaseOrderAsync(It.IsAny<PurchaseOrder>()))
+                                        .Returns(Task.CompletedTask);
+
+            _purchaseOrderRepositoryMock.Setup(r => r.SaveAsync()).ThrowsAsync(new Exception("Số lượng sản phẩm phải là số"));
+
+            var result = await _purchaseOrderService.CreatePurchaseOrder(purchaseOrderRequestDto);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.NotNull(result.Message);
+            Assert.Contains("Số lượng sản phẩm phải là số", result.Message);
         }
 
     }
