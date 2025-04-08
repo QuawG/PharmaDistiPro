@@ -90,16 +90,30 @@ namespace PharmaDistiPro.Helper
             #region Product
 
             // Mapping Product -> ProductDTO
+
+            // Mapping from Product to ProductDTO
             CreateMap<Product, ProductDTO>()
                 .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.Unit))
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : string.Empty)) // ✅ Tránh null
-                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.ImageProducts != null && src.ImageProducts.Any() ? src.ImageProducts.First().Image : string.Empty)) // ✅ Tránh null
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : string.Empty))
+                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.ImageProducts != null && src.ImageProducts.Any()
+                    ? src.ImageProducts.Select(ip => ip.Image).ToList()
+                    : new List<string>())) // Map images from ImageProducts to Image list
                 .ReverseMap();
+            // Ánh xạ từ ImageProduct sang ImageProductDTO
+            CreateMap<ImageProduct, ImageProductDTO>()
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image));
 
-            // Mapping ProductInputRequest -> ProductDTO
-            CreateMap<ProductInputRequest, ProductDTO>().ReverseMap();
+            // Ánh xạ từ ImageProductInputRequest sang ImageProduct
+            CreateMap<ImageProductInputRequest, ImageProduct>()
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image));
+        
 
-            // Mapping ProductInputRequest -> Product (Chỉ cập nhật nếu có dữ liệu)
+        // Mapping from ProductInputRequest to ProductDTO
+        CreateMap<ProductInputRequest, ProductDTO>().ReverseMap();
+
+            // Mapping from ProductInputRequest to Product (for update operations)
             CreateMap<ProductInputRequest, Product>()
                 .ForMember(dest => dest.ProductName, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ProductName)))
                 .ForMember(dest => dest.ProductCode, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ProductCode)))
@@ -111,18 +125,20 @@ namespace PharmaDistiPro.Helper
                 .ForMember(dest => dest.Vat, opt => opt.Condition(src => src.Vat.HasValue))
                 .ForMember(dest => dest.SellingPrice, opt => opt.Condition(src => src.SellingPrice.HasValue))
                 .ForMember(dest => dest.Weight, opt => opt.Condition(src => src.Weight.HasValue))
-                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()) 
-                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
-                .ForMember(dest => dest.Status, opt => opt.Ignore()); 
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()) // Don't map CreatedBy
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore()) // Don't map CreatedDate
+                .ForMember(dest => dest.Status, opt => opt.Ignore()) // Don't map Status
+                .ForMember(dest => dest.ImageProducts, opt => opt.Ignore()) // Ignore ImageProducts mapping
+                .ReverseMap();
 
-            // Mapping Product <-> ProductOrderDto
+            // Mapping from Product to ProductOrderDto
             CreateMap<Product, ProductOrderDto>();
             CreateMap<ProductOrderDto, Product>();
 
             #endregion
             #region ImageProduct
-            CreateMap<ImageProduct, ImageProductDTO>()
-                .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product)) 
+           CreateMap<ImageProduct, ImageProductDTO>()
+                
                 .ReverseMap()
                 .ForMember(dest => dest.Product, opt => opt.Ignore());
             #endregion
@@ -132,8 +148,10 @@ namespace PharmaDistiPro.Helper
 
             // Ánh xạ từ Model -> DTO
             CreateMap<NoteCheck, NoteCheckDTO>()
-                .ForMember(dest => dest.NoteCheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
-                .ReverseMap(); // Cho phép ánh xạ ngược từ DTO -> Model
+
+      .ForMember(dest => dest.NoteCheckCode, opt => opt.MapFrom(src => src.NoteCheckCode)) // <-- thêm dòng này
+      .ForMember(dest => dest.NoteCheckDetails, opt => opt.MapFrom(src => src.NoteCheckDetails))
+      .ReverseMap(); // Cho phép ánh xạ ngược từ DTO -> Model
 
             // Ánh xạ từ RequestDTO -> Model
             CreateMap<NoteCheckRequestDTO, NoteCheck>()

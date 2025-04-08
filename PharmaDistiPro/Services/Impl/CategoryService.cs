@@ -291,22 +291,26 @@ namespace PharmaDistiPro.Services.Impl
 
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
-        public async Task<Response<CategoryDTO>> UpdateCategoryAsync(CategoryInputRequest categoryUpdateRequest)
+   
+
+
+        public async Task<Response<CategoryDTO>> UpdateCategoryAsync(int id, CategoryInputRequest categoryUpdateRequest)
         {
             var response = new Response<CategoryDTO>();
             string imageUrl = null;
+
             try
             {
-                
-                var categoryToUpdate = await _categoryRepository.GetByIdAsync(categoryUpdateRequest.Id);
+                // Kiểm tra danh mục có tồn tại không
+                var categoryToUpdate = await _categoryRepository.GetByIdAsync(id);
                 if (categoryToUpdate == null)
                 {
                     response.Success = false;
-                    response.Message = "Không tìm thấy danh mục";
+                    response.Message = "Không tìm thấy danh mục.";
                     return response;
                 }
 
-             
+                // Kiểm tra danh mục cha hợp lệ
                 if (categoryUpdateRequest.CategoryMainId.HasValue)
                 {
                     var parentCategory = await _categoryRepository.GetByIdAsync(categoryUpdateRequest.CategoryMainId.Value);
@@ -316,8 +320,8 @@ namespace PharmaDistiPro.Services.Impl
                         response.Message = "Danh mục cha không tồn tại.";
                         return response;
                     }
-                 
-                    if (categoryUpdateRequest.CategoryMainId == categoryUpdateRequest.Id)
+
+                    if (categoryUpdateRequest.CategoryMainId == id)
                     {
                         response.Success = false;
                         response.Message = "Danh mục không thể là cha của chính nó.";
@@ -325,9 +329,11 @@ namespace PharmaDistiPro.Services.Impl
                     }
                 }
 
-                
+                // Kiểm tra trùng tên hoặc mã danh mục
                 var duplicateCategory = await _categoryRepository.GetSingleByConditionAsync(
-                    c => (c.CategoryName.Equals(categoryUpdateRequest.CategoryName) || (c.CategoryCode != null && c.CategoryCode.Equals(categoryUpdateRequest.CategoryCode))) && c.Id != categoryUpdateRequest.Id
+                    c => ((categoryUpdateRequest.CategoryName != null && c.CategoryName.Equals(categoryUpdateRequest.CategoryName)) ||
+                          (categoryUpdateRequest.CategoryCode != null && c.CategoryCode != null && c.CategoryCode.Equals(categoryUpdateRequest.CategoryCode)))
+                          && c.Id != id
                 );
 
                 if (duplicateCategory != null)
@@ -337,7 +343,7 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-                
+                // Cập nhật thông tin danh mục
                 if (!string.IsNullOrEmpty(categoryUpdateRequest.CategoryName))
                     categoryToUpdate.CategoryName = categoryUpdateRequest.CategoryName;
 
@@ -365,58 +371,18 @@ namespace PharmaDistiPro.Services.Impl
 
                 response.Success = true;
                 response.Data = _mapper.Map<CategoryDTO>(categoryToUpdate);
-                response.Message = "Cập nhật danh mục thành công";
+                response.Message = "Cập nhật danh mục thành công.";
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Lỗi: {ex.Message}";
+                response.Message = $"Lỗi hệ thống: {ex.Message} (Chi tiết: {ex.StackTrace})";
             }
 
             return response;
         }
 
-
-        //public async Task<Response<bool>> DeleteCategoryAsync(int categoryId)
-        //{
-        //    var response = new Response<bool>();
-
-        //    try
-        //    {
-        //        Kiểm tra danh mục có tồn tại không
-        //        var categoryToDelete = await _categoryRepository.GetByIdAsync(categoryId);
-        //        if (categoryToDelete == null)
-        //        {
-        //            response.Success = false;
-        //            response.Message = "Không tìm thấy danh mục";
-        //            return response;
-        //        }
-
-        //        Kiểm tra xem danh mục có danh mục con không
-        //        var hasSubCategories = await _categoryRepository.GetSingleByConditionAsync(c => c.CategoryMainId == categoryId);
-        //        if (hasSubCategories != null)
-        //        {
-        //            response.Success = false;
-        //            response.Message = "Không thể xóa danh mục vì vẫn còn danh mục con.";
-        //            return response;
-        //        }
-
-        //        Xóa danh mục
-        //       await _categoryRepository.DeleteAsync(categoryToDelete);
-        //        await _categoryRepository.SaveAsync();
-
-        //        response.Success = true;
-        //        response.Data = true;
-        //        response.Message = "Xóa danh mục thành công";
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Success = false;
-        //        response.Message = $"Lỗi: {ex.Message}";
-        //    }
-
-        //    return response;
-        //}
+    
 
 
     }

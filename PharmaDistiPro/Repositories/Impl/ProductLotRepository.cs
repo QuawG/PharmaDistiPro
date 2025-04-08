@@ -47,5 +47,19 @@ namespace PharmaDistiPro.Repositories.Impl
             int rowAffected = await _context.SaveChangesAsync();
             return await GetProductLotById(ProductLot.ProductLotId);
         }
+        public async Task<Product> GetProductByIdAsync(int productId)
+        {
+            return await _context.Products
+                .Include(p => p.Category) // Bao gồm thông tin Category
+                .Include(p => p.ImageProducts)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+        }
+
+
+        public async Task UpdateAsyncProductLot(ProductLot productLot)
+        {
+            _context.ProductLots.Update(productLot);
+            await _context.SaveChangesAsync(); // Phải có dòng này
+        }
     }
 }

@@ -17,19 +17,19 @@ namespace PharmaDistiPro.Repositories.Impl
             // Lấy warehouse chưa có order nào, ưu tiên warehouse có UserId nhỏ nhất
             var warehouseWithoutOrders = await _context.Users
                 .Where(x => x.RoleId == 2 && !x.OrderAssignToNavigations.Any() && x.Status==true) // Warehouse chưa có order nào
-                .OrderBy(x => x.UserId) // Sắp xếp theo UserId
+                .OrderBy(x => x.UserId) 
                 .FirstOrDefaultAsync();
 
             if (warehouseWithoutOrders != null)
             {
-                return warehouseWithoutOrders; // Nếu có warehouse chưa có order, trả về nó
+                return warehouseWithoutOrders; 
             }
 
-            // Nếu tất cả warehouse đã có order, tìm warehouse có ít order nhất, nếu bằng nhau thì lấy warehouse có UserId nhỏ nhất
+            
             var warehouseWithMinOrders = await _context.Users
-                .Where(x => x.RoleId == 2)
-                .OrderBy(x => x.OrderAssignToNavigations.Count) // Sắp xếp theo số lượng order tăng dần
-                .ThenBy(x => x.UserId) // Nếu số lượng order bằng nhau, lấy warehouse có UserId nhỏ nhất
+                .Where(x => x.RoleId == 2 && x.Status == true)
+              
+                .OrderBy(x => x.OrderAssignToNavigations.Count) 
                 .FirstOrDefaultAsync();
 
             return warehouseWithMinOrders;

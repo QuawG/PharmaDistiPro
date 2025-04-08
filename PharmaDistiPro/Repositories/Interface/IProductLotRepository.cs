@@ -12,6 +12,7 @@ namespace PharmaDistiPro.Repositories.Interface
         Task<List<ProductLot>> CreateProductLots(List<ProductLot> ProductLots);
         Task<ProductLot> UpdateProductLot(ProductLot ProductLot);
         Task<Lot> GetLotById(int id);
-
+        Task<Product> GetProductByIdAsync(int productId);
+        Task UpdateAsyncProductLot(ProductLot productLot);
     }
 }

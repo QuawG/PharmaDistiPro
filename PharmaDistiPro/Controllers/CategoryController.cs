@@ -46,7 +46,7 @@ namespace PharmaDistiPro.Controllers
 
         // 2. Tạo mới category
         [HttpPost]
-        public async Task<IActionResult> CreateCategory([FromBody] CategoryInputRequest request)
+        public async Task<IActionResult> CreateCategory([FromForm] CategoryInputRequest request)
         {
             var result = await _categoryService.CreateCategoryAsync(request);
             if (!result.Success)
@@ -55,17 +55,14 @@ namespace PharmaDistiPro.Controllers
             }
             return Ok(result);
         }
-
         // 3. Cập nhật category
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryInputRequest request)
+        public async Task<IActionResult> UpdateCategory(int id, [FromForm] CategoryInputRequest request)
         {
-            request.Id = id; // Đảm bảo Id được gán từ route parameter
-
-            var result = await _categoryService.UpdateCategoryAsync(request);
+            var result = await _categoryService.UpdateCategoryAsync(id, request);
             if (!result.Success)
             {
-                return BadRequest(result); // Sử dụng BadRequest thay vì NotFound cho trường hợp cập nhật thất bại
+                return BadRequest(result);
             }
             return Ok(result);
         }

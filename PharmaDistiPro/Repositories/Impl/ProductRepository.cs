@@ -12,25 +12,28 @@ namespace PharmaDistiPro.Repositories.Impl
         {
         }
 
+        // Lấy tất cả sản phẩm với thông tin hình ảnh và category
         public async Task<IEnumerable<Product>> GetAllAsyncProduct()
         {
             return await _context.Products
-                .Include(p => p.Category) // Bảo đảm load thông tin Category
+                .Include(p => p.Category) // Bao gồm thông tin Category
+                .Include(p => p.ImageProducts) // Bao gồm thông tin hình ảnh
                 .ToListAsync();
         }
 
-
-        public async Task<Product> GetByIdAsyncProduct(object id)
+        // Lấy sản phẩm theo ID với thông tin hình ảnh và category
+        public async Task<Product> GetByIdAsyncProduct(int id)
         {
-            if (id == null)
-            {
-                return null; // Or handle the error as per your requirement
-            }
+         
 
             return await _context.Products
-                                  .Include(p => p.Category)  // Ensure Category is included
-                                  .FirstOrDefaultAsync(p => p.ProductId == (int)id);  // Using FirstOrDefaultAsync for more explicit control
+                .Include(p => p.Category) // Bao gồm thông tin Category
+                .Include(p => p.ImageProducts) // Bao gồm thông tin hình ảnh
+                .FirstOrDefaultAsync(p => p.ProductId == id); // Sử dụng FirstOrDefaultAsync để kiểm tra rõ ràng
         }
+
+
+       
     }
 
 }

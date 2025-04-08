@@ -33,6 +33,7 @@ namespace PharmaDistiPro.Models
         public virtual DbSet<ReceivedNote> ReceivedNotes { get; set; } = null!;
         public virtual DbSet<ReceivedNoteDetail> ReceivedNoteDetails { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
+        public virtual DbSet<StorageHistory> StorageHistories { get; set; } = null!;
         public virtual DbSet<StorageRoom> StorageRooms { get; set; } = null!;
         public virtual DbSet<Supplier> Suppliers { get; set; } = null!;
         public virtual DbSet<User> Users { get; set; } = null!;
@@ -324,6 +325,20 @@ namespace PharmaDistiPro.Models
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.Property(e => e.RoleName).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<StorageHistory>(entity =>
+            {
+                entity.ToTable("StorageHistory");
+
+                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+
+                entity.Property(e => e.Service).HasMaxLength(50);
+
+                entity.HasOne(d => d.StorageRoom)
+                    .WithMany(p => p.StorageHistories)
+                    .HasForeignKey(d => d.StorageRoomId)
+                    .HasConstraintName("FK_StorageHistory_StorageRooms");
             });
 
             modelBuilder.Entity<StorageRoom>(entity =>

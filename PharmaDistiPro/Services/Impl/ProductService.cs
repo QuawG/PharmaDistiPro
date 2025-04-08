@@ -81,7 +81,21 @@ namespace PharmaDistiPro.Services.Impl
                 var products = await _productRepository.GetAllAsyncProduct() ?? new List<Product>();
 
                 // Ánh xạ dữ liệu sang DTO
-                response.Data = _mapper.Map<IEnumerable<ProductDTO>>(products);
+                var productDtos = _mapper.Map<IEnumerable<ProductDTO>>(products);
+
+                // Duyệt qua từng sản phẩm và ánh xạ danh sách hình ảnh từ ImageProduct sang Images trong ProductDTO
+                foreach (var productDto in productDtos)
+                {
+                    var product = products.FirstOrDefault(p => p.ProductId == productDto.ProductId);
+
+                    if (product != null)
+                    {
+                        // Lấy danh sách hình ảnh từ ImageProduct và ánh xạ vào ProductDTO
+                        productDto.Images = product.ImageProducts?.Select(ip => ip.Image).ToList();
+                    }
+                }
+
+                response.Data = productDtos;
                 response.Success = true;
                 response.Message = products.Any() ? "Lấy danh sách sản phẩm thành công" : "Không có sản phẩm nào.";
 
@@ -97,7 +111,6 @@ namespace PharmaDistiPro.Services.Impl
 
             return response;
         }
-
         // Deactivate product
         public async Task<Response<ProductDTO>> ActivateDeactivateProduct(int productId, bool update)
         {
@@ -171,11 +184,21 @@ namespace PharmaDistiPro.Services.Impl
                 newProduct.CreatedDate = DateTime.Now;
                 newProduct.Status = true;
 
-                // Upload ảnh nếu có
+                // Kiểm tra và upload ảnh nếu có
                 if (productInputRequest.Images != null && productInputRequest.Images.Any())
                 {
+                    int currentImageCount = 0;
+
                     foreach (var image in productInputRequest.Images)
                     {
+                        // Kiểm tra số lượng ảnh không vượt quá 5
+                        if (currentImageCount >= 5)
+                        {
+                            response.Success = false;
+                            response.Message = "Mỗi sản phẩm chỉ được tối đa 5 ảnh.";
+                            return response;
+                        }
+
                         var uploadParams = new ImageUploadParams()
                         {
                             File = new FileDescription(image.FileName, image.OpenReadStream()),
@@ -189,6 +212,8 @@ namespace PharmaDistiPro.Services.Impl
                         {
                             Image = imageUrl
                         });
+
+                        currentImageCount++; // Tăng số lượng ảnh đã upload
                     }
                 }
 
@@ -243,8 +268,13 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
+                var productDto = _mapper.Map<ProductDTO>(product);
+
+                // Kiểm tra mối quan hệ hình ảnh và ánh xạ đúng vào Images
+                productDto.Images = product.ImageProducts?.Select(ip => ip.Image).ToList();
+
                 response.Success = true;
-                response.Data = _mapper.Map<ProductDTO>(product);
+                response.Data = productDto;
                 response.Message = "Product found";
                 return response;
             }
@@ -256,7 +286,6 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
-        // Update product (hỗ trợ cập nhật nhiều ảnh nếu cần)
         public async Task<Response<ProductDTO>> UpdateProduct(ProductInputRequest productUpdateRequest)
         {
             var response = new Response<ProductDTO>();
@@ -272,9 +301,20 @@ namespace PharmaDistiPro.Services.Impl
 
                 _mapper.Map(productUpdateRequest, productToUpdate);
 
-                // Xử lý ảnh mới nếu có
+                // Kiểm tra danh sách ảnh hiện tại
+                var currentImages = productToUpdate.ImageProducts.ToList();
+                int currentImageCount = currentImages.Count;
+
+                // Kiểm tra xem tổng số ảnh hiện tại + mới có vượt quá 5 không
                 if (productUpdateRequest.Images != null && productUpdateRequest.Images.Any())
                 {
+                    if (currentImageCount + productUpdateRequest.Images.Count > 5)
+                    {
+                        response.Success = false;
+                        response.Message = "Mỗi sản phẩm chỉ được tối đa 5 ảnh.";
+                        return response;
+                    }
+
                     foreach (var image in productUpdateRequest.Images)
                     {
                         var uploadParams = new ImageUploadParams()
@@ -283,17 +323,30 @@ namespace PharmaDistiPro.Services.Impl
                             PublicId = Path.GetFileNameWithoutExtension(image.FileName)
                         };
 
-                        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                        var imageUrl = uploadResult.SecureUri.ToString();
-
-                        productToUpdate.ImageProducts.Add(new ImageProduct
+                        try
                         {
-                            Image = imageUrl,
-                            ProductId = productToUpdate.ProductId
-                        });
+                            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                            var imageUrl = uploadResult.SecureUri.ToString();
+
+                            // Thêm ảnh mới vào danh sách ảnh của sản phẩm
+                            productToUpdate.ImageProducts.Add(new ImageProduct
+                            {
+                                Image = imageUrl,
+                                ProductId = productToUpdate.ProductId
+                            });
+
+                            currentImageCount++;  // Cập nhật số lượng ảnh sau khi thêm ảnh mới
+                        }
+                        catch (Exception uploadEx)
+                        {
+                            response.Success = false;
+                            response.Message = $"Lỗi khi tải ảnh lên: {uploadEx.Message}";
+                            return response;
+                        }
                     }
                 }
 
+                // Cập nhật thông tin sản phẩm sau khi xử lý ảnh
                 await _productRepository.UpdateAsync(productToUpdate);
                 await _productRepository.SaveAsync();
 

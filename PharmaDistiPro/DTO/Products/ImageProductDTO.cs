@@ -8,6 +8,6 @@ namespace PharmaDistiPro.DTO.Products
         public int? ProductId { get; set; }
         public string? Image { get; set; }
 
-        public virtual Product? Product { get; set; }
+       
     }
 }

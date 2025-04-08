@@ -119,8 +119,7 @@ namespace PharmaDistiPro.Services.Impl
                 order.Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN;
                 order.UpdatedStatusDate = DateTime.Now;
                 order.CustomerId = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
-                order.DistrictId = 1482;
-                order.WardCode = "11010";
+          
 
 
                 await _orderRepository.InsertOrderAsync(order);

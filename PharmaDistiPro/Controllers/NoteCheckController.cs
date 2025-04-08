@@ -39,54 +39,17 @@ namespace PharmaDistiPro.Controllers
 
 
 
-        /// <summary>
-        /// Đánh dấu một mục hàng hỏng đã được xử lý.
-        /// </summary>
-        /// <param name="noteCheckDetailId">ID của chi tiết kiểm kho</param>
-        /// <returns>Thông tin chi tiết kiểm kho đã cập nhật</returns>
-        [HttpPut("mark-damaged-processed/{noteCheckDetailId}")]
-        public async Task<IActionResult> MarkDamagedItemProcessed(int noteCheckDetailId)
-        {
-            try
-            {
-                var result = await _noteCheckService.MarkDamagedItemProcessedAsync(noteCheckDetailId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Lỗi: {ex.Message}");
-            }
-        }
+ 
 
-        /// <summary>
-        /// Lấy danh sách hàng hỏng chưa xử lý trong một lần kiểm kho.
-        /// </summary>
-        /// <param name="noteCheckId">ID của phiếu kiểm kho</param>
-        /// <returns>Danh sách các mục hàng hỏng chưa xử lý</returns>
-        [HttpGet("unprocessed-damaged-items/{noteCheckId}")]
-        public async Task<IActionResult> GetUnprocessedDamagedItems(int noteCheckId)
-        {
-            try
-            {
-                var result = await _noteCheckService.GetUnprocessedDamagedItemsAsync(noteCheckId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Lỗi: {ex.Message}");
-            }
-        }
+        
+       
 
-        /// <summary>
-        /// Lấy danh sách tất cả hàng hỏng từ các lần kiểm kho.
-        /// </summary>
-        /// <returns>Danh sách tất cả các mục hàng hỏng</returns>
-        [HttpGet("all-damaged-items")]
-        public async Task<IActionResult> GetAllDamagedItems()
+        [HttpGet("all-error-products")]
+        public async Task<IActionResult> GetAllErrorProducts()
         {
             try
             {
-                var result = await _noteCheckService.GetAllDamagedItemsAsync();
+                var result = await _noteCheckService.GetAllErrorProductsAsync();
                 return Ok(result);
             }
             catch (Exception ex)
@@ -94,7 +57,86 @@ namespace PharmaDistiPro.Controllers
                 return BadRequest($"Lỗi: {ex.Message}");
             }
         }
+        [HttpPut("cancel-error-product/{noteCheckDetailId}")]
+        public async Task<IActionResult> CancelErrorProduct(int noteCheckDetailId)
+        {
+            try
+            {
+                var result = await _noteCheckService.UpdateErrorProductCancelStatusAsync(noteCheckDetailId);
+                return Ok(new { Success = true, Message = "Đã hủy sản phẩm lỗi thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Success = false, Message = ex.Message });
+            }
     }
+
+            [HttpGet]
+        public async Task<IActionResult> GetAllNoteChecks()
+        {
+            try
+            {
+                var result = await _noteCheckService.GetAllNoteChecksAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Lỗi: {ex.Message}");
+            }
+        }
+
+
+        // Chi tiết của đơn kiểm kê
+        [HttpGet("{noteCheckId}")]
+        public async Task<IActionResult> GetNoteCheckById(int noteCheckId)
+        {
+            try
+            {
+                var result = await _noteCheckService.GetNoteCheckByIdAsync(noteCheckId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Lỗi: {ex.Message}");
+            }
+        }
+
+        // Duyệt đơn kiểm kê
+        [HttpPut("{noteCheckId}/approve")]
+        public async Task<IActionResult> ApproveNoteCheck(int noteCheckId)
+        {
+            try
+            {
+                var result = await _noteCheckService.ApproveNoteCheckAsync(noteCheckId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Lỗi: {ex.Message}");
+            }
+        }
+
+        [HttpPut("update/{noteCheckId}")]
+        public async Task<IActionResult> UpdateNoteCheck(int noteCheckId, [FromBody] NoteCheckRequestDTO request)
+        {
+            if (request == null)
+            {
+                return BadRequest("Dữ liệu không hợp lệ.");
+            }
+
+            try
+            {
+                var result = await _noteCheckService.UpdateNoteCheckAsync(noteCheckId, request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Lỗi: {ex.Message}");
+            }
+        }
+
+    }
+
 
 
 

@@ -30,7 +30,7 @@ namespace PharmaDistiPro.DTO.NoteCheckDetails
             public int? Quantity { get; set; }
             public int? Status { get; set; }
             public int? StorageRoomId { get; set; }
-            public virtual ProductOrderDto? Product { get; set; }
+            public virtual ProductDTO? Product { get; set; }
         }
     
 }

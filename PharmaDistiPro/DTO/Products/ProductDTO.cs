@@ -16,6 +16,6 @@
         public double? Vat { get; set; }
         public int? Storageconditions { get; set; }
         public double? Weight { get; set; }
-        public string? Images { get; set; }  // ✅ Cho phép null
+        public List<string>? Images { get; set; }  // ✅ Danh sách ảnh có thể null
     }
 }

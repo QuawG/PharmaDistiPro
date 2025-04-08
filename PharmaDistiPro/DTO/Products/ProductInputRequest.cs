@@ -19,5 +19,7 @@ namespace PharmaDistiPro.DTO.Products
         public int? Storageconditions { get; set; }
         public double? Weight { get; set; }
         public List<IFormFile>? Images { get; set; } // Thêm để hỗ trợ nhiều ảnh
+
+       
     }
 }

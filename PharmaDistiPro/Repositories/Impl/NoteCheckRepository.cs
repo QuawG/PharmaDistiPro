@@ -27,57 +27,92 @@ namespace PharmaDistiPro.Repositories.Impl
         }
         public async Task InsertNoteCheckAsync(NoteCheck notecheck)
         {
-            // Lấy ngày từ CreatedDate (nếu null thì lấy ngày hiện tại)
+            
             var createdDate = notecheck.CreatedDate ?? DateTime.Now;
 
-            // Lấy số thứ tự lớn nhất trong ngày hiện tại
             var maxNoteCheckNumber = await GetMaxNoteCheckNumberByDate(createdDate);
 
-            // Tạo số thứ tự tiếp theo
+            
             var nextNoteCheckNumber = (maxNoteCheckNumber + 1).ToString();
 
-            // Nếu số thứ tự nhỏ hơn 100, đảm bảo có ít nhất 3 chữ số (001 -> 099, 100 giữ nguyên)
+            
             if (maxNoteCheckNumber + 1 < 100)
             {
                 nextNoteCheckNumber = nextNoteCheckNumber.PadLeft(3, '0');
             }
 
-            //Tạo mã đơn hàng theo format mong muốn
-            notecheck.NoteCheckCode = $"{ConstantStringHelper.OrderCode}{createdDate:ddMMyyyy}{nextNoteCheckNumber}";
+          
+            notecheck.NoteCheckCode = $"{ConstantStringHelper.NoteCheckCode}{createdDate:ddMMyyyy}{nextNoteCheckNumber}";
 
-            // Chèn vào DB
+           
             await _context.NoteChecks.AddAsync(notecheck);
             await _context.SaveChangesAsync();
         }
 
-        // Lấy số thứ tự lớn nhất trong ngày hiện tại
+       
         public async Task<int> GetMaxNoteCheckNumberByDate(DateTime createdDate)
         {
-            // Tạo prefix chính xác dựa trên ngày tạo
+          
             var noteCheckCodePattern = $"{ConstantStringHelper.NoteCheckCode}{createdDate:ddMMyyyy}";
 
-            // Lọc các đơn kiểm hàng theo ngày tháng năm, bỏ qua giờ phút giây
+          
             var latestNoteCheck = await _context.NoteChecks
                 .Where(o => o.CreatedDate.HasValue &&
                             o.CreatedDate.Value.Year == createdDate.Year &&
                             o.CreatedDate.Value.Month == createdDate.Month &&
                             o.CreatedDate.Value.Day == createdDate.Day &&
-                            o.NoteCheckCode.StartsWith(noteCheckCodePattern)) // Chỉ lấy các NoteCheckCode hợp lệ
+                            o.NoteCheckCode.StartsWith(noteCheckCodePattern)) 
                 .OrderByDescending(o => o.NoteCheckCode)
                 .FirstOrDefaultAsync();
 
-            // Nếu không có đơn kiểm nào trong ngày, bắt đầu từ 0
+            
             if (latestNoteCheck == null)
                 return 0;
 
-            // Lấy phần số thứ tự của NoteCheckCode
+            
             var lastNoteCheckNumberStr = latestNoteCheck.NoteCheckCode.Substring(noteCheckCodePattern.Length);
 
-            // Kiểm tra nếu không thể chuyển đổi thành số thì reset về 0
             return int.TryParse(lastNoteCheckNumberStr, out int noteCheckNumber) ? noteCheckNumber : 0;
         }
 
 
+        public async Task<List<NoteCheckDetail>> GetDetailsByNoteCheckIdAsync(int noteCheckId)
+        {
+            
+            return await _context.NoteCheckDetails
+                                   .Where(d => d.NoteCheckId == noteCheckId)
+                                   .ToListAsync();
+        }
+        public async Task<NoteCheck> GetNoteCheckByIdAsync(int noteCheckId)
+        {
+            return await _context.NoteChecks
+                .Include(nc => nc.NoteCheckDetails) // Nạp quan hệ NoteCheckDetails
+                .FirstOrDefaultAsync(nc => nc.NoteCheckId == noteCheckId);
+        }
+
+        public async Task<List<NoteCheck>> GetAllWithDetailsAsync()
+        {
+            return await _context.NoteChecks
+                .Include(nc => nc.NoteCheckDetails)
+                    .ThenInclude(ncd => ncd.ProductLot)
+                        .ThenInclude(pl => pl.Product)
+                .ToListAsync();
+        }
+
+        public async Task UpdateNoteCheckAsync(NoteCheck noteCheck)
+        {
+            _context.NoteChecks.Update(noteCheck);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<NoteCheck> GetByCodeWithDetailsAsync(string noteCheckCode)
+        {
+            return await _context.NoteChecks
+                .Include(n => n.NoteCheckDetails)
+                .ThenInclude(d => d.ProductLot)
+                .ThenInclude(pl => pl.Product)
+                .FirstOrDefaultAsync(n => n.NoteCheckCode == noteCheckCode);
+        }
 
     }
 }

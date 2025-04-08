@@ -1,4 +1,177 @@
-﻿
+﻿//using Microsoft.EntityFrameworkCore;
+//using Microsoft.Extensions.DependencyInjection;
+//using PharmaDistiPro.Repositories.Interface;
+//using PharmaDistiPro.Repositories.Impl;
+//using PharmaDistiPro.Services.Interface;
+//using PharmaDistiPro.Services.Impl;
+//using PharmaDistiPro.Models;
+//using AutoMapper;
+//using CloudinaryDotNet;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.IdentityModel.Tokens;
+//using System.Text;
+//using Microsoft.OpenApi.Models;
+//using System.Text.Json.Serialization;
+
+//namespace PharmaDistiPro
+//{
+//    public class Program
+//    {
+//        public static void Main(string[] args)
+//        {
+//            var builder = WebApplication.CreateBuilder(args);
+
+//            // Add services to the container
+//            builder.Services.AddControllers()
+//                .AddJsonOptions(options =>
+//                {
+//                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; // Bỏ qua vòng lặp
+//                });
+
+//            // Swagger configuration
+//            builder.Services.AddEndpointsApiExplorer();
+//            builder.Services.AddSwaggerGen(options =>
+//            {
+//                options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+//                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//                {
+//                    Name = "Authorization",
+//                    Type = SecuritySchemeType.ApiKey,
+//                    Scheme = "Bearer",
+//                    BearerFormat = "JWT",
+//                    In = ParameterLocation.Header,
+//                    Description = "JWT Authorization header using the Bearer scheme."
+//                });
+//                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+//                {
+//                    {
+//                        new OpenApiSecurityScheme
+//                        {
+//                            Reference = new OpenApiReference
+//                            {
+//                                Type = ReferenceType.SecurityScheme,
+//                                Id = "Bearer"
+//                            }
+//                        },
+//                        Array.Empty<string>()
+//                    }
+//                });
+//            });
+
+//            // Database connection
+//            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//            builder.Services.AddDbContext<SEP490_G74Context>(options =>
+//                options.UseSqlServer(connectionString)
+//                       .EnableDetailedErrors()
+//                       .EnableSensitiveDataLogging());
+
+//            builder.Services.AddHttpContextAccessor();
+
+//            // CORS configuration: Sử dụng named policy để chỉ định domain được phép
+//            builder.Services.AddCors(options =>
+//            {
+//                options.AddPolicy("AllowPharmaDistiPro", policy =>
+//                    policy.WithOrigins("http://pharmadistiproweb.pro.vn")
+//                          .AllowAnyMethod()
+//                          .AllowAnyHeader()
+//                          .AllowCredentials());
+//            });
+
+//            // Cloudinary configuration
+//            var cloudName = builder.Configuration.GetValue<string>("Cloudinary:CloudName");
+//            var apiKey = builder.Configuration.GetValue<string>("Cloudinary:Key");
+//            var apiSecret = builder.Configuration.GetValue<string>("Cloudinary:Secret");
+//            var account = new Account(cloudName, apiKey, apiSecret);
+//            builder.Services.AddSingleton(new Cloudinary(account));
+
+//            // Email configuration
+//            var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+//            builder.Services.AddSingleton(emailConfig);
+//            builder.Services.AddScoped<IEmailService, EmailService>();
+
+//            // JWT Authentication
+//            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+//            {
+//                options.TokenValidationParameters = new TokenValidationParameters
+//                {
+//                    ValidateActor = true,
+//                    ValidateAudience = true,
+//                    ValidateLifetime = true,
+//                    ValidateIssuerSigningKey = true,
+//                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+//                    ValidAudience = builder.Configuration["Jwt:Audience"],
+//                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+//                };
+//            });
+
+//            // GHN Service
+//            builder.Services.AddHttpClient<IGHNService, GHNService>();
+
+//            // Dependency Injection for repositories
+//            builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+//            builder.Services.AddScoped<IStorageRoomRepository, StorageRoomRepository>();
+//            builder.Services.AddScoped<IUnitRepository, UnitRepository>();
+//            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+//            builder.Services.AddScoped<IUserRepository, UserRepository>();
+//            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+//            builder.Services.AddScoped<IOrdersDetailRepository, OrdersDetailRepository>();
+//            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+//            builder.Services.AddScoped<IIssueNoteRepository, IssueNoteRepository>();
+//            builder.Services.AddScoped<IIssueNoteDetailsRepository, IssueNoteDetailsRepository>();
+//            builder.Services.AddScoped<IProductLotRepository, ProductLotRepository>();
+//            builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
+//            builder.Services.AddScoped<IPurchaseOrdersDetailRepository, PurchaseOrdersDetailRepository>();
+//            builder.Services.AddScoped<ILotRepository, LotRepository>();
+//            builder.Services.AddScoped<IReceivedNoteRepository, ReceivedNoteRepository>();
+//            builder.Services.AddScoped<INoteCheckRepository, NoteCheckRepository>();
+//            builder.Services.AddScoped<INoteCheckDetailsRepository, NoteCheckDetailsRepository>();
+
+//            // Dependency Injection for services
+//            builder.Services.AddScoped<ISupplierService, SupplierService>();
+//            builder.Services.AddScoped<IStorageRoomService, StorageRoomService>();
+//            builder.Services.AddScoped<IUnitService, UnitService>();
+//            builder.Services.AddScoped<ICategoryService, CategoryService>();
+//            builder.Services.AddScoped<IUserService, UserService>();
+//            builder.Services.AddScoped<IOrderService, OrderService>();
+//            builder.Services.AddScoped<IProductService, ProductService>();
+//            builder.Services.AddScoped<ICartService, CartService>();
+//            builder.Services.AddScoped<IIssueNoteService, IssueNoteService>();
+//            builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
+//            builder.Services.AddScoped<ILotService, LotService>();
+//            builder.Services.AddScoped<IProductLotService, ProductLotService>();
+//            builder.Services.AddScoped<IReceivedNoteService, ReceivedNoteService>();
+//            builder.Services.AddScoped<INoteCheckService, NoteCheckService>();
+
+//            // AutoMapper
+//            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+//            var app = builder.Build();
+
+//            // Sử dụng HTTPS Redirection
+//            app.UseHttpsRedirection();
+
+//            // Sử dụng CORS với policy đã định nghĩa
+//            app.UseCors("AllowPharmaDistiPro");
+
+//            // Authentication và Authorization
+//            app.UseAuthentication();
+//            app.UseAuthorization();
+
+//            // Swagger
+//            app.UseSwagger();
+//            app.UseSwaggerUI();
+
+//            // Map controllers
+//            app.MapControllers();
+
+//            app.Run();
+//        }
+//    }
+//}
+
+
+
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PharmaDistiPro.Repositories.Interface;
@@ -160,7 +333,7 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<ILotService, LotService>();
             builder.Services.AddScoped<IProductLotService, ProductLotService>();
             builder.Services.AddScoped<IReceivedNoteService, ReceivedNoteService>();
-            builder.Services.AddScoped<INoteCheckService,NoteCheckService>();
+            builder.Services.AddScoped<INoteCheckService, NoteCheckService>();
             #endregion
 
             // Register AutoMapper
@@ -168,10 +341,10 @@ namespace PharmaDistiPro
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
+
 
             app.UseHttpsRedirection();
 
@@ -192,3 +365,11 @@ namespace PharmaDistiPro
         }
     }
 }
+
+
+
+
+
+
+
+
