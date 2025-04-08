@@ -47,12 +47,12 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({
   //   const matchesStatus = !selectedStatus || user.status === selectedStatus;
   //   return matchesSearch && matchesStatus;
   // });
-  const filteredUsers  = users.filter(user => {
+  const filteredUsers = users.filter(user => {
     const matchesSearch =
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())||
-    user.phone.includes(searchTerm);
+      (user.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.userName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.phone || '').includes(searchTerm);
     const matchesStatus = !selectedStatus || (selectedStatus === 'Active' ? user.status : !user.status);
     return matchesSearch && matchesStatus;
   });

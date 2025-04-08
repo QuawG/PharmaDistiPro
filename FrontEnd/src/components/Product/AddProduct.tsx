@@ -1,65 +1,121 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "../../pages/Home/AuthContext"; // Import useAuth để lấy user
+import { Form, Input, Select, Button, Upload, message, Row, Col, Card } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+
+const { Option } = Select;
+const { TextArea } = Input;
+
+interface Category {
+  id: number;
+  categoryMainId: number;
+  categoryName: string;
+  categoryCode: string;
+  image: string | null;
+  subCategories: any[];
+}
 
 export default function ProductAdd({ handleChangePage }: { handleChangePage: (page: string) => void }) {
-  // State lưu trữ dữ liệu form
-  const [formData, setFormData] = useState({
-    productCode: "",
-    productName: "",
-    manufactureName: "",
-    categoryId: "",
-    subCategoryId: "",
-    unitName: "",
-    status: "Đang bán",
-    description: "",
-    sellingPrice: "",
-    storageConditions: "",
-    weight: "",
-    image: null as File | null,
-    VAT: "",
-  });
+  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
+  const [form] = Form.useForm(); // Sử dụng Form của Ant Design
+  const [categories, setCategories] = useState<Category[]>([]); // Lưu danh mục
+  const [fileList, setFileList] = useState<any[]>([]); // Quản lý danh sách file ảnh
+  const [loading, setLoading] = useState(false);
 
-  // Danh sách tùy chọn giả định
-  const categories = [
-    { id: "1", name: "Thuốc giảm đau" },
-    { id: "2", name: "Kháng sinh" },
-  ];
-  const subCategories = [
-    { id: "1", name: "Viên nén" },
-    { id: "2", name: "Dung dịch" },
-  ];
-  const statuses = ["Đang bán", "Ngừng bán"];
+  // Lấy danh sách danh mục từ API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("http://pharmadistiprobe.fun/api/Category/subcategory");
+        if (response.status === 200) {
+          setCategories(response.data.data); // Lưu danh mục chính
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        message.error("Không thể tải danh sách danh mục. Vui lòng thử lại!");
+      }
+    };
 
-  // Xử lý thay đổi input
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    fetchCategories();
+  }, []);
 
   // Xử lý thay đổi file upload
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({ ...prev, image: e.target.files![0] }));
-    }
-  };
-
-  // Kiểm tra form trước khi submit
-  const validateForm = () => {
-    const { productCode, productName, manufactureName, categoryId, subCategoryId, unitName, status, description, sellingPrice, storageConditions, weight, image, VAT } = formData;
-    if (!productCode || !productName || !manufactureName || !categoryId || !subCategoryId || !unitName || !status || !description || !sellingPrice || !storageConditions || !weight || !image|| !VAT) {
-      alert("Vui lòng điền đầy đủ thông tin!");
-      return false;
-    }
-    return true;
+  const handleFileChange = ({ fileList }: any) => {
+    // Chỉ cho phép file ảnh và kiểm tra kích thước
+    const newFileList = fileList.filter((file: any) => {
+      const isImage = file.type.startsWith("image/");
+      const isLt10M = file.size / 1024 / 1024 < 10; // Kiểm tra kích thước < 10MB
+      if (!isImage) {
+        message.error("Chỉ được chọn tệp hình ảnh (PNG, JPG, JPEG, GIF)!");
+        return false;
+      }
+      if (!isLt10M) {
+        message.error("Ảnh phải nhỏ hơn 10MB!");
+        return false;
+      }
+      return true;
+    });
+    setFileList(newFileList);
   };
 
   // Xử lý submit form
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  const handleSubmit = async (values: any) => {
+    if (fileList.length === 0) {
+      message.error("Vui lòng tải lên ít nhất một ảnh sản phẩm!");
+      return;
+    }
 
-    console.log("Form Data:", formData);
-    alert("Thêm sản phẩm thành công!");
-    handleChangePage("Danh sách sản phẩm");
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại!");
+      }
+
+      // Chuẩn bị dữ liệu gửi lên API
+      const formDataToSend = new FormData();
+      formDataToSend.append("productName", values.productName);
+      formDataToSend.append("manufactureName", values.manufactureName);
+      formDataToSend.append("categoryId", values.categoryId);
+      formDataToSend.append("unit", values.unit);
+      formDataToSend.append("status", values.status);
+      formDataToSend.append("description", values.description);
+      formDataToSend.append("sellingPrice", values.sellingPrice);
+      formDataToSend.append("storageconditions", values.storageconditions);
+      formDataToSend.append("weight", values.weight);
+      formDataToSend.append("vat", values.vat);
+      formDataToSend.append("createdBy", user?.customerId.toString() || "");
+
+      // Thêm các file ảnh vào FormData
+      fileList.forEach((file: any) => {
+        formDataToSend.append("images", file.originFileObj);
+      });
+
+      // Gửi yêu cầu lên API
+      const response = await axios.post("http://pharmadistiprobe.fun/api/Product", formDataToSend, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.status === 201) {
+        message.success("Thêm sản phẩm thành công!");
+        handleChangePage("Danh sách sản phẩm");
+      } else {
+        throw new Error("Phản hồi không hợp lệ từ server!");
+      }
+    } catch (error: any) {
+      console.error("Failed to add product:", error);
+      if (error.response?.data?.message) {
+        message.error(error.response.data.message);
+      } else {
+        message.error("Thêm sản phẩm thất bại. Vui lòng thử lại!");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -69,145 +125,198 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
         <p className="text-sm text-gray-500">Nhập thông tin chi tiết của sản phẩm mới</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 p-5 w-full bg-white rounded-lg shadow">
-        {/* Row 1 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Mã sản phẩm</label>
-            <input type="text" name="productCode" value={formData.productCode} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
+      <Card title="Thông tin sản phẩm" className="w-full">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            status: "true", // Giá trị mặc định cho status
+          }}
+        >
+          <Row gutter={16}>
+            {/* <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Mã sản phẩm"
+                name="productCode"
+                rules={[{ required: true, message: "Vui lòng nhập mã sản phẩm!" }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col> */}
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Tên sản phẩm"
+                name="productName"
+                rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Nhà sản xuất"
+                name="manufactureName"
+                rules={[{ required: true, message: "Vui lòng nhập nhà sản xuất!" }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Danh mục"
+                name="categoryId"
+                rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
+              >
+                <Select placeholder="Chọn danh mục">
+                  {categories.map((cat) => (
+                    <Option key={cat.id} value={cat.id}>
+                      {cat.categoryName.trim()}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Tên sản phẩm</label>
-            <input type="text" name="productName" value={formData.productName} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
+          <Row gutter={16}>
 
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Nhà sản xuất</label>
-            <input type="text" name="manufactureName" value={formData.manufactureName} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
-        </div>
-
-        {/* Row 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Danh mục</label>
-            <select name="categoryId" value={formData.categoryId} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
-              <option value="">Chọn danh mục</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Danh mục phụ</label>
-            <select name="subCategoryId" value={formData.subCategoryId} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
-              <option value="">Chọn danh mục phụ</option>
-              {subCategories.map((sub) => (
-                <option key={sub.id} value={sub.id}>{sub.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Trạng thái</label>
-            <select name="status" value={formData.status} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md">
-              {statuses.map((st) => (
-                <option key={st} value={st}>{st}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Row 3 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Giá bán</label>
-            <input type="text" name="sellingPrice" value={formData.sellingPrice} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Trọng lượng</label>
-            <input type="text" name="weight" value={formData.weight} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Điều kiện bảo quản</label>
-            <input type="text" name="storageConditions" value={formData.storageConditions} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">Đơn vị tính</label>
-            <input type="text" name="unitName" value={formData.unitName} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm text-gray-700">VAT</label>
-            <input type="text" name="VAT" value={formData.VAT} onChange={handleChange} required className="w-full px-3 py-2 border rounded-md" />
-          </div>
-        </div>
-
-        {/* Upload ảnh */}
-        <div className="space-y-1">
-  <label className="block text-sm text-gray-700">Mô tả sản phẩm</label>
-  <textarea
-    name="description"
-    value={formData.description}
-    onChange={handleChange}
-    required
-    className="w-full px-3 py-2 border rounded-md"
-  />
-</div>
-
-        {/* Ảnh sản phẩm */}
-        <div className="space-y-1">
-          <label className="block text-[14px] mb-2 text-gray-700">Ảnh sản phẩm</label>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              {formData.image ? (
-                <img
-                  src={URL.createObjectURL(formData.image)}
-                  alt="Ảnh sản phẩm"
-                  className="mx-auto h-32 object-cover"
-                />
-              ) : (
-                <>
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"/>
-                      </svg>
-                      <div className="flex text-sm text-gray-600">
-                        <label
-                          htmlFor="file-upload"
-                          className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                        >
-                          <span>Chọn file</span>
-                          <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} />
-                        </label>
-                        <p className="pl-1">hoặc kéo thả</p>
-                      </div>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF tới 10MB</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Trạng thái"
+                name="status"
+                rules={[{ required: true, message: "Vui lòng chọn trạng thái!" }]}
+              >
+                <Select>
+                  <Option value="true">Đang bán</Option>
+                  <Option value="false">Ngừng bán</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Đơn vị tính"
+                name="unit"
+                rules={[{ required: true, message: "Vui lòng nhập đơn vị tính!" }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Giá bán (VND)"
+                name="sellingPrice"
+                rules={[
+                  { required: true, message: "Vui lòng nhập giá bán!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value || Number(value) > 0) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("Giá bán phải là số dương!"));
+                    },
+                  },
+                ]}
+              >
+                <Input type="number" min={0} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Trọng lượng (kg)"
+                name="weight"
+                rules={[
+                  { required: true, message: "Vui lòng nhập trọng lượng!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value || Number(value) > 0) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("Trọng lượng phải là số dương!"));
+                    },
+                  },
+                ]}
+              >
+                <Input type="number" min={0} step="0.01" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="Nhiệt độ bảo quản (°C)"
+                name="storageconditions"
+                rules={[
+                  { required: true, message: "Vui lòng nhập nhiệt độ bảo quản!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value || !isNaN(Number(value))) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("Nhiệt độ bảo quản phải là số!"));
+                    },
+                  },
+                ]}
+              >
+                <Input type="number" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item
+                label="VAT (%)"
+                name="vat"
+                rules={[
+                  { required: true, message: "Vui lòng nhập VAT!" },
+                  {
+                    validator: async (_, value) => {
+                      if (!value || Number(value) >= 0) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("VAT phải là số không âm!"));
+                    },
+                  },
+                ]}
+              >
+                <Input type="number" min={0} max={100} />
+              </Form.Item>
+            </Col>
+          </Row>
 
 
-        <button type="submit" className="px-9 py-3 bg-amber-500 text-white rounded-md font-bold text-sm">Lưu</button>
-      </form>
+          <Form.Item
+            label="Mô tả sản phẩm"
+            name="description"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả sản phẩm!" }]}
+          >
+            <TextArea rows={4} />
+          </Form.Item>
+
+          <Form.Item label="Ảnh sản phẩm">
+            <Upload
+              listType="picture"
+              fileList={fileList}
+              onChange={handleFileChange}
+              beforeUpload={() => false} // Ngăn upload tự động, xử lý trong handleSubmit
+              multiple // Cho phép chọn nhiều ảnh
+              accept="image/png,image/jpeg,image/gif"
+            >
+              <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+            </Upload>
+            <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF tới 10MB</p>
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading}>
+              Lưu
+            </Button>
+            <Button
+              style={{ marginLeft: 8 }}
+              onClick={() => handleChangePage("Danh sách sản phẩm")}
+              disabled={loading}
+            >
+              Hủy
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
     </div>
   );
 }

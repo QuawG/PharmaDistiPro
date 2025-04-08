@@ -82,7 +82,7 @@ const IssueNoteListPage: React.FC<IssueNoteListPageProps> = ({ handleChangePage 
           <IssueNoteTable
             notes={filteredNotes}
             handleChangePage={handleChangePage}
-            onDelete={(id) => setFilteredNotes(filteredNotes.filter((note) => note.id !== id))}
+            // onDelete={(id) => setFilteredNotes(filteredNotes.filter((note) => note.id !== id))}
             onUpdate={(updatedNote) =>
               setFilteredNotes(
                 filteredNotes.map((note) => (note.id === updatedNote.id ? updatedNote : note))

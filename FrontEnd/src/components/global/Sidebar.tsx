@@ -13,7 +13,7 @@ const menus = {
   "Đơn hàng": ["Danh sách đơn hàng", "Tạo đơn hàng"], // Sẽ lọc dựa trên role
   "Lô hàng": ["Danh sách lô hàng", "Tạo lô hàng"],
   "Phiếu nhập kho": ["Danh sách phiếu nhập", "Tạo phiếu nhập kho"],
-  "Phiếu xuất kho": ["Danh sách phiếu xuất kho", "Tạo phiếu xuất kho"],
+  "Phiếu xuất kho": ["Danh sách phiếu xuất kho"],
   "Kho": ["Danh sách kho", "Tạo kho mới"],
 };
 
@@ -52,9 +52,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
   // Lọc menu "Phiếu xuất kho" dựa trên vai trò
   const getIssueNoteMenuItems = () => {
     if (user?.roleName === "WarehouseManager") {
-      return ["Danh sách phiếu xuất kho (Warehouse Manager)", "Tạo phiếu xuất kho"];
+      return ["Danh sách phiếu xuất kho (Warehouse Manager)"];
     } else {
-      return ["Danh sách phiếu xuất kho", "Tạo phiếu xuất kho"];
+      return ["Danh sách phiếu xuất kho"];
     }
   };
 
