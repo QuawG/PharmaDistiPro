@@ -59,7 +59,9 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
                new IssueNote { IssueNoteId = 1, Status = 2, CreatedBy = 1 },
                new IssueNote { IssueNoteId = 2, Status = 2, CreatedBy = 1 }
             };
-            issueNotes = issueNotes.Where(x => x.CreatedBy == userId).ToList();
+            issueNotes = issueNotes.Where(x => x.CreatedBy == userId)
+                .OrderByDescending(x => x.IssueNoteId)
+                .ToList();
 
             _issueNoteRepositoryMock.Setup(repo => repo.GetByConditionAsync(
                     It.IsAny<Expression<Func<IssueNote, bool>>>(),

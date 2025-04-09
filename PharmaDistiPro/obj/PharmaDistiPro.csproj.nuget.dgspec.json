@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {}
+    "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {}
   },
   "projects": {
-    "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {
+    "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+        "projectUniqueName": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
         "projectName": "PharmaDistiPro",
-        "projectPath": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+        "projectPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
+        "outputPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",

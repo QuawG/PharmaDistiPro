@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "TOJHMc9Ax2c=",
+  "dgSpecHash": "bGiSSv6bvNU=",
   "success": true,
-  "projectFilePath": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+  "projectFilePath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\bouncycastle.cryptography\\2.5.0\\bouncycastle.cryptography.2.5.0.nupkg.sha512",
@@ -110,12 +110,5 @@
     "C:\\Users\\Admin\\.nuget\\packages\\system.threading.tasks\\4.3.0\\system.threading.tasks.4.3.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\system.windows.extensions\\4.7.0\\system.windows.extensions.4.7.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Problem reading the cache file d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
-    }
-  ]
+  "logs": []
 }

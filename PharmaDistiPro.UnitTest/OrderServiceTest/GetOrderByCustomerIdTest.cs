@@ -60,6 +60,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 CustomerId = customerId
             }   };
             orderList = orderList.Where(x => x.CustomerId == customerId).ToList();
+            orderList = orderList.OrderByDescending(x => x.OrderId).ToList();
 
             _orderRepositoryMock.Setup(repo => repo.GetByConditionAsync(       
                 It.IsAny<Expression<Func<Order, bool>>>(),        

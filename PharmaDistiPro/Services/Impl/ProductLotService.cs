@@ -194,8 +194,6 @@ namespace PharmaDistiPro.Services.Impl
         {
             var productlots = await _productLotRepository.GetProductLotList();
 
-            
-
             var response = new Response<List<ProductLotResponse>>();
             if (productlots == null)
             {

@@ -48,6 +48,8 @@ namespace PharmaDistiPro.Test.User
             new UserDTO { UserId = 2, UserName = "loc2" }
         };
 
+            users = users.OrderByDescending(x => x.UserId).ToList();
+
             _userRepositoryMock
                 .Setup(repo => repo.GetByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), It.IsAny<string[]>(),
                 It.IsAny<Func<IQueryable<Models.User>, IOrderedQueryable<Models.User>>>()))
@@ -56,6 +58,7 @@ namespace PharmaDistiPro.Test.User
             _mapperMock
                 .Setup(mapper => mapper.Map<IEnumerable<UserDTO>>(users))
                 .Returns(userDTOs);
+
 
             var result = await _userService.GetCustomerList();
 
@@ -120,6 +123,7 @@ namespace PharmaDistiPro.Test.User
             new Models.User { UserId = 1, UserName = "loc", RoleId = 1 },
             new Models.User { UserId = 2, UserName = "loc2", RoleId = 2 }
         };
+            users = users.OrderByDescending(x => x.UserId).ToList();
 
             var userDTOs = new List<UserDTO>
         {

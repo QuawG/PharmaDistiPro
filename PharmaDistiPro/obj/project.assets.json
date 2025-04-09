@@ -5724,11 +5724,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+      "projectUniqueName": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
       "projectName": "PharmaDistiPro",
-      "projectPath": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+      "projectPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
+      "outputPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -5824,13 +5824,5 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Problem reading the cache file d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
-    }
-  ]
+  }
 }
