@@ -67,7 +67,18 @@ namespace PharmaDistiPro.Test.User
             var registerRequest = new UserInputRequest
             {
                 Email = "test@gmail.com",
-                UserName = "testUser"
+                UserName = "testUser",
+                FirstName = "Ngo",
+                Password = "password",
+                LastName = "Loc",
+                Address = "Thượng cát",
+                Phone = "0987654321",
+                Age = 25,
+                EmployeeCode = "NV001",
+                TaxCode = "123456789",
+                Status = true,
+                RoleId = 1
+
             };
 
             var newUser = new Models.User

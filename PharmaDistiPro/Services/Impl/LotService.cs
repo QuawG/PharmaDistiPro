@@ -115,7 +115,7 @@ namespace PharmaDistiPro.Services.Impl
         {
             var lots = await _lotRepository.GetLotList();
 
-            lots = lots.OrderByDescending(x => x.LotId).ToList();
+            
 
             var response = new Response<List<Lot>>();
             if (lots == null)
@@ -136,9 +136,11 @@ namespace PharmaDistiPro.Services.Impl
                 };
                 return response;
             }
+            lots = lots.OrderByDescending(x => x.LotId).ToList();
             response = new Response<List<Lot>>
             {
                 StatusCode = 200,
+
                 Data = lots
             };
             return response;

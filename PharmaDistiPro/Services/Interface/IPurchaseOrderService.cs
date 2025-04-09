@@ -8,6 +8,7 @@ namespace PharmaDistiPro.Services.Interface
     {
         #region purchase order
         Task<Response<PurchaseOrdersDto>> CreatePurchaseOrder(PurchaseOrdersRequestDto purchaseOrdersRequestDto);
+
         Task<Response<PurchaseOrdersDto>> UpdatePurchaseOrderStatus(int poId, int status);
 
         Task<Response<IEnumerable<PurchaseOrdersDto>>> GetPurchaseOrdersList(int[] status, DateTime? dateFrom, DateTime? dateTo);

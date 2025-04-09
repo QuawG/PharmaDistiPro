@@ -233,7 +233,10 @@ namespace PharmaDistiPro.Services.Impl
         #region check po status
         public async Task<Response<List<ProductShortage>>> CheckReceivedStockStatus(int purchaseOrderId)
         {
+            try
+            {
 
+           
             var purchaseOrder = await _purchaseOrderRepository.GetPoById(purchaseOrderId);
 
             if (purchaseOrder == null)
@@ -288,6 +291,16 @@ namespace PharmaDistiPro.Services.Impl
                Data = shortages,
                StatusCode = 200
             };
+            }
+            catch (Exception ex)
+            {
+                return new Response<List<ProductShortage>>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    StatusCode = 500
+                };
+            }
         }
         #endregion
     }

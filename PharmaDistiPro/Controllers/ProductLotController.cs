@@ -74,5 +74,16 @@ namespace PharmaDistiPro.Controllers
             }
             return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
         }
+
+        [HttpGet("CheckProductQuantity/{productId}")]
+        public async Task<IActionResult> CheckProductQuantity(int productId)
+        {
+            var response = await _productLotService.CheckQuantityProduct(productId);
+            if (!response.Success)
+            {
+                return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
+            }
+            return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
+        }
     }
 }

@@ -439,9 +439,6 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
             _productLotRepositoryMock.Verify(repo => repo.UpdateAsync(It.Is<ProductLot>(p => p.ProductLotId == 2 && p.Quantity == 4)), Times.Once);
         }
 
-
-
-
     }
 }
 

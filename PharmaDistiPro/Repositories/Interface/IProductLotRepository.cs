@@ -13,5 +13,7 @@ namespace PharmaDistiPro.Repositories.Interface
         Task<ProductLot> UpdateProductLot(ProductLot ProductLot);
         Task<Lot> GetLotById(int id);
 
+        Task<ProductLot> CheckQuantityProduct(int productId);
+
     }
 }

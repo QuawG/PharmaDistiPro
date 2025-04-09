@@ -56,7 +56,7 @@ namespace PharmaDistiPro.Test.User
         }
 
         [Fact]
-        public async Task ActivateDeactivateUser_Success()
+        public async Task ActivateDeactivateUserTrue_Success()
         {
             int userId = 1;
             bool updateStatus = true;
@@ -82,6 +82,60 @@ namespace PharmaDistiPro.Test.User
                 UserName = "testUser",
                 RoleId = 1,
                 Status = updateStatus 
+            };
+
+            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(
+                    It.IsAny<Expression<Func<Models.User, bool>>>(),
+                    It.IsAny<string[]>()))
+                .ReturnsAsync(user);
+
+            _userRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Models.User>()))
+                .Callback<Models.User>(u => u.Status = updateStatus);
+
+            _userRepositoryMock.Setup(repo => repo.SaveAsync())
+                .Returns(Task.FromResult(1));
+
+            _mapperMock.Setup(m => m.Map<UserDTO>(It.IsAny<Models.User>()))
+                .Returns(userDto);
+
+            var result = await _userService.ActivateDeactivateUser(userId, updateStatus);
+
+            Assert.True(result.Success);
+            Assert.Equal("Cập nhật thành công", result.Message);
+            Assert.NotNull(result.Data);
+            Assert.Equal(updateStatus, result.Data.Status);
+
+            _userRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Models.User>()), Times.Once);
+            _userRepositoryMock.Verify(repo => repo.SaveAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ActivateDeactivateUserFalse_Success()
+        {
+            int userId = 1;
+            bool updateStatus = false;
+
+            var user = new Models.User
+            {
+                UserId = userId,
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                RoleId = 1,
+                Status = false,
+                Role = new Models.Role
+                {
+                    Id = 1,
+                    RoleName = "Admin"
+                }
+            };
+
+            var userDto = new UserDTO
+            {
+                UserId = userId,
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                RoleId = 1,
+                Status = updateStatus
             };
 
             _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(
@@ -157,6 +211,37 @@ namespace PharmaDistiPro.Test.User
 
             _userRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Models.User>()), Times.Once);
             _userRepositoryMock.Verify(repo => repo.SaveAsync(), Times.Never); 
+        }
+
+        [Fact]
+        public async Task ActivateDeactivateUser_StatusNull_UpdateFails()
+        {
+            int userId = 1;
+            bool updateStatus = true;
+
+            var user = new Models.User
+            {
+                UserId = userId,
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                RoleId = 1,
+                Status = false
+            };
+
+            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), It.IsAny<string[]>()))
+                .ReturnsAsync(user);
+
+            _userRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Models.User>()))
+                .ThrowsAsync(new Exception("Status không được để trống"));
+
+            // Act
+            var result = await _userService.ActivateDeactivateUser(userId, updateStatus);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal("Status không được để trống", result.Message);
+            Assert.Null(result.Data);
+
         }
     }
 }

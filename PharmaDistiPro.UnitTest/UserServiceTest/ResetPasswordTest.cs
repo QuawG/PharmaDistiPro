@@ -175,6 +175,80 @@ namespace PharmaDistiPro.Test.User
             _userRepositoryMock.Verify(repo => repo.UpdateUser(It.IsAny<Models.User>()), Times.Never);
         }
 
+        [Fact]
+        public async Task Test_ResetPassword_WhenOTPIsNull()
+        {
+            var request = new ResetPasswordRequest
+            {
+                Email = "123@example.com",
+                OTP = null,
+                Password = "newpassword",
+                ConfirmPassword = "newpassword"
+            };
+
+            var fakeUser = new Models.User
+            {
+                Email = "123@example.com",
+                ResetpasswordOtpexpriedTime = DateTime.Now.AddMinutes(5)
+            };
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetUserByEmail(request.Email))
+                .ReturnsAsync((Models.User)null);
+
+            var result = await _userService.ResetPassword(request);
+
+            Assert.Equal(404, result.StatusCode);
+        }
+        [Fact]
+        public async Task Test_ResetPassword_WhenPasswordIsNull()
+        {
+            var request = new ResetPasswordRequest
+            {
+                Email = "123@example.com",
+                OTP = "123456",
+                Password = null,
+                ConfirmPassword = "newpassword"
+            };
+            var fakeUser = new Models.User
+            {
+                Email = "123@example.com",
+                ResetpasswordOtpexpriedTime = DateTime.Now.AddMinutes(5)
+            };
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetUserByEmail(request.Email))
+                .ReturnsAsync((Models.User)null);
+            var result = await _userService.ResetPassword(request);
+
+            Assert.Equal(404, result.StatusCode);
+
+        }
+
+        [Fact]
+        public async Task Test_ResetPassword_WhenConfirmPasswordIsNull()
+        {
+            var request = new ResetPasswordRequest
+            {
+                Email = "123@example.com",
+                OTP = "123456",
+                Password = "newpassword",
+                ConfirmPassword = null
+            };
+            var fakeUser = new Models.User
+            {
+                Email = "123@example.com",
+                ResetpasswordOtpexpriedTime = DateTime.Now.AddMinutes(5)
+            };
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetUserByEmail(request.Email))
+                .ReturnsAsync((Models.User)null);
+            var result = await _userService.ResetPassword(request);
+
+            Assert.Equal(404, result.StatusCode);
+        }
+
 
 
     }

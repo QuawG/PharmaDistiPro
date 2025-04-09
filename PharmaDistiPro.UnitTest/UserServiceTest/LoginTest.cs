@@ -112,7 +112,7 @@ namespace PharmaDistiPro.Test.User
         {
             var fakeRequest = new LoginRequest
             {
-                Username = "wronguser",
+                Username = "dasdsad",
                 Password = "wrongpassword"
             };
 
@@ -127,22 +127,50 @@ namespace PharmaDistiPro.Test.User
         }
 
         [Fact]
-        public async Task Test_Login_Failed_CaseSensitiveUsername()
+        public async Task Test_Login_Failed_UsernameIsNull()
         {
+            // 🟡 Arrange
             var fakeRequest = new LoginRequest
             {
-                Username = "TestUser", 
-                Password = "password123"
+                Username = null,
+                Password = "somepassword"
             };
 
-            _userRepositoryMock.Setup(repo => repo.GetUser(fakeRequest.Username, fakeRequest.Password)).ReturnsAsync((Models.User?)null);
+            _userRepositoryMock
+                .Setup(repo => repo.GetUser(fakeRequest.Username, fakeRequest.Password))
+                .ReturnsAsync((Models.User?)null);
 
-            // 🟢 Act
+            // 🔵 Act
             var result = await _userService.Login(fakeRequest);
 
+            // 🔴 Assert
             Assert.NotNull(result);
             Assert.Equal(404, result.StatusCode);
-            Assert.Equal("User does not exist", result.Message);
+            Assert.Equal("Tài khoản không tồn tại", result.Message); // tuỳ bạn xử lý
+            Assert.Null(result.Data);
+        }
+
+        [Fact]
+        public async Task Test_Login_Failed_PasswordIsNull()
+        {
+            // 🟡 Arrange
+            var fakeRequest = new LoginRequest
+            {
+                Username = "testuser",
+                Password = null
+            };
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetUser(fakeRequest.Username, fakeRequest.Password))
+                .ReturnsAsync((Models.User?)null);
+
+            // 🔵 Act
+            var result = await _userService.Login(fakeRequest);
+
+            // 🔴 Assert
+            Assert.NotNull(result);
+            Assert.Equal(404, result.StatusCode);
+            Assert.Equal("Tài khoản không tồn tại", result.Message);
             Assert.Null(result.Data);
         }
 

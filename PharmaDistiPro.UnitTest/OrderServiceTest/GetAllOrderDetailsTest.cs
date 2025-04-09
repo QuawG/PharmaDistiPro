@@ -14,7 +14,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PharmaDistiPro.UnitTest.OrderServiceTest
+namespace PharmaDistiPro.Test.OrderServiceTest
 {
     public class GetAllOrderDetailsTest
     {

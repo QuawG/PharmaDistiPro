@@ -281,6 +281,78 @@ namespace PharmaDistiPro.Test.OrderServiceTest
 
         }
 
+        [Fact]
+        public async Task UpdateOrder_WhenStatusIsNull_ReturnsFailure()
+        {
+            // Arrange
+            Order order = new Order
+            {
+                OrderId = 1,
+                Status = null // Status null
+            };
+
+            int newStatus = (int)Common.Enums.OrderStatus.VAN_CHUYEN;
+
+            _orderRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(order);
+
+            _orderRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Order>())).ThrowsAsync(new InvalidOperationException("Trạng thái không hợp lệ"));
+
+            // Act
+            var result = await _orderService.UpdateOrderStatus(1, newStatus);
+
+            // Assert
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Trạng thái không hợp lệ", result.Message); 
+        }
+
+        [Fact]
+        public async Task UpdateOrder_WhenStatusNotFound_ReturnsFailure()
+        {
+            
+            Order order = new Order
+            {
+                OrderId = 1,
+                Status = (int)Common.Enums.OrderStatus.VAN_CHUYEN 
+            };
+
+            int invalidStatus = 99; // Trạng thái không hợp lệ
+
+            _orderRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(order);
+
+            _orderRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Order>())).ThrowsAsync(new InvalidOperationException("Trạng thái không hợp lệ"));
+
+            
+            var result = await _orderService.UpdateOrderStatus(1, invalidStatus);
+
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Trạng thái không hợp lệ", result.Message); // Kiểm tra lỗi trạng thái không hợp lệ
+        }
+
+        [Fact]
+        public async Task UpdateOrder_WhenOrderStatusIsCompleted_ReturnsFailure()
+        {
+            Order order = new Order
+            {
+                OrderId = 1,
+                Status = (int)Common.Enums.OrderStatus.HOAN_THANH
+            };
+
+            int newStatus = (int)Common.Enums.OrderStatus.VAN_CHUYEN; 
+
+            _orderRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(order);
+            _orderRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Order>())).ThrowsAsync(new InvalidOperationException("Đơn hàng đã hoàn thành, không thể sửa trạng thái"));
+
+            // Act
+            var result = await _orderService.UpdateOrderStatus(1, newStatus);
+
+            // Assert
+            Assert.Null(result.Data);
+            Assert.False(result.Success);
+            Assert.Equal("Đơn hàng đã hoàn thành, không thể sửa trạng thái", result.Message); 
+        }
+
     }
 
 }

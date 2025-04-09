@@ -319,7 +319,7 @@ namespace PharmaDistiPro.Services.Impl
             return new Response<LoginResponse>
             {
                 StatusCode = 404,
-                Message = "User does not exist"
+                Message = "Tài khoản không tồn tại"
             };
         }
         #endregion

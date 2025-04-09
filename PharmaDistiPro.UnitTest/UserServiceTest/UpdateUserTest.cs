@@ -477,7 +477,7 @@ namespace PharmaDistiPro.Test.User
         }
 
         [Fact]
-        public async Task UpdateUser_StatusCodeInvalid_ReturnError()
+        public async Task UpdateUser_FirstNameInvalid_ReturnError()
         {
             var existingUser = new Models.User
             {
@@ -493,7 +493,7 @@ namespace PharmaDistiPro.Test.User
             var userUpdateRequest = new UserInputRequest
             {
                 UserId = 1,
-                FirstName = "New",
+                FirstName = null,
                 Email = "new@gmail.com",
                 LastName = "Name",
                 Phone = "abcasd",
@@ -507,14 +507,55 @@ namespace PharmaDistiPro.Test.User
 
 
             _mapperMock.Setup(m => m.Map<UserDTO>(It.IsAny<Models.User>()))
-                .Throws(new Exception("Status không được để trống"));
+                .Throws(new Exception("First name không được để trống"));
 
             var result = await _userService.UpdateUser(userUpdateRequest);
 
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Status không được để trống", result.Message);
+            Assert.Equal("First name không được để trống", result.Message);
+        }
+
+        [Fact]
+        public async Task UpdateUser_LasttNameInvalid_ReturnError()
+        {
+            var existingUser = new Models.User
+            {
+                UserId = 1,
+                Email = "123@gmail.com",
+                FirstName = "Old",
+                LastName = "Name",
+                TaxCode = "123456789",
+                Status = true,
+                Age = 18
+            };
+
+            var userUpdateRequest = new UserInputRequest
+            {
+                UserId = 1,
+                FirstName = null,
+                Email = "new@gmail.com",
+                LastName = null,
+                Phone = "abcasd",
+                Status = null
+            };
+
+            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(1))
+                .ReturnsAsync(existingUser);
+
+            _mapperMock.Setup(m => m.Map(userUpdateRequest, existingUser));
+
+
+            _mapperMock.Setup(m => m.Map<UserDTO>(It.IsAny<Models.User>()))
+                .Throws(new Exception("Last name không được để trống"));
+
+            var result = await _userService.UpdateUser(userUpdateRequest);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.NotEmpty(result.Message);
+            Assert.Equal("Last name không được để trống", result.Message);
         }
     }
 }

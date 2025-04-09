@@ -65,12 +65,29 @@ namespace PharmaDistiPro.Test.User
         }
 
         [Fact]
-        public async Task GetCustomerList_ShouldReturnNoData_WhenNoUsersExist()
+        public async Task GetCustomerList_ShouldReturnNoDataUser_WhenNoUsersExist()
         {
             var emptyUsers = new List<Models.User>();
 
             _userRepositoryMock
-                .Setup(repo => repo.GetByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), 
+                .Setup(repo => repo.GetByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(),
+                It.IsAny<string[]>(), It.IsAny<Func<IQueryable<Models.User>, IOrderedQueryable<Models.User>>>()))
+                .ReturnsAsync(emptyUsers);
+
+            var result = await _userService.GetCustomerList();
+
+            Assert.False(result.Success);
+            Assert.Null(result.Data);
+            Assert.Equal("Không có dữ liệu", result.Message);
+        }
+
+        [Fact]
+        public async Task GetCustomerList_ShouldReturnNoDataCustomer_WhenNoUsersExist()
+        {
+            var emptyUsers = new List<Models.User>();
+
+            _userRepositoryMock
+                .Setup(repo => repo.GetByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(),
                 It.IsAny<string[]>(), It.IsAny<Func<IQueryable<Models.User>, IOrderedQueryable<Models.User>>>()))
                 .ReturnsAsync(emptyUsers);
 

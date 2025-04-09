@@ -47,5 +47,24 @@ namespace PharmaDistiPro.Repositories.Impl
             int rowAffected = await _context.SaveChangesAsync();
             return await GetProductLotById(ProductLot.ProductLotId);
         }
+
+        public async Task<ProductLot> CheckQuantityProduct(int productId)
+        {
+            var groupedData = await _context.ProductLots
+                .Where(x => x.ProductId == productId && x.ExpiredDate >= DateTime.UtcNow)
+                .ToListAsync(); 
+
+            var result = groupedData
+                .GroupBy(x => x.ProductId)
+                .Select(g => new ProductLot
+                {
+                    ProductId = g.Key,
+                    Quantity = g.Sum(x => x.Quantity),
+                    ExpiredDate = g.Max(x => x.ExpiredDate) 
+                })
+                .FirstOrDefault();
+
+            return result;
+        }
     }
 }
