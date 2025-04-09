@@ -54,6 +54,7 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 else
                 {
+                    orders = orders.OrderByDescending(o => o.OrderId).ToList();
                     response.Data = _mapper.Map<IEnumerable<OrderDto>>(orders);
                     response.Success = true;
                     return response;
@@ -103,7 +104,6 @@ namespace PharmaDistiPro.Services.Impl
                 };
             }
         }
-
 
         // check out  sau khi add to cart
         public async Task<Response<OrderDto>> CheckOut(OrderRequestDto orderRequestDto)
@@ -189,8 +189,7 @@ namespace PharmaDistiPro.Services.Impl
             {
                 var orders = await _orderRepository.GetByConditionAsync(o => o.Status == (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
                     includes: new string[] { "ConfirmedByNavigation", "Customer" });
-
-                orders = orders.OrderByDescending(o => o.OrderId).ToList();
+            
                 if (!orders.Any())
                 {
                     response.Success = false;
@@ -198,6 +197,7 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 else
                 {
+                     orders = orders.OrderByDescending(o => o.OrderId).ToList();
                     response.Data = _mapper.Map<IEnumerable<OrderDto>>(orders);
                     response.Success = true;
                     return response;
@@ -264,7 +264,7 @@ namespace PharmaDistiPro.Services.Impl
                 (!dateCreatedTo.HasValue || x.CreatedDate <= dateCreatedTo.Value),
                 includes: new string[] { "ConfirmedByNavigation", "Customer" });
 
-                ordersList = ordersList.OrderByDescending(o => o.OrderId);
+               
 
                 if (!ordersList.Any())
                 {
@@ -275,7 +275,7 @@ namespace PharmaDistiPro.Services.Impl
 
                     };
                 }
-
+                ordersList = ordersList.OrderByDescending(o => o.OrderId);
                 response.Data = _mapper.Map<IEnumerable<OrderDto>>(ordersList);
                 response.Success = true;
                 return response;
@@ -300,7 +300,7 @@ namespace PharmaDistiPro.Services.Impl
                 var orders = await _orderRepository.GetByConditionAsync(o => o.AssignTo == userId && o.Status == (int)Common.Enums.OrderStatus.XAC_NHAN,
                     includes: new string[] { "ConfirmedByNavigation", "Customer" });
 
-                orders = orders.OrderByDescending(o => o.OrderId).ToList();
+                
                 if (!orders.Any())
                 {
                     response.Success = false;
@@ -308,6 +308,7 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 else
                 {
+                    orders = orders.OrderByDescending(o => o.OrderId).ToList();
                     response.Data = _mapper.Map<IEnumerable<OrderDto>>(orders);
                     response.Success = true;
                     return response;
@@ -332,6 +333,7 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<IEnumerable<OrdersDetailDto>>();
             try
             {
+                
                 IEnumerable<OrdersDetail> ordersDetails = await _ordersDetailRepository.GetByConditionAsync(x =>
                 x.Order.Status == (int)Common.Enums.OrderStatus.HOAN_THANH &&
                     (!dateFrom.HasValue || x.Order.CreatedDate >= dateFrom.Value) &&
@@ -356,7 +358,7 @@ namespace PharmaDistiPro.Services.Impl
                     groupedOrders = groupedOrders.Take(topProduct.Value).ToList(); // Đảm bảo kiểu dữ liệu nhất quán
                 }
 
-                var resultOrders = groupedOrders
+                 var resultOrders = groupedOrders
                     .Select(g => new OrdersDetailDto
                     {
                         ProductId = g.ProductId,
@@ -394,9 +396,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var ordersDetails = await _ordersDetailRepository.GetByConditionAsync(o => o.OrderId == orderId, includes: new string[] { "Product" });
-                ordersDetails = ordersDetails.OrderByDescending(o => o.OrderDetailId);
 
-                var orderDto = _mapper.Map<IEnumerable<OrdersDetailDto>>(ordersDetails);
                 if (!ordersDetails.Any())
                 {
                     response.Success = false;
@@ -404,6 +404,9 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 else
                 {
+                    ordersDetails = ordersDetails.OrderByDescending(o => o.OrderDetailId);
+
+                var orderDto = _mapper.Map<IEnumerable<OrdersDetailDto>>(ordersDetails);
                     response.Data = orderDto;
                     response.Success = true;
                 }

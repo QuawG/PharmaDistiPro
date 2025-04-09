@@ -50,6 +50,7 @@ namespace PharmaDistiPro.Services.Impl
                 }
                 else
                 {
+                    users = users.OrderByDescending(x => x.UserId);
                     response.Data = _mapper.Map<IEnumerable<UserDTO>>(users);
                     response.Success = true;
                 }
@@ -105,12 +106,17 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var users = await _userRepository.GetByConditionAsync(u => u.RoleId != 5, includes: new string[] { "Role" });
+                 if (users.Count() == 0){
+                    response.Message = "Không có dữ liệu";
+                    response.Success = false;
+                    return response;
+                 } 
+
+                users = users.OrderByDescending(x => x.UserId);
                 response.Data = _mapper.Map<IEnumerable<UserDTO>>(users);
                 response.Success = true;
+return response;
 
-                if (users.Count() == 0) response.Message = "Không có dữ liệu";
-
-                return response;
 
             }
             catch (Exception ex)
@@ -261,7 +267,7 @@ namespace PharmaDistiPro.Services.Impl
                 // Log lỗi chi tiết và thông báo lỗi thân thiện người dùng
                 // logger.LogError(ex, "Lỗi khi cập nhật người dùng");
                 response.Success = false;
-                response.Message = "Đã xảy ra lỗi trong quá trình cập nhật người dùng.";
+                response.Message = ex.Message;
             }
 
             return response;
@@ -319,7 +325,7 @@ namespace PharmaDistiPro.Services.Impl
             return new Response<LoginResponse>
             {
                 StatusCode = 404,
-                Message = "User does not exist"
+                Message = "Tài khoản không tồn tại"
             };
         }
         #endregion

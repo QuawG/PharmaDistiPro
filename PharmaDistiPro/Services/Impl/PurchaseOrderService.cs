@@ -41,7 +41,7 @@ namespace PharmaDistiPro.Services.Impl
                
 
                 await _purchaseOrderRepository.InsertPurchaseOrderAsync(purchaseOrder);
-                await _purchaseOrderRepository.SaveAsync(); // Lưu đơn hàng trước khi tạo chi tiết đơn hàng
+                await _purchaseOrderRepository.SaveAsync(); 
 
 
                 // Chuẩn bị danh sách PurchaseOrderDetails
@@ -69,7 +69,6 @@ namespace PharmaDistiPro.Services.Impl
             return response;
         }
 
-
         public async Task<Response<IEnumerable<PurchaseOrdersDto>>> GetPurchaseOrdersList(int[] status, DateTime? dateFrom, DateTime? dateTo)
         {
            var response = new Response<IEnumerable<PurchaseOrdersDto>>();
@@ -80,7 +79,7 @@ namespace PharmaDistiPro.Services.Impl
                 (!dateTo.HasValue || x.CreateDate <= dateTo),
                 includes: new string[] { "CreatedByNavigation", "Supplier" });
 
-                purchaseOrders.OrderByDescending(x => x.CreateDate);
+               
 
                 if (!purchaseOrders.Any())
                 {
@@ -88,7 +87,7 @@ namespace PharmaDistiPro.Services.Impl
                     response.Success = false;
                     return response;
                 }
-
+                purchaseOrders = purchaseOrders.OrderByDescending(x => x.PurchaseOrderId);
                 response.Data = _mapper.Map<IEnumerable<PurchaseOrdersDto>>(purchaseOrders);
                 response.Success = true;
                 return response;
@@ -116,7 +115,7 @@ namespace PharmaDistiPro.Services.Impl
                     response.Success = false;
                     return response;
                 }
-                
+                purchaseOrders = purchaseOrders.OrderByDescending(x => x.PurchaseOrderId);
                 response.Data = _mapper.Map<IEnumerable<PurchaseOrdersDto>>(purchaseOrders);
                 response.Success = true;
                 return response;
@@ -234,7 +233,10 @@ namespace PharmaDistiPro.Services.Impl
         #region check po status
         public async Task<Response<List<ProductShortage>>> CheckReceivedStockStatus(int purchaseOrderId)
         {
+            try
+            {
 
+           
             var purchaseOrder = await _purchaseOrderRepository.GetPoById(purchaseOrderId);
 
             if (purchaseOrder == null)
@@ -289,6 +291,16 @@ namespace PharmaDistiPro.Services.Impl
                Data = shortages,
                StatusCode = 200
             };
+            }
+            catch (Exception ex)
+            {
+                return new Response<List<ProductShortage>>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    StatusCode = 500
+                };
+            }
         }
         #endregion
     }

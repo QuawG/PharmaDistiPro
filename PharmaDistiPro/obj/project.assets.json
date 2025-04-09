@@ -5719,19 +5719,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\minhq\\.nuget\\packages\\": {}
+    "C:\\Users\\Admin\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\SEP490_G74_backend\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+      "projectUniqueName": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
       "projectName": "PharmaDistiPro",
-      "projectPath": "D:\\SEP490_G74_backend\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
-      "packagesPath": "C:\\Users\\minhq\\.nuget\\packages\\",
-      "outputPath": "D:\\SEP490_G74_backend\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
+      "projectPath": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+      "outputPath": "d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\minhq\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -5813,24 +5813,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[6.0.36, 6.0.36]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[6.0.36, 6.0.36]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[6.0.36, 6.0.36]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[6.0.36, 6.0.36]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -5839,8 +5821,16 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.407\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Problem reading the cache file d:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+    }
+  ]
 }

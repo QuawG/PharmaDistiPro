@@ -26,9 +26,9 @@ namespace PharmaDistiPro.Services.Impl
 
                 if(cartModelDto.Quantity <= 0)
                 {
-                    return response;
                     response.Message = "Số lượng không hợp lệ";
                     response.Success = false;
+                    return response;
                 }
                 if(itemExist == null)
                 {

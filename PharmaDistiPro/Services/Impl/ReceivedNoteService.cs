@@ -35,7 +35,10 @@ namespace PharmaDistiPro.Services.Impl
         {
             var purchaseOrder = await _purchaseOrderRepository.GetPoById(ReceiveNote.PurchaseOrderId.Value);
             var userId = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
+            try
+            {
 
+            
             if (purchaseOrder == null)
             {
                 return new Response<ReceivedNoteDto>
@@ -162,6 +165,16 @@ namespace PharmaDistiPro.Services.Impl
                 Data = _mapper.Map<ReceivedNoteDto>(receiveNoteNew),
                 StatusCode = 200
             };
+            }
+            catch (Exception ex)
+            {
+                return new Response<ReceivedNoteDto>
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    StatusCode = 500
+                };
+            }
         }
 
 

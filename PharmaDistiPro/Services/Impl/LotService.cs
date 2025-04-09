@@ -19,6 +19,9 @@ namespace PharmaDistiPro.Services.Impl
 
         public async Task<Response<LotResponse>> CreateLot(LotRequest lot)
         {
+            try
+            {
+
             var response = new Response<LotResponse>();
             var userId = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
 
@@ -76,6 +79,16 @@ namespace PharmaDistiPro.Services.Impl
                 StatusCode = 500,
                 Message = "Lỗi khi tạo lô!"
             };
+            }
+            catch (Exception ex)
+            {
+                return new Response<LotResponse>
+                {
+                    StatusCode = 500,
+                    Message = "Lỗi khi tạo lô! " + ex.Message
+                };
+            }
+
         }
         public async Task<Response<Lot>> GetLotByLotCode(string lotCode)
         {
@@ -102,7 +115,7 @@ namespace PharmaDistiPro.Services.Impl
         {
             var lots = await _lotRepository.GetLotList();
 
-            lots = lots.OrderByDescending(x => x.LotId).ToList();
+            
 
             var response = new Response<List<Lot>>();
             if (lots == null)
@@ -123,9 +136,11 @@ namespace PharmaDistiPro.Services.Impl
                 };
                 return response;
             }
+            lots = lots.OrderByDescending(x => x.LotId).ToList();
             response = new Response<List<Lot>>
             {
                 StatusCode = 200,
+
                 Data = lots
             };
             return response;

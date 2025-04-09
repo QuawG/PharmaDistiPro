@@ -236,7 +236,7 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Không có dữ liệu";
                     return response;
                 }
-
+                issueNotes = issueNotes.OrderByDescending(x => x.IssueNoteId).ToList();
                 response.Success = true;
                 response.Data = _mapper.Map<IEnumerable<IssueNoteDto>>(issueNotes);
             }
@@ -260,6 +260,7 @@ namespace PharmaDistiPro.Services.Impl
                     response.Success = false;
                     response.Message = "Không có dữ liệu";
                 }
+                issueNotes = issueNotes.OrderByDescending(x => x.IssueNoteId).ToList();
                 response.Success = true;
                 response.Data = _mapper.Map<IEnumerable<IssueNoteDto>>(issueNotes);
                 return response;
@@ -343,7 +344,7 @@ namespace PharmaDistiPro.Services.Impl
                 var issueNoteDetails = await _issueNoteDetailsRepository
                     .GetByConditionAsync(
                         x => true,
-                        includes: new string[] { "ProductLot", "ProductLot.Product" } // Ghi đúng đường dẫn quan hệ
+                        includes: new string[] { "ProductLot", "ProductLot.Product" } 
                     );
                 if (!issueNoteDetails.Any())
                 {

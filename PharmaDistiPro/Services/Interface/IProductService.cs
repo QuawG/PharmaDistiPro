@@ -10,5 +10,6 @@ namespace PharmaDistiPro.Services.Interface
         Task<Response<IEnumerable<ProductDTO>>> GetProductList();
         Task<Response<IEnumerable<ProductDTO>>> GetProductList(int pageNumber = 1, string? searchTerm = null);
         Task<Response<ProductDTO>> UpdateProduct(ProductInputRequest productUpdateRequest);
+
     }
 }

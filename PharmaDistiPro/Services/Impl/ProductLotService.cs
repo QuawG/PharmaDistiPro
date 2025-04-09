@@ -15,8 +15,50 @@ namespace PharmaDistiPro.Services.Impl
             _productLotRepository = productLotRepository;
         }
 
+        public async Task<Response<ProductLotResponse>> CheckQuantityProduct(int productId)
+        {
+            try
+            {
+                var productLot = await _productLotRepository.CheckQuantityProduct(productId);
+
+                if (productLot == null)
+                {
+                    return new Response<ProductLotResponse>
+                    {
+                        StatusCode = 200,
+                        Message = "Không tìm thấy sản phẩm trong kho"
+                    };
+                }
+
+                var data = new ProductLotResponse
+                {
+                    ProductId = productLot.ProductId,
+                    Quantity = productLot.Quantity
+                };
+
+                return new Response<ProductLotResponse>
+                {
+                    StatusCode = 200,
+                    Message = "Thành công",
+                    Data = data
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response<ProductLotResponse>
+                {
+                    StatusCode = 400,
+                    Message = ex.Message
+                };
+            }
+        }
+
         public async Task<Response<List<ProductLotResponse>>> CreateProductLot(List<ProductLotRequest> productLots)
         {
+            try
+            {
+
+           
             if (productLots == null || productLots.Count == 0)
             {
                 return new Response<List<ProductLotResponse>>
@@ -102,6 +144,15 @@ namespace PharmaDistiPro.Services.Impl
             };
 
             return response;
+            }
+            catch (Exception ex)
+            {
+                return new Response<List<ProductLotResponse>>
+                {
+                    StatusCode = 500,
+                    Message = $"Lỗi hệ thống: {ex.Message}"
+                };
+            }
         }
 
 
@@ -143,7 +194,7 @@ namespace PharmaDistiPro.Services.Impl
         {
             var productlots = await _productLotRepository.GetProductLotList();
 
-            productlots = productlots.OrderByDescending(x => x.ProductLotId).ToList();
+            
 
             var response = new Response<List<ProductLotResponse>>();
             if (productlots == null)
@@ -164,6 +215,7 @@ namespace PharmaDistiPro.Services.Impl
                 };
                 return response;
             }
+            productlots = productlots.OrderByDescending(x => x.ProductLotId).ToList();
             List<ProductLotResponse> dataSet = new List<ProductLotResponse>();
             foreach (ProductLot item in productlots)
             {
@@ -265,5 +317,8 @@ namespace PharmaDistiPro.Services.Impl
             };
             return response;
         }
+
+
+
     }
 }
