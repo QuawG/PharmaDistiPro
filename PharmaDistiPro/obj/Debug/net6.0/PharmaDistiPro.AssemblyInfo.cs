@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PharmaDistiPro")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+337e9ee845ede55c3f8e5ada933e4eae3e8ace1c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c42a2ad9b619ddcf1e956be0efa2d7e7ac76356a")]
 [assembly: System.Reflection.AssemblyProductAttribute("PharmaDistiPro")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PharmaDistiPro")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "bGiSSv6bvNU=",
+  "dgSpecHash": "ZZxcMuRx3WA=",
   "success": true,
-  "projectFilePath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Main9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+  "projectFilePath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\bouncycastle.cryptography\\2.5.0\\bouncycastle.cryptography.2.5.0.nupkg.sha512",
