@@ -32,6 +32,8 @@ namespace PharmaDistiPro.Services.Impl
             _httpContextAccessor = httpContextAccessor;
         }
 
+
+        // create notecheck
         public async Task<NoteCheckDTO> CreateNoteCheckAsync(NoteCheckRequestDTO request)
         {
             var userId = _httpContextAccessor.HttpContext?.User?.Identity?.Name;
@@ -44,7 +46,6 @@ namespace PharmaDistiPro.Services.Impl
             noteCheck.CreatedDate = request.CreatedDate ?? DateTime.UtcNow;
             noteCheck.Status = false;
 
-            int totalDifference = 0;
             var details = new List<NoteCheckDetail>();
             var resultDetails = new List<string>();
 
@@ -54,44 +55,45 @@ namespace PharmaDistiPro.Services.Impl
                 var productLot = await _productLotRepository.GetSingleByConditionAsync(p => p.ProductLotId == detailDto.ProductLotId);
                 if (productLot == null)
                 {
-                    throw new Exception($" Không tìm thấy ProductLot với ID: {detailDto.ProductLotId}");
+                    throw new Exception($"Không tìm thấy ProductLot với ID: {detailDto.ProductLotId}");
                 }
 
                 if (!productLot.ProductId.HasValue)
                 {
-                    throw new Exception($" ProductLotId {productLot.ProductLotId} không liên kết với sản phẩm.");
+                    throw new Exception($"ProductLotId {productLot.ProductLotId} không liên kết với sản phẩm.");
                 }
 
-              
+             
                 var product = await _productLotRepository.GetProductByIdAsync(productLot.ProductId.Value);
                 if (product == null)
                 {
-                    throw new Exception($" Không tìm thấy Product với ID: {productLot.ProductId.Value}");
+                    throw new Exception($"Không tìm thấy Product với ID: {productLot.ProductId.Value}");
                 }
 
-       
+                
                 var detail = _mapper.Map<NoteCheckDetail>(detailDto);
 
+                
                 detail.StorageQuantity = productLot.Quantity;
                 detail.ErrorQuantity ??= 0;
 
+               
                 if (!detail.StorageQuantity.HasValue)
                 {
-                    throw new Exception($" StorageQuantity không có giá trị (null) cho ProductLotId {productLot.ProductLotId}.");
+                    throw new Exception($"StorageQuantity không có giá trị (null) cho ProductLotId {productLot.ProductLotId}.");
                 }
 
                 if (!detail.ActualQuantity.HasValue)
                 {
-                    throw new Exception($" ActualQuantity không có giá trị (null) cho ProductLotId {productLot.ProductLotId}.");
+                    throw new Exception($"ActualQuantity không có giá trị (null) cho ProductLotId {productLot.ProductLotId}.");
                 }
 
-                // 4. Tính toán chênh lệch
-                int difference = detail.StorageQuantity.Value - detail.ActualQuantity.Value;
-                totalDifference += difference;
+    
+                detail.DifferenceQuatity = detail.StorageQuantity.Value - detail.ActualQuantity.Value;
 
-                int actualShortage = difference - detail.ErrorQuantity.Value;
+                int actualShortage = detail.DifferenceQuatity.Value - detail.ErrorQuantity.Value;
 
-                // 5. Tạo chuỗi kết quả chi tiết
+               
                 string shortageText = actualShortage > 0
                     ? $"thiếu {actualShortage}"
                     : actualShortage < 0
@@ -103,130 +105,142 @@ namespace PharmaDistiPro.Services.Impl
 
                 resultDetails.Add($"Sản phẩm {productName} của lô {lotId} này {shortageText} (hỏng {detail.ErrorQuantity})");
 
-                // 6. Gán status
+                // 9. Gán status
                 detail.Status = (detail.ErrorQuantity > 0) ? 0 : null;
                 details.Add(detail);
             }
 
-            // 7. Gán lại danh sách chi tiết và lưu vào DB
+            
             noteCheck.NoteCheckDetails = details;
-            noteCheck.DifferenceQuatity = totalDifference;
             noteCheck.Result = string.Join(", ", resultDetails);
 
+       
             await _noteCheckRepository.InsertNoteCheckAsync(noteCheck);
             return _mapper.Map<NoteCheckDTO>(noteCheck);
-        
-    }
+        }
 
 
 
         public async Task<NoteCheckDTO> UpdateNoteCheckAsync(int noteCheckId, NoteCheckRequestDTO request)
         {
-           
+            // Kiểm tra NoteCheck tồn tại
             var existingNoteCheck = await _noteCheckRepository.GetNoteCheckByIdAsync(noteCheckId);
             if (existingNoteCheck == null)
             {
                 throw new Exception($"Không tìm thấy NoteCheck với ID: {noteCheckId}");
             }
 
-           
+            // Kiểm tra trạng thái (không cho cập nhật nếu đã duyệt)
             if (existingNoteCheck.Status == true)
             {
                 throw new Exception("Không thể cập nhật NoteCheck đã được duyệt");
             }
 
-     
-            existingNoteCheck.CreatedDate = DateTime.UtcNow;
-            // Các trường khác có thể cập nhật nếu có trong request
-            if (request.CreatedDate.HasValue)
-            {
-                existingNoteCheck.CreatedDate = request.CreatedDate.Value;
-            }
-         
+            // Cập nhật các trường chính của NoteCheck
+            existingNoteCheck.StorageRoomId = request.StorageRoomId;
+            existingNoteCheck.ReasonCheck = request.ReasonCheck;
+            existingNoteCheck.CreatedDate = request.CreatedDate ?? DateTime.UtcNow;
 
-       
+            // Xử lý chi tiết kiểm kho
             var updatedDetails = new List<NoteCheckDetail>();
-            int totalDifference = 0;
             var resultDetails = new List<string>();
 
             foreach (var detailDto in request.NoteCheckDetails)
             {
-           
-                var existingDetail = existingNoteCheck.NoteCheckDetails
-                    .FirstOrDefault(d => d.NoteCheckDetailId == detailDto.NoteCheckDetailId);
+                // Kiểm tra ProductLot tồn tại
+                var productLot = await _productLotRepository.GetSingleByConditionAsync(p =>
+                    p.ProductLotId == detailDto.ProductLotId);
 
+                if (productLot == null)
+                {
+                    throw new Exception($"Không tìm thấy ProductLot với ID: {detailDto.ProductLotId}");
+                }
+
+                // Kiểm tra Product tồn tại
+                if (!productLot.ProductId.HasValue)
+                {
+                    throw new Exception($"ProductLotId {productLot.ProductLotId} không liên kết với sản phẩm.");
+                }
+
+                var product = await _productLotRepository.GetProductByIdAsync(productLot.ProductId.Value);
+                if (product == null)
+                {
+                    throw new Exception($"Không tìm thấy Product với ID: {productLot.ProductId.Value}");
+                }
+
+                // Tìm NoteCheckDetail hiện có (nếu có) hoặc tạo mới
+                var existingDetail = existingNoteCheck.NoteCheckDetails
+                    .FirstOrDefault(d => d.ProductLotId == detailDto.ProductLotId);
+
+                NoteCheckDetail detail;
                 if (existingDetail == null)
                 {
-                   
-                    var productLot = await _productLotRepository.GetSingleByConditionAsync(p =>
-                        p.ProductLotId == detailDto.ProductLotId);
-
-                    if (productLot == null)
+                    // Tạo mới NoteCheckDetail
+                    detail = new NoteCheckDetail
                     {
-                        throw new Exception($"Không tìm thấy ProductLot với ID: {detailDto.ProductLotId}");
-                    }
-
-                    var product = await _productLotRepository.GetProductByIdAsync(productLot.ProductId.Value);
-                    if (product == null)
-                    {
-                        throw new Exception($"Không tìm thấy Product với ID: {productLot.ProductId.Value}");
-                    }
-
-                    var newDetail = _mapper.Map<NoteCheckDetail>(detailDto);
-                    newDetail.NoteCheckId = noteCheckId;
-                    newDetail.StorageQuantity = productLot.Quantity;
-                    newDetail.ErrorQuantity ??= 0;
-
-                    // Tính toán
-                    int difference = newDetail.StorageQuantity.Value - newDetail.ActualQuantity.Value;
-                    totalDifference += difference;
-                    int actualShortage = difference - newDetail.ErrorQuantity.Value;
-
-                    // Tạo kết quả
-                    string shortageText = GetShortageText(actualShortage);
-                    string resultText = BuildResultText(product, productLot, shortageText, newDetail.ErrorQuantity.Value);
-                    resultDetails.Add(resultText);
-
-                    newDetail.Status = newDetail.ErrorQuantity > 0 ? 0 : null;
-                    updatedDetails.Add(newDetail);
+                        NoteCheckId = noteCheckId,
+                        ProductLotId = detailDto.ProductLotId,
+                        StorageQuantity = productLot.Quantity,
+                        ActualQuantity = detailDto.ActualQuantity,
+                        ErrorQuantity = detailDto.ErrorQuantity ?? 0
+                    };
                 }
                 else
                 {
-                   
-                    existingDetail.ActualQuantity = detailDto.ActualQuantity ?? existingDetail.ActualQuantity;
-                    existingDetail.ErrorQuantity = detailDto.ErrorQuantity ?? existingDetail.ErrorQuantity;
-
-                    var productLot = await _productLotRepository.GetSingleByConditionAsync(p =>
-                        p.ProductLotId == existingDetail.ProductLotId);
-                    var product = await _productLotRepository.GetProductByIdAsync(productLot.ProductId.Value);
-
-                 
-                    int difference = existingDetail.StorageQuantity.Value - existingDetail.ActualQuantity.Value;
-                    totalDifference += difference;
-                    int actualShortage = difference - existingDetail.ErrorQuantity.Value;
-
-                  
-                    string shortageText = GetShortageText(actualShortage);
-                    string resultText = BuildResultText(product, productLot, shortageText, existingDetail.ErrorQuantity.Value);
-                    resultDetails.Add(resultText);
-
-                    existingDetail.Status = existingDetail.ErrorQuantity > 0 ? 0 : null;
-                    updatedDetails.Add(existingDetail);
+                    // Cập nhật NoteCheckDetail hiện có
+                    detail = existingDetail;
+                    detail.StorageQuantity = productLot.Quantity; // Cập nhật lại số lượng kho
+                    detail.ActualQuantity = detailDto.ActualQuantity;
+                    detail.ErrorQuantity = detailDto.ErrorQuantity ?? 0;
                 }
+
+                // Kiểm tra giá trị null
+                if (!detail.StorageQuantity.HasValue)
+                {
+                    throw new Exception($"StorageQuantity không có giá trị (null) cho ProductLotId {productLot.ProductLotId}.");
+                }
+
+                if (!detail.ActualQuantity.HasValue)
+                {
+                    throw new Exception($"ActualQuantity không có giá trị (null) cho ProductLotId {productLot.ProductLotId}.");
+                }
+
+                // Tính toán DifferenceQuantity
+                detail.DifferenceQuatity = detail.StorageQuantity.Value - detail.ActualQuantity.Value;
+
+                // Tính actual shortage
+                int actualShortage = detail.DifferenceQuatity.Value - detail.ErrorQuantity.Value;
+
+                // Tạo văn bản kết quả
+                string shortageText = actualShortage > 0
+                    ? $"thiếu {actualShortage}"
+                    : actualShortage < 0
+                        ? $"thừa {Math.Abs(actualShortage)}"
+                        : "đủ";
+
+                string productName = product?.ProductName ?? "Không rõ sản phẩm";
+                string lotId = productLot?.LotId?.ToString() ?? "Không rõ lô";
+                string resultText = $"Sản phẩm {productName} của lô {lotId} này {shortageText} (hỏng {detail.ErrorQuantity})";
+                resultDetails.Add(resultText);
+
+                // Cập nhật trạng thái
+                detail.Status = detail.ErrorQuantity > 0 ? 0 : null;
+
+                updatedDetails.Add(detail);
             }
 
-    
+            // Cập nhật danh sách NoteCheckDetails
             existingNoteCheck.NoteCheckDetails = updatedDetails;
-            existingNoteCheck.DifferenceQuatity = totalDifference;
             existingNoteCheck.Result = string.Join(", ", resultDetails);
 
-    
+            // Lưu thay đổi
             await _noteCheckRepository.UpdateNoteCheckAsync(existingNoteCheck);
 
+            // Trả về DTO
             return _mapper.Map<NoteCheckDTO>(existingNoteCheck);
         }
 
-        
+
         private string GetShortageText(int actualShortage)
         {
             return actualShortage > 0 ? $"thiếu {actualShortage}"
@@ -373,7 +387,7 @@ namespace PharmaDistiPro.Services.Impl
 
 
         //confirm notecheck
-        public async Task<NoteCheckDTO> ApproveNoteCheckAsync(int noteCheckId)
+        public async Task<NoteCheckDTO> ConfirmNoteCheckAsync(int noteCheckId)
         {
             var noteCheck = await _noteCheckRepository.GetNoteCheckByIdAsync(noteCheckId);
             if (noteCheck == null)

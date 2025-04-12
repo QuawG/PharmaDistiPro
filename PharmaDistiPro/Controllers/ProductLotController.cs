@@ -85,5 +85,32 @@ namespace PharmaDistiPro.Controllers
             }
             return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
         }
+
+
+        [HttpPut("CheckAndUpdateExpiredLots")]
+public async Task<IActionResult> CheckAndUpdateExpiredLots()
+        {
+            var response = await _productLotService.AutoUpdateProductLotStatusAsync();
+
+            if (!response.Success)
+            {
+                return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
+            }
+
+            return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
+        }
+
+
+        [HttpGet("TotalQuantity/{productId}")]
+        public async Task<IActionResult> GetTotalAvailableQuantity(int productId)
+        {
+            var response = await _productLotService.GetQuantityByProductIdAsync(productId);
+            if (!response.Success)
+            {
+                return StatusCode(response.StatusCode, new { response.Message, response.Errors });
+            }
+
+            return Ok(new { response.Message, Quantity = response.Data });
+        }
     }
 }

@@ -107,7 +107,7 @@ namespace PharmaDistiPro.Controllers
         {
             try
             {
-                var result = await _noteCheckService.ApproveNoteCheckAsync(noteCheckId);
+                var result = await _noteCheckService.ConfirmNoteCheckAsync(noteCheckId);
                 return Ok(result);
             }
             catch (Exception ex)

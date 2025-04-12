@@ -35,7 +35,12 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
-
+        [HttpGet("RoomTypes")]
+        public async Task<IActionResult> GetAllRoomTypes()
+        {
+            var types = await _storageRoomService.GetAllRoomTypes();
+            return Ok(types);
+        }
 
         // API  StorageRoom theo Id
         [HttpGet("GetStorageRoomById/{storageRoomId}")]
@@ -64,19 +69,7 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
-        ////Api update storageRoom
-        //[HttpPut("UpdateStorageRoom")]
-        //public async Task<IActionResult> UpdateStorageRoom([FromForm] StorageRoomInputRequest storageRoom)
-        //{
-        //    var response = await _storageRoomService.UpdateStorageRoom(storageRoom);
-
-        //    if (!ModelState.IsValid) return BadRequest(ModelState);
-
-        //    if (!response.Success)
-        //        return BadRequest(new { response.Message });
-
-        //    return Ok(response);
-        //}
+     
 
         [HttpPut("UpdateStorageRoom")]
         public async Task<IActionResult> UpdateStorageRoom([FromBody] StorageRoomInputRequest storageRoom)
@@ -116,24 +109,7 @@ namespace PharmaDistiPro.Controllers
             return Ok(response);
         }
 
-        [HttpGet("CheckTemperatureWarning")]
-        public async Task<IActionResult> CheckTemperatureWarning()
-        {
-            try
-            {
-                var response = await _storageRoomService.CheckTemperatureWarning();
-
-                if (!response.Success)
-                    return BadRequest(new { response.Message });
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Lỗi API CheckTemperatureWarning: {ex.Message}");
-                return StatusCode(500, new { Message = "Lỗi máy chủ nội bộ." });
-            }
-        }
+      
 
     }
 }

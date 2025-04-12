@@ -25,6 +25,7 @@ namespace PharmaDistiPro.Models
         public int? ConfirmedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public int? AssignTo { get; set; }
+        public bool? StatusPayment { get; set; }
 
         public virtual User? AssignToNavigation { get; set; }
         public virtual User? ConfirmedByNavigation { get; set; }

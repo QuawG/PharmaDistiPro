@@ -101,7 +101,9 @@ namespace PharmaDistiPro.Services.Impl
                     ManufacturedDate = productLot.ManufacturedDate,
                     ExpiredDate = productLot.ExpiredDate,
                     SupplyPrice = productLot.SupplyPrice,
-                    Status = productLot.Status
+                    Status = productLot.Status,
+                    OrderQuantity = productLot.OrderQuantity,
+                    StorageRoomId = productLot.StorageRoomId,
                 };
 
                 createdProductLots.Add(newProductLot);
@@ -317,6 +319,66 @@ namespace PharmaDistiPro.Services.Impl
         }
 
 
+        public async Task<Response<string>> AutoUpdateProductLotStatusAsync()
+        {
+            var response = new Response<string>();
+            try
+            {
+                var productLots = await _productLotRepository.GetAllAsync(); 
 
+                var now = DateTime.Now;
+                foreach (var lot in productLots)
+                {
+                    if (lot.ExpiredDate <= now.AddMonths(3))
+                    {
+                        lot.Status = 0; // Sắp hết hạn – ngừng bán
+                    }
+                    else
+                    {
+                        lot.Status = 1; // Còn hạn – có thể bán
+                    }
+
+                    await _productLotRepository.UpdateAsync(lot);
+                }
+
+                await _productLotRepository.SaveAsync();
+
+                response.Success = true;
+                response.Data = "Cập nhật trạng thái sản phẩm theo ngày hết hạn thành công.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Lỗi khi cập nhật trạng thái sản phẩm: {ex.Message}";
+            }
+
+            return response;
+        }
+
+
+        // Get quantity product can bye
+        public async Task<Response<int>> GetQuantityByProductIdAsync(int productId)
+        {
+            var response = new Response<int>();
+            try
+            {
+                var productLots = await _productLotRepository
+                    .GetAllAsync(); 
+                var totalQuantity = productLots
+                    .Where(lot => lot.ProductId == productId && lot.Status == 1) //khong het han
+                    .Sum(lot => lot.Quantity ?? 0); 
+
+                response.Success = true;
+                response.Data = totalQuantity;
+                response.Message = "Lấy tổng số lượng sản phẩm thành công.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Lỗi khi tính tổng số lượng: {ex.Message}";
+            }
+
+            return response;
+        }
     }
 }

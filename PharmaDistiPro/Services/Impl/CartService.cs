@@ -117,7 +117,7 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var cartList = CookieHelper.GetCartFromCookie(_httpContextAccessor.HttpContext);
-                // kiem tra xem item co trong cart khong de remove
+                
                 var itemExist = cartList.FirstOrDefault(c => c.ProductId == productId);
                 if (itemExist == null)
                 {

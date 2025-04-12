@@ -272,6 +272,8 @@ namespace PharmaDistiPro.Models
             {
                 entity.HasKey(e => e.PurchaseOrderDetailId);
 
+                entity.Property(e => e.SupplyPrice).HasColumnType("money");
+
                 entity.HasOne(d => d.Product)
                     .WithMany(p => p.PurchaseOrdersDetails)
                     .HasForeignKey(d => d.ProductId)

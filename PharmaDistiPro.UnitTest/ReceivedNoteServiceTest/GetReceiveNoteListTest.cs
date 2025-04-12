@@ -10,7 +10,7 @@ using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Impl;
 
-namespace PharmaDistiPro.Tests.Services
+namespace PharmaDistiPro.Tests.ReceivedNoteServicesTest
 {
     public class ReceivedNoteService_GetList_Tests
     {

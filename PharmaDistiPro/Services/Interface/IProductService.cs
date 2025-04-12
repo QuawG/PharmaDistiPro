@@ -8,7 +8,8 @@ namespace PharmaDistiPro.Services.Interface
         Task<Response<ProductDTO>> CreateNewProduct(ProductInputRequest productInputRequest);
         Task<Response<ProductDTO>> GetProductById(int productId);
         Task<Response<IEnumerable<ProductDTO>>> GetProductList();
-        Task<Response<IEnumerable<ProductDTO>>> GetProductList(int pageNumber = 1, string? searchTerm = null);
+  
+        Task<Response<IEnumerable<ProductDTO>>> GetProductListCustomer();
         Task<Response<ProductDTO>> UpdateProduct(ProductInputRequest productUpdateRequest);
 
     }

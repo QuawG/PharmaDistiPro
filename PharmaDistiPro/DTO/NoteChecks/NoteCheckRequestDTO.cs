@@ -6,7 +6,7 @@ namespace PharmaDistiPro.DTO.NoteChecks
     {
         public int NoteCheckId { get; set; }
         public string? NoteCheckCode { get; set; }
-        public int? DifferenceQuatity { get; set; }
+
         public int? StorageRoomId { get; set; }
         public string? ReasonCheck { get; set; }
         public string? Result { get; set; }
@@ -24,7 +24,9 @@ namespace PharmaDistiPro.DTO.NoteChecks
         public int? NoteCheckId { get; set; }
         public int? ProductLotId { get; set; }
         public int? StorageQuantity { get; set; }
+
         public int? ActualQuantity { get; set; }
+        public int? DifferenceQuatity { get; set; }
         public int? ErrorQuantity { get; set; }
         public int? Status { get; set; }
     }

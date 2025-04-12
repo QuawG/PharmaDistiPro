@@ -2,6 +2,7 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using PharmaDistiPro.DTO.Products;
+using PharmaDistiPro.Helper.Enums;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Impl;
 using PharmaDistiPro.Repositories.Interface;
@@ -27,90 +28,93 @@ namespace PharmaDistiPro.Services.Impl
         }
 
         
-        public async Task<Response<IEnumerable<ProductDTO>>> GetProductList(int pageNumber = 1, string? searchTerm = null)
-        {
-            var response = new Response<IEnumerable<ProductDTO>>();
-            try
-            {
-                Expression<Func<Product, bool>> filter = p => true;
-                if (!string.IsNullOrEmpty(searchTerm))
-                {
-                    searchTerm = searchTerm.ToLower();
-                    filter = p => (p.ProductName != null && p.ProductName.ToLower().Contains(searchTerm)) ||
-                                  (p.ProductCode != null && p.ProductCode.ToLower().Contains(searchTerm));
-                }
-
-                const int pageSize = 6; // Đồng bộ với thông báo
-                var products = await _productRepository.GetPagedAsync(
-                    filter: filter,
-                    pageNumber: pageNumber,
-                    pageSize: pageSize,
-                    includes: null,
-                    orderBy: q => q.OrderBy(p => p.ProductId)
-                );
-
-                if (!products.Any())
-                {
-                    response.Success = false;
-                    response.Message = "Không có dữ liệu";
-                    return response;
-                }
-
-                var totalItems = await _productRepository.CountAsync(filter);
-                var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-                response.Data = _mapper.Map<IEnumerable<ProductDTO>>(products);
-                response.Success = true;
-                response.Message = $"Lấy danh sách sản phẩm thành công (Trang {pageNumber}/{totalPages}, {pageSize} sản phẩm/trang)";
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.Message = ex.Message;
-                return response;
-            }
-        }
+        
         public async Task<Response<IEnumerable<ProductDTO>>> GetProductList()
         {
             var response = new Response<IEnumerable<ProductDTO>>();
 
             try
             {
-                // Lấy danh sách sản phẩm từ repository
                 var products = await _productRepository.GetAllAsyncProduct() ?? new List<Product>();
 
-                // Ánh xạ dữ liệu sang DTO
-                var productDtos = _mapper.Map<IEnumerable<ProductDTO>>(products);
+                var productDtos = _mapper.Map<IEnumerable<ProductDTO>>(products).ToList();
 
-                // Duyệt qua từng sản phẩm và ánh xạ danh sách hình ảnh từ ImageProduct sang Images trong ProductDTO
                 foreach (var productDto in productDtos)
                 {
                     var product = products.FirstOrDefault(p => p.ProductId == productDto.ProductId);
 
                     if (product != null)
                     {
-                        // Lấy danh sách hình ảnh từ ImageProduct và ánh xạ vào ProductDTO
+                        // Gán danh sách ảnh
                         productDto.Images = product.ImageProducts?.Select(ip => ip.Image).ToList();
+
+                        // Gán tên điều kiện bảo quản
+                        productDto.Storageconditions = product.Storageconditions switch
+                        {
+                            (int)StorageCondition.Normal => "Bảo quản thường( Nhiệt độ: 15-30 ; Độ ẩm < 75%)",
+                            (int)StorageCondition.Cold => "Bảo quản lạnh( Nhiệt độ: 2-8 ; Độ ẩm < 45%)",
+                            (int)StorageCondition.Cool => "Bảo quản mát( Nhiệt độ: 8-15 ; Độ ẩm < 70%)",
+                            _ => "Không xác định"
+                        };
                     }
                 }
 
                 response.Data = productDtos;
                 response.Success = true;
                 response.Message = products.Any() ? "Lấy danh sách sản phẩm thành công" : "Không có sản phẩm nào.";
-
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = "Đã xảy ra lỗi khi lấy danh sách sản phẩm.";
-
-                // Ghi log lỗi, nếu có ILogger thì dùng _logger.LogError(ex, "Lỗi khi lấy danh sách sản phẩm.");
                 Console.WriteLine($"Lỗi: {ex}");
             }
 
             return response;
         }
+        public async Task<Response<IEnumerable<ProductDTO>>> GetProductListCustomer()
+        {
+            var response = new Response<IEnumerable<ProductDTO>>();
+
+            try
+            {
+                var products = await _productRepository.GetAllAsyncCustomerProduct() ?? new List<Product>();
+
+                var productDtos = _mapper.Map<IEnumerable<ProductDTO>>(products).ToList();
+
+                foreach (var productDto in productDtos)
+                {
+                    var product = products.FirstOrDefault(p => p.ProductId == productDto.ProductId);
+
+                    if (product != null)
+                    {
+                        productDto.Images = product.ImageProducts?.Select(ip => ip.Image).ToList();
+
+                        productDto.Storageconditions = product.Storageconditions switch
+                        {
+                            (int)StorageCondition.Normal => "Bảo quản thường",
+                            (int)StorageCondition.Cold => "Bảo quản lạnh",
+                            (int)StorageCondition.Cool => "Bảo quản mát",
+                            _ => "Không xác định"
+                        };
+                    }
+                }
+
+                response.Data = productDtos;
+                response.Success = true;
+                response.Message = products.Any() ? "Lấy danh sách sản phẩm thành công" : "Không có sản phẩm nào.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = "Đã xảy ra lỗi khi lấy danh sách sản phẩm.";
+                Console.WriteLine($"Lỗi: {ex}");
+            }
+
+            return response;
+        }
+
+
         // Deactivate product
         public async Task<Response<ProductDTO>> ActivateDeactivateProduct(int productId, bool update)
         {
@@ -121,7 +125,7 @@ namespace PharmaDistiPro.Services.Impl
                 if (product == null)
                 {
                     response.Success = false;
-                    response.Data = null; // Không ánh xạ nếu product null
+                    response.Data = null; 
                     response.Message = "Không tìm thấy sản phẩm";
                     return response;
                 }
@@ -147,7 +151,7 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<ProductDTO>();
             try
             {
-                // Kiểm tra CategoryId có giá trị không
+                // Kiểm tra CategoryId
                 if (!productInputRequest.CategoryId.HasValue)
                 {
                     response.Success = false;
@@ -155,7 +159,7 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-                // Lấy Category từ CategoryId
+                // Lấy category
                 var category = await _categoryRepository.GetByIdAsync(productInputRequest.CategoryId.Value);
                 if (category == null)
                 {
@@ -164,7 +168,7 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-                // Kiểm tra CategoryId có phải là danh mục con không (không có danh mục con khác)
+                // Chỉ cho phép chọn danh mục con
                 var existingCategory = await _categoryRepository.GetSingleByConditionAsync(c => c.CategoryMainId == category.CategoryMainId);
                 if (existingCategory == null)
                 {
@@ -173,25 +177,32 @@ namespace PharmaDistiPro.Services.Impl
                     return response;
                 }
 
-                // Tạo ProductCode: [CategoryCode]_TT_[Tên viết tắt sản phẩm]
-                string categoryCode = category.CategoryCode ?? "DEFAULT";
-                string productShortCode = GenerateProductCode(productInputRequest.ProductName);
-                string productCode = $"{categoryCode}_{productShortCode}";
-                Console.WriteLine($"Generated ProductCode: {productCode}");
+                // Kiểm tra điều kiện bảo quản hợp lệ
+                if (!Enum.IsDefined(typeof(StorageCondition), productInputRequest.Storageconditions))
+                {
+                    response.Success = false;
+                    response.Message = "Điều kiện bảo quản không hợp lệ. Chỉ được chọn: Bảo quản thường (1), Bảo quản lạnh (2), hoặc Bảo quản mát (3).";
+                    return response;
+                }
 
+                // Tạo sản phẩm mới từ input request
                 var newProduct = _mapper.Map<Product>(productInputRequest);
-                newProduct.ProductCode = productCode;
+
+                // ⚠️ Gán Storageconditions đúng kiểu int?
+                newProduct.Storageconditions = productInputRequest.Storageconditions.HasValue
+                    ? (int?)productInputRequest.Storageconditions.Value
+                    : null;
+
                 newProduct.CreatedDate = DateTime.Now;
                 newProduct.Status = true;
 
-                // Kiểm tra và upload ảnh nếu có
+                // Upload ảnh (tối đa 5 ảnh)
                 if (productInputRequest.Images != null && productInputRequest.Images.Any())
                 {
                     int currentImageCount = 0;
 
                     foreach (var image in productInputRequest.Images)
                     {
-                        // Kiểm tra số lượng ảnh không vượt quá 5
                         if (currentImageCount >= 5)
                         {
                             response.Success = false;
@@ -213,14 +224,24 @@ namespace PharmaDistiPro.Services.Impl
                             Image = imageUrl
                         });
 
-                        currentImageCount++; // Tăng số lượng ảnh đã upload
+                        currentImageCount++;
                     }
                 }
 
+                // Lưu sản phẩm để lấy ProductId
                 await _productRepository.InsertAsync(newProduct);
                 await _productRepository.SaveAsync();
 
-                // Gán ProductId cho hình ảnh sau khi sản phẩm được lưu
+                // Tạo mã sản phẩm
+                string categoryCode = category.CategoryCode ?? "DEFAULT";
+                string productNumberFormatted = newProduct.ProductId.ToString("D4");
+                string productCode = $"{categoryCode}_{productNumberFormatted}";
+
+                newProduct.ProductCode = productCode;
+                await _productRepository.UpdateAsync(newProduct);
+                await _productRepository.SaveAsync();
+
+                // Gán ProductId cho hình ảnh
                 if (newProduct.ImageProducts.Any())
                 {
                     foreach (var imageProduct in newProduct.ImageProducts)
@@ -230,9 +251,20 @@ namespace PharmaDistiPro.Services.Impl
                     await _productRepository.SaveAsync();
                 }
 
-                response.Message = "Tạo mới sản phẩm thành công";
+                // Convert ra DTO
+                var dto = _mapper.Map<ProductDTO>(newProduct);
+
+                dto.Storageconditions = newProduct.Storageconditions switch
+                {
+                    (int)StorageCondition.Normal => "Bảo quản thường",
+                    (int)StorageCondition.Cold => "Bảo quản lạnh",
+                    (int)StorageCondition.Cool => "Bảo quản mát",
+                    _ => "Không xác định"
+                };
+
+                response.Message = $"Tạo mới sản phẩm thành công. Điều kiện bảo quản: {dto.Storageconditions}";
                 response.Success = true;
-                response.Data = _mapper.Map<ProductDTO>(newProduct);
+                response.Data = dto;
                 return response;
             }
             catch (Exception ex)
@@ -243,15 +275,7 @@ namespace PharmaDistiPro.Services.Impl
             }
         }
 
-        // Hàm tạo mã viết tắt từ tên sản phẩm (VD: "Vương Niệu Đan" -> "VND")
-        private string GenerateProductCode(string productName)
-        {
-            if (string.IsNullOrWhiteSpace(productName))
-                return "UNKNOWN";
 
-            var words = productName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            return string.Join("", words.Select(w => w.Substring(0, 1).ToUpper()));
-        }
 
         // Get product by Id
         public async Task<Response<ProductDTO>> GetProductById(int productId)
@@ -270,7 +294,7 @@ namespace PharmaDistiPro.Services.Impl
 
                 var productDto = _mapper.Map<ProductDTO>(product);
 
-                // Kiểm tra mối quan hệ hình ảnh và ánh xạ đúng vào Images
+           
                 productDto.Images = product.ImageProducts?.Select(ip => ip.Image).ToList();
 
                 response.Success = true;
@@ -291,21 +315,26 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<ProductDTO>();
             try
             {
+          
                 var productToUpdate = await _productRepository.GetByIdAsync(productUpdateRequest.ProductId);
                 if (productToUpdate == null)
                 {
                     response.Success = false;
-                    response.Message = "Không tìm thấy sản phẩm";
+                    response.Message = "Không tìm thấy sản phẩm.";
                     return response;
                 }
 
-                _mapper.Map(productUpdateRequest, productToUpdate);
+           
+                var originalProductCode = productToUpdate.ProductCode;
 
-                // Kiểm tra danh sách ảnh hiện tại
-                var currentImages = productToUpdate.ImageProducts.ToList();
+               
+                _mapper.Map(productUpdateRequest, productToUpdate);
+                productToUpdate.ProductCode = originalProductCode; 
+
+            
+                var currentImages = productToUpdate.ImageProducts?.ToList() ?? new List<ImageProduct>();
                 int currentImageCount = currentImages.Count;
 
-                // Kiểm tra xem tổng số ảnh hiện tại + mới có vượt quá 5 không
                 if (productUpdateRequest.Images != null && productUpdateRequest.Images.Any())
                 {
                     if (currentImageCount + productUpdateRequest.Images.Count > 5)
@@ -317,7 +346,7 @@ namespace PharmaDistiPro.Services.Impl
 
                     foreach (var image in productUpdateRequest.Images)
                     {
-                        var uploadParams = new ImageUploadParams()
+                        var uploadParams = new ImageUploadParams
                         {
                             File = new FileDescription(image.FileName, image.OpenReadStream()),
                             PublicId = Path.GetFileNameWithoutExtension(image.FileName)
@@ -328,14 +357,13 @@ namespace PharmaDistiPro.Services.Impl
                             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                             var imageUrl = uploadResult.SecureUri.ToString();
 
-                            // Thêm ảnh mới vào danh sách ảnh của sản phẩm
                             productToUpdate.ImageProducts.Add(new ImageProduct
                             {
                                 Image = imageUrl,
                                 ProductId = productToUpdate.ProductId
                             });
 
-                            currentImageCount++;  // Cập nhật số lượng ảnh sau khi thêm ảnh mới
+                            currentImageCount++;
                         }
                         catch (Exception uploadEx)
                         {
@@ -346,13 +374,24 @@ namespace PharmaDistiPro.Services.Impl
                     }
                 }
 
-                // Cập nhật thông tin sản phẩm sau khi xử lý ảnh
+            
                 await _productRepository.UpdateAsync(productToUpdate);
                 await _productRepository.SaveAsync();
 
                 response.Success = true;
-                response.Data = _mapper.Map<ProductDTO>(productToUpdate);
-                response.Message = "Cập nhật thành công";
+                var updatedProductDto = _mapper.Map<ProductDTO>(productToUpdate);
+
+             
+                updatedProductDto.Storageconditions = productToUpdate.Storageconditions switch
+                {
+                    (int)StorageCondition.Normal => "Bảo quản thường",
+                    (int)StorageCondition.Cold => "Bảo quản lạnh",
+                    (int)StorageCondition.Cool => "Bảo quản mát",
+                    _ => "Không xác định"
+                };
+
+                response.Data = updatedProductDto;
+                response.Message = "Cập nhật thành công.";
                 return response;
             }
             catch (Exception ex)

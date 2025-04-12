@@ -27,6 +27,7 @@ namespace PharmaDistiPro.Models
         public double? Vat { get; set; }
         public int? Storageconditions { get; set; }
         public double? Weight { get; set; }
+        public double? VolumePerUnit { get; set; }
 
         public virtual Category? Category { get; set; }
         public virtual User? CreatedByNavigation { get; set; }

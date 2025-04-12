@@ -15,6 +15,7 @@ using PharmaDistiPro.DTO.StorageRooms;
 using PharmaDistiPro.DTO.Suppliers;
 using PharmaDistiPro.DTO.Units;
 using PharmaDistiPro.DTO.Users;
+using PharmaDistiPro.Helper.Enums;
 using PharmaDistiPro.Models;
 namespace PharmaDistiPro.Helper
 {
@@ -44,20 +45,30 @@ namespace PharmaDistiPro.Helper
 
             CreateMap<StorageRoomInputRequest, StorageRoom>()
            .ForMember(dest => dest.StorageRoomId, opt => opt.MapFrom(src => src.StorageRoomId))
-           .ForMember(dest => dest.Temperature, opt => opt.MapFrom(src => src.Temperature))
-           .ForMember(dest => dest.Humidity, opt => opt.MapFrom(src => src.Humidity))
+          
+   
            .ForMember(dest => dest.StorageRoomCode, opt => opt.MapFrom(src => src.StorageRoomCode))
            .ForMember(dest => dest.StorageRoomName, opt => opt.MapFrom(src => src.StorageRoomName))
-           .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+           .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
            .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => src.CreatedBy))
            .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
            .ReverseMap(); // Để hỗ trợ ánh xạ 2 chiều
-        
-        #endregion
 
-        #region Unit
-        CreateMap<Unit, UnitDTO>();
+            #endregion
+
+            #region StorageHistory
+            CreateMap<StorageHistory, StorageHistoryDTO>()
+                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore()); // Bỏ qua StorageRoom
+            CreateMap<StorageHistoryDTO, StorageHistory>();
+
+            CreateMap<StorageHistoryInputRequest, StorageHistory>()
+                .ReverseMap();
+            #endregion
+
+
+            #region Unit
+            CreateMap<Unit, UnitDTO>();
             CreateMap<UnitDTO, Unit>();
             #endregion
 
@@ -87,18 +98,21 @@ namespace PharmaDistiPro.Helper
             CreateMap<User, UserInputRequest>();
             CreateMap<UserInputRequest, User>();
             #endregion
+
             #region Product
 
-            // Mapping Product -> ProductDTO
-
-            // Mapping from Product to ProductDTO
             CreateMap<Product, ProductDTO>()
-                .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.Unit))
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : string.Empty))
-                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.ImageProducts != null && src.ImageProducts.Any()
-                    ? src.ImageProducts.Select(ip => ip.Image).ToList()
-                    : new List<string>())) // Map images from ImageProducts to Image list
-                .ReverseMap();
+       .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.Unit))
+       .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : string.Empty))
+       .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.ImageProducts != null && src.ImageProducts.Any()
+           ? src.ImageProducts.Select(ip => ip.Image).ToList()
+           : new List<string>()))
+       .ForMember(dest => dest.Storageconditions, opt => opt.MapFrom(src =>
+           src.Storageconditions == (int)StorageCondition.Normal ? "Bảo quản thường" :
+           src.Storageconditions == (int)StorageCondition.Cold ? "Bảo quản lạnh" :
+           src.Storageconditions == (int)StorageCondition.Cool ? "Bảo quản mát" :
+           "Không xác định"
+       ));
             // Ánh xạ từ ImageProduct sang ImageProductDTO
             CreateMap<ImageProduct, ImageProductDTO>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
@@ -108,36 +122,41 @@ namespace PharmaDistiPro.Helper
             CreateMap<ImageProductInputRequest, ImageProduct>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image));
-        
 
-        // Mapping from ProductInputRequest to ProductDTO
-        CreateMap<ProductInputRequest, ProductDTO>().ReverseMap();
+            // Mapping từ ProductInputRequest sang ProductDTO
+            CreateMap<ProductInputRequest, ProductDTO>()
+                .ReverseMap();
 
-            // Mapping from ProductInputRequest to Product (for update operations)
+            // Mapping từ ProductInputRequest sang Product (cho các thao tác cập nhật)
             CreateMap<ProductInputRequest, Product>()
                 .ForMember(dest => dest.ProductName, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ProductName)))
                 .ForMember(dest => dest.ProductCode, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ProductCode)))
                 .ForMember(dest => dest.ManufactureName, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.ManufactureName)))
                 .ForMember(dest => dest.Description, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.Description)))
+                .ForMember(dest => dest.Storageconditions, opt => opt.MapFrom(src => (int?)src.Storageconditions)) // Ánh xạ từ StorageCondition? sang int?
                 .ForMember(dest => dest.Storageconditions, opt => opt.Condition(src => src.Storageconditions.HasValue))
                 .ForMember(dest => dest.Unit, opt => opt.Condition(src => !string.IsNullOrWhiteSpace(src.Unit)))
                 .ForMember(dest => dest.CategoryId, opt => opt.Condition(src => src.CategoryId.HasValue))
                 .ForMember(dest => dest.Vat, opt => opt.Condition(src => src.Vat.HasValue))
                 .ForMember(dest => dest.SellingPrice, opt => opt.Condition(src => src.SellingPrice.HasValue))
                 .ForMember(dest => dest.Weight, opt => opt.Condition(src => src.Weight.HasValue))
-                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()) // Don't map CreatedBy
-                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore()) // Don't map CreatedDate
-                .ForMember(dest => dest.Status, opt => opt.Ignore()) // Don't map Status
-                .ForMember(dest => dest.ImageProducts, opt => opt.Ignore()) // Ignore ImageProducts mapping
-                .ReverseMap();
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()) // Không ánh xạ CreatedBy
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore()) // Không ánh xạ CreatedDate
+                .ForMember(dest => dest.Status, opt => opt.Ignore()) // Không ánh xạ Status
+                .ForMember(dest => dest.ImageProducts, opt => opt.Ignore()) // Bỏ qua ánh xạ ImageProducts
+                .ReverseMap()
+                .ForMember(dest => dest.Storageconditions, opt => opt.MapFrom(src => (StorageCondition?)src.Storageconditions));
 
-            // Mapping from Product to ProductOrderDto
-            CreateMap<Product, ProductOrderDto>();
-            CreateMap<ProductOrderDto, Product>();
+            // Mapping từ Product sang ProductOrderDto
+            CreateMap<Product, ProductOrderDto>()
+                .ForMember(dest => dest.Storageconditions, opt => opt.MapFrom(src => (StorageCondition?)src.Storageconditions)); // Ánh xạ từ int? sang StorageCondition?
+
+            CreateMap<ProductOrderDto, Product>()
+                .ForMember(dest => dest.Storageconditions, opt => opt.MapFrom(src => (int?)src.Storageconditions)); // Ánh xạ từ StorageCondition? sang int?;
 
             #endregion
             #region ImageProduct
-           CreateMap<ImageProduct, ImageProductDTO>()
+            CreateMap<ImageProduct, ImageProductDTO>()
                 
                 .ReverseMap()
                 .ForMember(dest => dest.Product, opt => opt.Ignore());

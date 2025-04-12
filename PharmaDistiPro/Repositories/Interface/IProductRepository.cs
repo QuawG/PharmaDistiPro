@@ -5,6 +5,7 @@ namespace PharmaDistiPro.Repositories.Interface
 {
     public interface IProductRepository : IRepository<Product>
     {
+        Task<IEnumerable<Product>> GetAllAsyncCustomerProduct();
         Task<IEnumerable<Product>> GetAllAsyncProduct();
         Task<Product> GetByIdAsyncProduct(int id);
       

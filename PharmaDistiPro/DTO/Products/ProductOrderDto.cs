@@ -16,5 +16,6 @@
         public double? Vat { get; set; }
         public int? Storageconditions { get; set; }
         public double? Weight { get; set; }
+        public double? VolumePerUnit { get; set; }
     }
 }

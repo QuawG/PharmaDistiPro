@@ -13,6 +13,7 @@ namespace PharmaDistiPro.Services.Interface
         Task<Services.Response<ProductLotResponse>> GetProductLotById(int id);
 
         Task<Services.Response<ProductLotResponse>> CheckQuantityProduct(int productId);
-
+        Task<Response<string>> AutoUpdateProductLotStatusAsync();
+        Task<Response<int>> GetQuantityByProductIdAsync(int productId);
     }
 }

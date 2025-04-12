@@ -7,15 +7,21 @@
         public string? ManufactureName { get; set; }
         public string? ProductName { get; set; }
         public string? Unit { get; set; }
-        public string? CategoryName { get; set; }  
+        public string? CategoryName { get; set; }
         public string? Description { get; set; }
         public double? SellingPrice { get; set; }
-        public int? CreatedBy { get; set; }  // ✅ Giữ ID, không cần User model
+        public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
         public bool? Status { get; set; }
         public double? Vat { get; set; }
-        public int? Storageconditions { get; set; }
+
+
+        public string? Storageconditions { get; set; }
+
         public double? Weight { get; set; }
-        public List<string>? Images { get; set; }  // ✅ Danh sách ảnh có thể null
+        public double? VolumePerUnit { get; set; }
+        public List<string>? Images { get; set; }
+       
+
     }
 }

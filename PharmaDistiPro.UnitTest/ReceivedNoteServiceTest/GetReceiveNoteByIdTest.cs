@@ -11,7 +11,7 @@ using PharmaDistiPro.Models;
 using AutoMapper;
 using PharmaDistiPro.Helper;
 
-namespace PharmaDistiPro.Tests.Services
+namespace PharmaDistiPro.Tests.ReceivedNoteServicesTest
 {
     public class ReceivedNoteService_GetById_Tests
     {

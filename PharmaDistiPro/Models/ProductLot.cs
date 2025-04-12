@@ -18,6 +18,7 @@ namespace PharmaDistiPro.Models
         public DateTime? ManufacturedDate { get; set; }
         public DateTime? ExpiredDate { get; set; }
         public double? SupplyPrice { get; set; }
+        public int? OrderQuantity { get; set; }
         public int? Quantity { get; set; }
         public int? Status { get; set; }
         public int? StorageRoomId { get; set; }

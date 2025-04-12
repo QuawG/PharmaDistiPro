@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {}
+    "D:\\Test\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {}
   },
   "projects": {
-    "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {
+    "D:\\Test\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+        "projectUniqueName": "D:\\Test\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
         "projectName": "PharmaDistiPro",
-        "projectPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc9-4\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\FPTU\\HK9\\SEP_490\\Code\\Huuloc9-4\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
+        "projectPath": "D:\\Test\\PharmaDistiPro\\PharmaDistiPro\\PharmaDistiPro.csproj",
+        "packagesPath": "C:\\Users\\minhq\\.nuget\\packages\\",
+        "outputPath": "D:\\Test\\PharmaDistiPro\\PharmaDistiPro\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\minhq\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -83,6 +83,10 @@
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
               "version": "[6.36.0, )"
+            },
+            "VNPAY.NET": {
+              "target": "Package",
+              "version": "[6.2.0, )"
             }
           },
           "imports": [
@@ -96,6 +100,24 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[6.0.36, 6.0.36]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[6.0.36, 6.0.36]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[6.0.36, 6.0.36]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[6.0.36, 6.0.36]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -104,7 +126,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.408\\RuntimeIdentifierGraph.json"
         }
       }
     }
