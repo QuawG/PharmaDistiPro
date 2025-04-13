@@ -34,9 +34,9 @@ namespace PharmaDistiPro.Repositories.Impl
 
             return warehouseWithMinOrders;
         }
-        public async Task<User> GetUser(string username, string password)
+        public async Task<User> GetUser(string username)
         {
-            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserName==username && u.Password==password);
+            return await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserName==username );
         }
 
 
@@ -55,6 +55,12 @@ namespace PharmaDistiPro.Repositories.Impl
             _context.Users.Update(user);
             int rowAffected = await _context.SaveChangesAsync();
             return user;
+        }
+        public async Task<List<User>> GetUsersByRoleIdAsync(int roleId)
+        {
+            return await _context.Users
+                                 .Where(u => u.RoleId == roleId)
+                                 .ToListAsync();
         }
     }
 }

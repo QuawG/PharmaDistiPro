@@ -116,7 +116,7 @@ namespace PharmaDistiPro.Services.Impl
                 order.CreatedDate = DateTime.Now;
                 order.StockReleaseDate = null;
                 order.ConfirmedBy = null;
-                order.Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN;
+                order.Status = (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN;
                 order.UpdatedStatusDate = DateTime.Now;
                 order.CustomerId = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
           

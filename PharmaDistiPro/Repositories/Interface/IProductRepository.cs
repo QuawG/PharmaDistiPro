@@ -8,6 +8,6 @@ namespace PharmaDistiPro.Repositories.Interface
         Task<IEnumerable<Product>> GetAllAsyncCustomerProduct();
         Task<IEnumerable<Product>> GetAllAsyncProduct();
         Task<Product> GetByIdAsyncProduct(int id);
-      
+        Task<IEnumerable<Product>> GetByIdsAsync(List<int> productIds);
     }
 }

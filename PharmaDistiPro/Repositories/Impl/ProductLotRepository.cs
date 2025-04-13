@@ -14,7 +14,7 @@ namespace PharmaDistiPro.Repositories.Impl
         public async Task<IEnumerable<ProductLot>> GetProductLotsByProductIds(List<int> productIds)
         {
             return await _context.ProductLots
-                .Where(p => p.ProductId.HasValue && productIds.Contains(p.ProductId.Value) && p.ExpiredDate >= DateTime.Now)
+                .Where(p => p.ProductId.HasValue && productIds.Contains(p.ProductId.Value) && p.Status == 1 )
                 .OrderBy(p => p.ExpiredDate)
                 .ToListAsync();
         }
@@ -65,7 +65,7 @@ namespace PharmaDistiPro.Repositories.Impl
         public async Task<ProductLot> CheckQuantityProduct(int productId)
         {
             var groupedData = await _context.ProductLots
-                .Where(x => x.ProductId == productId && x.ExpiredDate >= DateTime.UtcNow)
+                .Where(x => x.ProductId == productId && x.ExpiredDate >= DateTime.Now.AddMonths(3))
                 .ToListAsync(); 
 
             var result = groupedData

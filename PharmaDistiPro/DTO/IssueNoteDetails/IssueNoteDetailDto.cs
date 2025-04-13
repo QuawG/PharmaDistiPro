@@ -12,16 +12,17 @@ namespace PharmaDistiPro.DTO.IssueNoteDetails
         public virtual ProductLotIssueNoteDetailsDto? ProductLot { get; set; }
     }
 
+
+
     public class ProductLotIssueNoteDetailsDto
     {
         public int ProductLotId { get; set; }
         public int? ProductId { get; set; }
         public int? LotId { get; set; }
-        public DateTime? ManufacturedDate { get; set; }
-        public DateTime? ExpiredDate { get; set; }
-        public double? SupplyPrice { get; set; }
-        public int? Quantity { get; set; }
-        public int? Status { get; set; }
+
+        public int? StorageRoomId { get; set; }
+
+        public string? StorageRoomName { get; set; }
         public virtual ProductOrderDto? Product { get; set; }
     }
-}
+    }

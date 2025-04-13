@@ -6,6 +6,9 @@ using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
 using Microsoft.Extensions.Logging;
 using System;
+using PharmaDistiPro.Helper.Enums;
+using PharmaDistiPro.Repositories.Impl;
+using System.Net.Mail;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -13,25 +16,31 @@ namespace PharmaDistiPro.Services.Impl
     {
         private readonly IStorageHistoryRepository _storageHistoryRepository;
         private readonly IStorageRoomRepository _storageRoomRepository;
+        private readonly IUserRepository _userRepository; // Đã khai báo nhưng chưa khởi tạo
         private readonly IMapper _mapper;
         private readonly Cloudinary _cloudinary;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<StorageHistoryService> _logger;
+        private readonly IEmailService _emailService;
 
         public StorageHistoryService(
             IStorageRoomRepository storageRoomRepository,
             IStorageHistoryRepository storageHistoryRepository,
+            IUserRepository userRepository, // Thêm vào constructor
             Cloudinary cloudinary,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<StorageHistoryService> logger)
+            ILogger<StorageHistoryService> logger,
+            IEmailService emailService)
         {
             _storageRoomRepository = storageRoomRepository ?? throw new ArgumentNullException(nameof(storageRoomRepository));
             _storageHistoryRepository = storageHistoryRepository ?? throw new ArgumentNullException(nameof(storageHistoryRepository));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository)); // Khởi tạo
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cloudinary = cloudinary ?? throw new ArgumentNullException(nameof(cloudinary));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); // Đảm bảo không null
         }
         public async Task<StorageHistoryDTO> CreateStorageHistoryAsync(StorageHistoryInputRequest request)
         {
@@ -90,7 +99,6 @@ namespace PharmaDistiPro.Services.Impl
                 throw new Exception($"Error creating StorageHistory: {ex.Message}", ex);
             }
         }
-
 
 
         public async Task<List<StorageHistoryChartDTO>> GetTop50EarliestForChartAsync(int storageRoomId)

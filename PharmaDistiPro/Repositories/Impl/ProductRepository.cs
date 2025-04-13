@@ -42,7 +42,12 @@ namespace PharmaDistiPro.Repositories.Impl
         }
 
 
-
+        public async Task<IEnumerable<Product>> GetByIdsAsync(List<int> productIds)
+        {
+            return await _context.Products
+                                 .Where(p => productIds.Contains(p.ProductId))
+                                 .ToListAsync();
+        }
     }
 
 }

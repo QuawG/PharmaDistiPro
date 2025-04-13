@@ -15,5 +15,6 @@
         public string ProductName { get; set; }
         = string.Empty;
         public string LotCode { get; set; } = string.Empty;
+        public int? StorageRoomId { get; set; }
     }
 }

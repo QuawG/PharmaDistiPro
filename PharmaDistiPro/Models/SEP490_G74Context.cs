@@ -389,8 +389,6 @@ namespace PharmaDistiPro.Models
 
                 entity.Property(e => e.LastName).HasMaxLength(50);
 
-                entity.Property(e => e.Password).HasMaxLength(50);
-
                 entity.Property(e => e.Phone).HasMaxLength(50);
 
                 entity.Property(e => e.RefreshTokenExpriedTime).HasColumnType("datetime");

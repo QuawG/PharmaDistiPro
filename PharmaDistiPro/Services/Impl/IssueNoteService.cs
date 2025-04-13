@@ -3,6 +3,7 @@ using PharmaDistiPro.DTO.IssueNote;
 using PharmaDistiPro.DTO.IssueNoteDetails;
 using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
+using PharmaDistiPro.Repositories.Impl;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IOrderRepository _orderRepository;
         private readonly IOrdersDetailRepository _ordersDetailRepository;
         private readonly IProductLotRepository _productLotRepository;
+        private readonly IProductRepository _productRepository;
+        private readonly IStorageRoomRepository _storageRoomRepository;
         private readonly IIssueNoteDetailsRepository _issueNoteDetailsRepository;
         private readonly IIssueNoteRepository _issueNoteRepository;
         private readonly IUserRepository _userRepository;
@@ -25,17 +28,20 @@ namespace PharmaDistiPro.Services.Impl
             IIssueNoteDetailsRepository issueNoteDetailsRepository,
             IOrdersDetailRepository ordersDetailRepository,
             IProductLotRepository productLotRepository, IMapper mapper, IUserRepository userRepository,
-            IHttpContextAccessor httpContextAccessor
-            )
+            IHttpContextAccessor httpContextAccessor,IProductRepository productRepository
+, IStorageRoomRepository storageRoomRepository)
         {
             _issueNoteRepository = issuteNoteRepository;
             _issueNoteDetailsRepository = issueNoteDetailsRepository;
             _orderRepository = orderRepository;
             _ordersDetailRepository = ordersDetailRepository;
             _productLotRepository = productLotRepository;
+            _productRepository = productRepository;
+            _storageRoomRepository = storageRoomRepository;
             _mapper = mapper;
             _userRepository = userRepository;
             _httpContextAccessor = httpContextAccessor;
+            _storageRoomRepository = storageRoomRepository;
         }
 
         #region IssueNote
@@ -115,97 +121,119 @@ namespace PharmaDistiPro.Services.Impl
 
             try
             {
-                IssueNoteRequestDto issueNoteRequestDto = new IssueNoteRequestDto();
-
-                #region Update Order Status
+                #region 1. Kiểm tra đơn hàng và cập nhật trạng thái
                 var order = await _orderRepository.GetByIdAsync(orderId);
                 if (order == null)
                 {
-                    response.Success = false;
-                    response.Message = "Không tìm thấy đơn hàng";
-                    return response;
+                    return new Response<IssueNoteDto>
+                    {
+                        Success = false,
+                        Message = "Không tìm thấy đơn hàng"
+                    };
                 }
+
                 order.Status = (int)Common.Enums.OrderStatus.VAN_CHUYEN;
                 order.UpdatedStatusDate = DateTime.Now;
                 await _orderRepository.UpdateAsync(order);
-
                 #endregion
-                #region IssueNote
 
-                //mapping order => issue note
-                int issueNoteCount = await _issueNoteRepository.CountAsync(x => true);
-                issueNoteRequestDto.OrderId = orderId;
-               
-                issueNoteRequestDto.CreatedDate = DateTime.Now;
-                issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
-                issueNoteRequestDto.Status = (int)Common.Enums.IssueNotesStatus.DA_XUAT;
-                issueNoteRequestDto.CustomerId = order.CustomerId;
-                issueNoteRequestDto.TotalAmount = order.TotalAmount;
-                issueNoteRequestDto.UpdatedStatusDate = DateTime.Now;
-                issueNoteRequestDto.CreatedBy = order.AssignTo;
+                #region 2. Tạo IssueNote
+                var issueNote = new IssueNote
+                {
+                    OrderId = orderId,
+                    CreatedDate = DateTime.Now,
+                    UpdatedStatusDate = DateTime.Now,
+                    Status = (int)Common.Enums.IssueNotesStatus.DA_XUAT,
+                    CustomerId = order.CustomerId,
+                    TotalAmount = order.TotalAmount,
+                    CreatedBy = order.AssignTo
+                };
 
-                var issueNote = _mapper.Map<IssueNote>(issueNoteRequestDto);
                 await _issueNoteRepository.CreateIssueNote(issueNote);
-
+                await _orderRepository.SaveAsync(); // Để issueNote.Id có giá trị
                 #endregion
 
-                #region IssueNoteDetail
-                IEnumerable<OrdersDetail> listOrdersDetails = await _ordersDetailRepository.GetByConditionAsync(x => x.OrderId == orderId);
+                #region 3. Xử lý chi tiết đơn hàng & xuất kho
+                var orderDetails = await _ordersDetailRepository.GetByConditionAsync(x => x.OrderId == orderId);
+                var productIds = orderDetails
+                    .Where(x => x.ProductId.HasValue)
+                    .Select(x => x.ProductId.Value)
+                    .Distinct()
+                    .ToList();
 
-                List<int> productIds = listOrdersDetails.Where(x => x.ProductId.HasValue).Select(x => x.ProductId.Value).ToList();
-
-                DateTime today = DateTime.Today;
-                IEnumerable<ProductLot> productLots = (await _productLotRepository.GetProductLotsByProductIds(productIds));
-
+                var productLots = (await _productLotRepository.GetProductLotsByProductIds(productIds)).ToList();
                 if (!productLots.Any())
                 {
-                    response.Success = false;
-                    response.Message = "Không có hàng trong kho";
-                    return response;
+                    return new Response<IssueNoteDto>
+                    {
+                        Success = false,
+                        Message = "Không có hàng trong kho"
+                    };
                 }
-                await _orderRepository.SaveAsync(); // Lưu để issueNote.Id có giá trị hợp lệ
 
-                int issueNoteDetailCount = await _issueNoteDetailsRepository.CountAsync(x => true);
-                List<IssueNoteDetail> issueNoteDetailsList = new List<IssueNoteDetail>();
+                // Lấy danh sách sản phẩm theo Ids
+                var products = await _productRepository.GetByIdsAsync(productIds); // đảm bảo bạn có hàm này trong repo
+                var productDict = products.ToDictionary(p => p.ProductId, p => p);
 
-                // Lặp qua từng sản phẩm trong đơn hàng
-                foreach (var orderDetail in listOrdersDetails)
+                var issueNoteDetailsList = new List<IssueNoteDetail>();
+
+                foreach (var detail in orderDetails)
                 {
-                    int remainingQuantity = orderDetail.Quantity.Value; // Số lượng cần xuất
-                    int productId = orderDetail.ProductId.Value;
+                    int remainingQty = detail.Quantity ?? 0;
+                    int productId = detail.ProductId ?? 0;
 
-                    foreach (var productLot in productLots.Where(p => p.ProductId == productId))
+                    var lots = productLots
+                        .Where(l => l.ProductId == productId && l.Quantity > 0)
+                        .OrderBy(l => l.ExpiredDate);
+
+                    foreach (var lot in lots)
                     {
-                        if (remainingQuantity <= 0) break; // Đã đủ số lượng, thoát vòng lặp
+                        if (remainingQty <= 0) break;
 
-                        int takeQuantity = Math.Min(productLot.Quantity.Value, remainingQuantity); // Lấy tối đa có thể từ lô này
-                        remainingQuantity -= takeQuantity; // Cập nhật số lượng còn lại
+                        int takeQty = Math.Min(remainingQty, lot.Quantity ?? 0);
+                        remainingQty -= takeQty;
+                        lot.Quantity -= takeQty;
 
-                        var issueNoteDetail = new IssueNoteDetail
+                        issueNoteDetailsList.Add(new IssueNoteDetail
                         {
-                            IssueNoteId = issueNote.IssueNoteId,// Liên kết với issueNotDetail
-                            ProductLotId = productLot.ProductLotId,
-                            Quantity = takeQuantity // Cập nhật số lượng xuất kho từ lô này
-                        };
+                            IssueNoteId = issueNote.IssueNoteId,
+                            ProductLotId = lot.ProductLotId,
+                            Quantity = takeQty
+                        });
 
-                        issueNoteDetailsList.Add(issueNoteDetail);
+                        await _productLotRepository.UpdateAsync(lot);
 
-                        // Cập nhật lại số lượng của lô hàng trong kho
-                        productLot.Quantity -= takeQuantity;
-                        await _productLotRepository.UpdateAsync(productLot);
+                        // Trả lại thể tích kho
+                        if (productDict.TryGetValue(productId, out var product) && product.VolumePerUnit.HasValue)
+                        {
+                            double volume = takeQty * product.VolumePerUnit.Value;
+
+                            if (lot.StorageRoomId.HasValue)
+                            {
+                                var storageRoom = await _storageRoomRepository.GetByIdAsync(lot.StorageRoomId.Value);
+                                if (storageRoom != null)
+                                {
+                                    storageRoom.RemainingRoomVolume = (storageRoom.RemainingRoomVolume ?? 0) + volume;
+                                    await _storageRoomRepository.UpdateAsync(storageRoom);
+                                }
+                            }
+                        }
                     }
-                    if (remainingQuantity > 0)
+
+                    if (remainingQty > 0)
                     {
-                        response.Success = false;
-                        response.Message = $"Không đủ hàng để xuất kho cho sản phẩm ID {productId}";
-                        return response;
+                        return new Response<IssueNoteDto>
+                        {
+                            Success = false,
+                            Message = $"Không đủ hàng để xuất kho cho sản phẩm ID: {productId}"
+                        };
                     }
                 }
+                #endregion
 
-                // Lưu danh sách chi tiết phiếu xuất kho
+                #region 4. Lưu chi tiết và hoàn tất
                 await _issueNoteDetailsRepository.InsertRangeAsync(issueNoteDetailsList);
-                 // Cập nhật tồn kho
-                await _orderRepository.SaveAsync(); // Lưu tất cả thay đổi
+                await _orderRepository.SaveAsync(); // lưu thay đổi sản phẩm, kho
                 #endregion
 
                 response.Success = true;
@@ -219,7 +247,6 @@ namespace PharmaDistiPro.Services.Impl
                 return response;
             }
         }
-
         public async Task<Response<IEnumerable<IssueNoteDto>>> GetIssueNoteByWarehouseId(int[]? status)
         {
             var response = new Response<IEnumerable<IssueNoteDto>>();
@@ -314,7 +341,8 @@ namespace PharmaDistiPro.Services.Impl
             try
             {
                 var issueNoteDetails = await _issueNoteDetailsRepository.GetByConditionAsync(x => x.IssueNoteId == issueNoteId,
-                    includes: new string[] { "ProductLot", "ProductLot.Product" });
+     includes: new string[] { "ProductLot", "ProductLot.Product", "ProductLot.StorageRoom" });
+
 
                 if (!issueNoteDetails.Any())
                 {
@@ -344,7 +372,7 @@ namespace PharmaDistiPro.Services.Impl
                 var issueNoteDetails = await _issueNoteDetailsRepository
                     .GetByConditionAsync(
                         x => true,
-                        includes: new string[] { "ProductLot", "ProductLot.Product" } 
+                       includes: new string[] { "ProductLot", "ProductLot.Product", "ProductLot.StorageRoom" }
                     );
                 if (!issueNoteDetails.Any())
                 {

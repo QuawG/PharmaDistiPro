@@ -191,14 +191,16 @@ namespace PharmaDistiPro.Helper
                 .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product))
                 .ReverseMap();
 
-           
 
 
-#endregion
+
+            #endregion
 
             #region productlot
             CreateMap<ProductLot, ProductLotIssueNoteDetailsDto>().ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
-                .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product));
+                .ForMember(dest => dest.Product, opt => opt.MapFrom(src => src.Product))
+                .ForMember(dest => dest.StorageRoomId, opt => opt.MapFrom(src => src.StorageRoomId))
+                .ForMember(dest => dest.StorageRoomName, opt => opt.MapFrom(src => src.StorageRoom.StorageRoomName));
 
             CreateMap<ProductLotIssueNoteDetailsDto, ProductLot>();
             #endregion

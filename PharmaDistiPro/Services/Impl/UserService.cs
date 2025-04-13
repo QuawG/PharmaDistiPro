@@ -150,7 +150,7 @@ return response;
                 }
 
                 // Upload avatar lên Cloudinary nếu cần
-                    if (userInputRequest.Avatar != null)
+                if (userInputRequest.Avatar != null)
                     {
                         var uploadParams = new ImageUploadParams()
                         {
@@ -166,12 +166,26 @@ return response;
 
 
                 // Map dữ liệu từ DTO sang Entity
-                var newUser = _mapper.Map<User>(userInputRequest);
+                var newUser = new User
+                {
+
+                    UserName = userInputRequest.UserName,
+                    Email = userInputRequest.Email,
+                    FirstName = userInputRequest.FirstName,
+                    LastName = userInputRequest.LastName ,
+                    Phone = userInputRequest.Phone,
+                    TaxCode = userInputRequest.TaxCode,
+                    RoleId = userInputRequest.RoleId
+                };
+                   
+                
                 newUser.Avatar = imageUrl;
                 newUser.CreatedDate = DateTime.Now;
                 newUser.Status = true;
+                CreatePasswordHash(userInputRequest.Password, out byte[] passwordHash, out byte[] passwordSalt);
+                newUser.Password = passwordHash;
                 newUser.CreatedBy = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
-
+                newUser.PasswordSalt = passwordSalt;
                 // Thêm mới user vào database
                 await _userRepository.InsertAsync(newUser);
                 await _userRepository.SaveAsync();
@@ -221,7 +235,6 @@ return response;
             }
         }
 
-        // Update user
         public async Task<Response<UserDTO>> UpdateUser(UserInputRequest userUpdateRequest)
         {
             var response = new Response<UserDTO>();
@@ -237,11 +250,8 @@ return response;
                     response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
-                userUpdateRequest.Password = userToUpdate.Password;
-                // mapper request model -> entity
-                _mapper.Map(userUpdateRequest, userToUpdate);
 
-                // Kiểm tra và upload avatar nếu có thay đổi
+                // Upload avatar nếu có ảnh mới
                 if (userUpdateRequest.Avatar != null)
                 {
                     var uploadParams = new ImageUploadParams()
@@ -255,6 +265,47 @@ return response;
                     userToUpdate.Avatar = imageUrl;
                 }
 
+                // Nếu có mật khẩu mới thì cập nhật
+                if (!string.IsNullOrEmpty(userUpdateRequest.Password))
+                {
+                    CreatePasswordHash(userUpdateRequest.Password, out byte[] passwordHash, out byte[] passwordSalt);
+                    userToUpdate.Password = passwordHash;
+                    userToUpdate.PasswordSalt = passwordSalt;
+                }
+
+                // Cập nhật các trường nếu có thay đổi
+                if (string.IsNullOrEmpty(userToUpdate.UserName))
+                    userToUpdate.UserName = userUpdateRequest.UserName;
+
+                if (string.IsNullOrEmpty(userToUpdate.Email))
+                    userToUpdate.Email = userUpdateRequest.Email;
+
+                if (string.IsNullOrEmpty(userToUpdate.FirstName))
+                    userToUpdate.FirstName = userUpdateRequest.FirstName;
+
+                if (string.IsNullOrEmpty(userToUpdate.LastName))
+                    userToUpdate.LastName = userUpdateRequest.LastName;
+
+                if (string.IsNullOrEmpty(userToUpdate.Phone))
+                    userToUpdate.Phone = userUpdateRequest.Phone;
+
+                if (string.IsNullOrEmpty(userToUpdate.TaxCode))
+                    userToUpdate.TaxCode = userUpdateRequest.TaxCode;
+
+                if (userToUpdate.RoleId != userUpdateRequest.RoleId)
+                    userToUpdate.RoleId = userUpdateRequest.RoleId;
+
+                if (userToUpdate.Age != userUpdateRequest.Age)
+                    userToUpdate.Age = userUpdateRequest.Age;
+
+                if (string.IsNullOrEmpty(userToUpdate.Address))
+                    userToUpdate.Address = userUpdateRequest.Address;
+
+
+
+
+
+
                 await _userRepository.UpdateAsync(userToUpdate);
                 await _userRepository.SaveAsync();
 
@@ -264,10 +315,8 @@ return response;
             }
             catch (Exception ex)
             {
-                // Log lỗi chi tiết và thông báo lỗi thân thiện người dùng
-                // logger.LogError(ex, "Lỗi khi cập nhật người dùng");
                 response.Success = false;
-                response.Message = ex.Message;
+                response.Message = $"Lỗi: {ex.Message}";
             }
 
             return response;
@@ -280,7 +329,9 @@ return response;
         public async Task<Response<LoginResponse>> Login(LoginRequest loginModel)
         {
             var response = new Response<LoginResponse>();
-            var user = await _userRepository.GetUser(loginModel.Username, loginModel.Password);
+            
+
+            var user = await _userRepository.GetUser(loginModel.Username);
 
         
 
@@ -295,7 +346,14 @@ return response;
                         Message = "Tài khoản không được phép đăng nhập"
                     };
                 }
-
+                if (!VerifyPasswordHash(loginModel.Password, user.Password, user.PasswordSalt))
+                {
+                    return new Response<LoginResponse>
+                    {
+                        StatusCode = 404,
+                        Message = "Sai mật khẩu"
+                    };
+                }
                 var accessToken = GenerateAccessToken(user);
                 var refreshToken = GenerateRefreshToken();
 
@@ -430,7 +488,9 @@ return response;
                 };
                 return response;
             }
-            user.Password = resetPasswordRequest.Password;
+            CreatePasswordHash(resetPasswordRequest.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            user.Password = passwordHash;
+            user.PasswordSalt = passwordSalt;
             user.ResetPasswordOtp = null;
             user.ResetpasswordOtpexpriedTime = null;
             await _userRepository.UpdateUser(user);
@@ -481,5 +541,25 @@ return response;
             return await _userRepository.UpdateUser(user);
         }
         #endregion
+
+        // Tạo hash và salt
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+            }
+        }
+
+        // Kiểm tra
+        private bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
+        {
+            using (var hmac = new HMACSHA512(storedSalt))
+            {
+                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return storedHash.SequenceEqual(computedHash);
+            }
+        }
     }
 }

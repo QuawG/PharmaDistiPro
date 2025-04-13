@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.ProductLots;
+using PharmaDistiPro.DTO.StorageRooms;
 using PharmaDistiPro.Models;
+using PharmaDistiPro.Services;
 using PharmaDistiPro.Services.Interface;
 
 namespace PharmaDistiPro.Controllers
@@ -111,6 +113,20 @@ public async Task<IActionResult> CheckAndUpdateExpiredLots()
             }
 
             return Ok(new { response.Message, Quantity = response.Data });
+        }
+
+        [HttpGet("{productLotId}/compatible-storage-rooms")]
+     
+        public async Task<IActionResult> GetCompatibleStorageRooms(int productLotId)
+        {
+            var response = await _productLotService.ListCompatibleStorageRoomsAsync(productLotId);
+
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
         }
     }
 }
