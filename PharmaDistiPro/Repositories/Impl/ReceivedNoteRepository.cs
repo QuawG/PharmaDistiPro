@@ -64,9 +64,18 @@ namespace PharmaDistiPro.Repositories.Impl
 
         public async Task<ReceivedNote> GetReceivedNoteById(int? id)
         {
-            return await _context.ReceivedNotes.FirstOrDefaultAsync(x => x.ReceiveNoteId == id);
+            return await _context.ReceivedNotes.Include(r => r.PurchaseOrder).FirstOrDefaultAsync(x => x.ReceiveNoteId == id);
         }
-        
+        public async Task<List<ReceivedNoteDetail>> GetReceivedNoteDetailByReceivedNoteId(int? id)
+        {
+            return await _context.ReceivedNoteDetails                                 
+                                 .Include(r => r.ProductLot)
+                                 .ThenInclude(pl => pl.Product)
+                                 .Include(r => r.ProductLot)
+                                 .ThenInclude(pl => pl.Lot)
+                                 .Where(r => r.ReceiveNoteId == id)
+                                 .ToListAsync();
+        }
         public Task<List<ReceivedNote>> GetReceivedNoteList()
         {
             return _context.ReceivedNotes.Include(x=> x.PurchaseOrder)

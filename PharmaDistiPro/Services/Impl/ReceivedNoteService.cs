@@ -1,14 +1,11 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using PharmaDistiPro.Common.Enums;
-using PharmaDistiPro.DTO.ProductShortage;
+
 using PharmaDistiPro.DTO.ReceivedNotes;
 using PharmaDistiPro.Helper;
 using PharmaDistiPro.Helper.Enums;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
-using System.Net.WebSockets;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -180,11 +177,11 @@ namespace PharmaDistiPro.Services.Impl
 
 
 
-        public async Task<Response<ReceivedNoteDto>> GetReceiveNoteById(int id)
+        public async Task<Response<ReceivedNoteResponse>> GetReceiveNoteById(int id)
         {
             if (id <= 0)
             {
-                return new Response<ReceivedNoteDto>
+                return new Response<ReceivedNoteResponse>
                 {
                     Success = false,
                     Message = "Id không hợp lệ!",
@@ -192,20 +189,42 @@ namespace PharmaDistiPro.Services.Impl
                 };
             }
             var receiveNote = await _receivedNoteRepository.GetReceivedNoteById(id);
-            if (receiveNote == null)
+            var receivedNoteDetails = await _receivedNoteRepository.GetReceivedNoteDetailByReceivedNoteId(id);
+            if (receiveNote == null || receivedNoteDetails == null)
             {
-                return new Response<ReceivedNoteDto>
+                return new Response<ReceivedNoteResponse>
                 {
                     Success = false,
                     Message = "Không tìm thấy phiếu nhập!",
                     StatusCode = 404
                 };
             }
-            return new Response<ReceivedNoteDto>
+            ReceivedNoteResponse response = new ReceivedNoteResponse
+            {
+                ReceiveNoteId = receiveNote.ReceiveNoteId,
+                ReceivedNoteCode = receiveNote.ReceiveNotesCode,
+                PurchaseOrderCode = receiveNote.PurchaseOrder.PurchaseOrderCode,
+                CreatedDate = receiveNote.CreatedDate ?? DateTime.MinValue, // Handle nullable DateTime with a default value
+                CreatedBy = receiveNote.CreatedBy?.ToString() ?? string.Empty, // Fix for CS0029 and CS8601
+                Status = receiveNote.Status?.ToString() ?? string.Empty, // Convert nullable int to string and handle null
+                PurchaseOrderId = receiveNote.PurchaseOrderId ?? 0, // Handle nullable int with a default value
+                ReceivedNoteDetails = receivedNoteDetails.Select(x => new ReceiveNoteDetailResponse
+                {
+                    ProductLotId = x.ProductLotId ?? 0, // Handle nullable int with a default value
+                    ActualReceived = x.ActualReceived ?? 0, // Handle nullable int with a default value
+                    ProductName = x.ProductLot.Product.ProductName,
+                    LotCode = x.ProductLot.Lot.LotCode,
+                    ProductCode = x.ProductLot.Product.ProductCode,
+                    Unit = x.ProductLot.Product.Unit,
+                    UnitPrice = (int)x.ProductLot.SupplyPrice                   
+
+                }).ToList() ?? new List<ReceiveNoteDetailResponse>() // Handle null collection
+            };
+            return new Response<ReceivedNoteResponse>
             {
                 Success = true,
                 Message = "Lấy phiếu nhập thành công!",
-                Data = _mapper.Map<ReceivedNoteDto>(receiveNote),
+                Data = response,
                 StatusCode = 200
             };
         }

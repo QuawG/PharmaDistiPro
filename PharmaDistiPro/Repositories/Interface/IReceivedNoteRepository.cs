@@ -12,7 +12,7 @@ namespace PharmaDistiPro.Repositories.Interface
         Task<ReceivedNoteDetail> CreateReceivedNoteDetail(ReceivedNoteDetail ReceiveNoteDetail);
 
         Task<List<ReceivedNoteDetail>> GetReceivedNoteDetailsByPurchaseOrderId(int? id);
-
+        Task<List<ReceivedNoteDetail>> GetReceivedNoteDetailByReceivedNoteId(int? id);
         Task<ProductLot> GetProductLotById(int? id);
         Task<ProductLot> UpdateProductLot(ProductLot ProductLot);
 

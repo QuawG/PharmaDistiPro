@@ -15,5 +15,10 @@ namespace PharmaDistiPro.DTO.ReceivedNotes
 
         public virtual UserDTO? CreatedByNavigation { get; set; }
         public virtual PurchaseOrdersDto? PurchaseOrder { get; set; }
+
     }
+
+
+    
+
 }

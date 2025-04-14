@@ -25,7 +25,13 @@ namespace PharmaDistiPro.Repositories.Impl
 
             return productLots; // Return the inserted product lots
         }
+        public async Task<ProductLot> CreateProductLot(ProductLot productLot)
+        {
+            await _context.ProductLots.AddAsync(productLot); // Corrected AddRangeAsync
+            await _context.SaveChangesAsync(); // Save changes to database
 
+            return productLot; // Return the inserted product lots
+        }
         public async Task<Lot> GetLotById(int id)
         {
             return await _context.Lots.FirstOrDefaultAsync(x => x.LotId == id);

@@ -76,9 +76,9 @@ namespace PharmaDistiPro.Services.Impl
                 var productLotResponses = new List<ProductLotResponse>();
                 var storageRoomsToUpdate = new Dictionary<int, StorageRoom>();
 
-                foreach (var productLot in productLots)
+                foreach (var productLotRequest in productLots)
                 {
-                    if (productLot.LotId == null)
+                    if (productLotRequest.LotId == null)
                     {
                         return new Response<List<ProductLotResponse>>
                         {
@@ -87,41 +87,41 @@ namespace PharmaDistiPro.Services.Impl
                         };
                     }
 
-                    var lot = await _productLotRepository.GetLotById(productLot.LotId);
+                    var lot = await _productLotRepository.GetLotById(productLotRequest.LotId);
                     if (lot == null)
                     {
                         return new Response<List<ProductLotResponse>>
                         {
                             StatusCode = 404,
-                            Message = $"Không tìm thấy lô có ID {productLot.LotId}!"
+                            Message = $"Không tìm thấy lô có ID {productLotRequest.LotId}!"
                         };
                     }
 
-                    var product = await _productRepository.GetByIdAsync(productLot.ProductId);
+                    var product = await _productRepository.GetByIdAsync(productLotRequest.ProductId);
                     if (product == null)
                     {
                         return new Response<List<ProductLotResponse>>
                         {
                             StatusCode = 404,
-                            Message = $"Không tìm thấy sản phẩm có ID {productLot.ProductId}!"
+                            Message = $"Không tìm thấy sản phẩm có ID {productLotRequest.ProductId}!"
                         };
                     }
 
-                    if (productLot.StorageRoomId == null)
+                    if (productLotRequest.StorageRoomId == null)
                     {
                         return new Response<List<ProductLotResponse>>
                         {
                             StatusCode = 400,
-                            Message = $"StorageRoomId không có giá trị cho lô {productLot.LotId}!"
+                            Message = $"StorageRoomId không có giá trị cho lô {productLotRequest.LotId}!"
                         };
                     }
 
-                    if (productLot.OrderQuantity == null || productLot.OrderQuantity <= 0)
+                    if (productLotRequest.OrderQuantity == null || productLotRequest.OrderQuantity <= 0)
                     {
                         return new Response<List<ProductLotResponse>>
                         {
                             StatusCode = 400,
-                            Message = $"Số lượng đặt hàng của lô {productLot.LotId} không hợp lệ!"
+                            Message = $"Số lượng đặt hàng của lô {productLotRequest.LotId} không hợp lệ!"
                         };
                     }
 
@@ -130,50 +130,67 @@ namespace PharmaDistiPro.Services.Impl
                         return new Response<List<ProductLotResponse>>
                         {
                             StatusCode = 400,
-                            Message = $"Dung tích đơn vị của sản phẩm {productLot.ProductId} không hợp lệ!"
+                            Message = $"Dung tích đơn vị của sản phẩm {productLotRequest.ProductId} không hợp lệ!"
                         };
                     }
 
                     // Tính dung tích cần thiết
-                    double requiredVolume = product.VolumePerUnit.Value * productLot.OrderQuantity.Value;
+                    double requiredVolume = product.VolumePerUnit.Value * productLotRequest.OrderQuantity.Value;
 
                     // Lấy phòng từ cache hoặc DB một lần
                     StorageRoom? storageRoom;
-                    if (storageRoomsToUpdate.ContainsKey(productLot.StorageRoomId.Value))
+                    if (storageRoomsToUpdate.ContainsKey(productLotRequest.StorageRoomId.Value))
                     {
-                        storageRoom = storageRoomsToUpdate[productLot.StorageRoomId.Value];
+                        storageRoom = storageRoomsToUpdate[productLotRequest.StorageRoomId.Value];
                     }
                     else
                     {
-                        storageRoom = await _storageRoomRepository.GetByIdAsync(productLot.StorageRoomId.Value);
+                        storageRoom = await _storageRoomRepository.GetByIdAsync(productLotRequest.StorageRoomId.Value);
                         if (storageRoom == null)
                         {
                             // Không kiểm tra lỗi ở đây như yêu cầu, chỉ tạo mới đối tượng để cập nhật
                             storageRoom = new StorageRoom
                             {
-                                StorageRoomId = productLot.StorageRoomId.Value,
+                                StorageRoomId = productLotRequest.StorageRoomId.Value,
                                 RemainingRoomVolume = 0 // Mặc định nếu không có trong DB
                             };
                         }
 
-                        storageRoomsToUpdate[productLot.StorageRoomId.Value] = storageRoom;
+                        storageRoomsToUpdate[productLotRequest.StorageRoomId.Value] = storageRoom;
                     }
 
                     // Cập nhật RemainingRoomVolume (dù có đủ dung tích hay không)
                     storageRoom.RemainingRoomVolume = (storageRoom.RemainingRoomVolume ?? 0) - requiredVolume;
 
+                    // Map ProductLotRequest to ProductLot
+                    var productLot = new ProductLot
+                    {
+                        LotId = productLotRequest.LotId,
+                        ProductId = productLotRequest.ProductId,
+                        ManufacturedDate = productLotRequest.ManufacturedDate,
+                        ExpiredDate = productLotRequest.ExpiredDate,
+                        OrderQuantity = productLotRequest.OrderQuantity,
+                        SupplyPrice = productLotRequest.SupplyPrice,
+                        Status = productLotRequest.Status,
+                        StorageRoomId = productLotRequest.StorageRoomId,
+                        Quantity = 0
+                    };
+
+                    var createdProductLot = await _productLotRepository.CreateProductLot(productLot);
+
                     var data = new ProductLotResponse
                     {
-                        LotId = productLot.LotId,
-                        ProductId = productLot.ProductId,
+                        Id = createdProductLot.ProductLotId,
+                        LotId = createdProductLot.LotId,
+                        ProductId = createdProductLot.ProductId,
                         ProductName = product.ProductName,
                         LotCode = lot.LotCode,
-                        OrderQuantity = productLot.OrderQuantity,
-                        StorageRoomId = productLot.StorageRoomId,
-                        SupplyPrice = productLot.SupplyPrice,
-                        ManufacturedDate = productLot.ManufacturedDate,
-                        ExpiredDate = productLot.ExpiredDate,
-                        Status = productLot.Status,
+                        OrderQuantity = createdProductLot.OrderQuantity,
+                        StorageRoomId = createdProductLot.StorageRoomId,
+                        SupplyPrice = createdProductLot.SupplyPrice,
+                        ManufacturedDate = createdProductLot.ManufacturedDate,
+                        ExpiredDate = createdProductLot.ExpiredDate,
+                        Status = createdProductLot.Status,
                         Quantity = 0
                     };
                     productLotResponses.Add(data);
@@ -228,7 +245,8 @@ namespace PharmaDistiPro.Services.Impl
                 LotId = productlot.LotId,
                 Status = productlot.Status,
                 ProductName = productlot.Product.ProductName,
-                LotCode = productlot.Lot.LotCode
+                LotCode = productlot.Lot.LotCode,
+                StorageRoomId = productlot.StorageRoomId
             };
             response = new Response<ProductLotResponse>
             {
@@ -276,6 +294,8 @@ namespace PharmaDistiPro.Services.Impl
                     LotId = item.LotId,
                     Status = item.Status,
                     ProductName = item.Product.ProductName,
+                    OrderQuantity = item.OrderQuantity,
+                    StorageRoomId = item.StorageRoomId,
                     LotCode = item.Lot.LotCode
                 };
                 dataSet.Add(data);
