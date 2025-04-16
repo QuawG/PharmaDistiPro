@@ -134,7 +134,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: number) => ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][status],
+      render: (status: number) => ["Hủy", "Đang chờ thanh toán ","Đang chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][status],
     },
     {
       title: "",
@@ -143,7 +143,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
         <Button
           type="primary"
           onClick={() => handleCreateIssueNote(record.orderId)}
-          disabled={record.status !== 2}
+          disabled={record.status !== 3}
         >
           Tạo phiếu xuất kho
         </Button>

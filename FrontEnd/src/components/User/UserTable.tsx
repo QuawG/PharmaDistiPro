@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
-import { Table, Modal, Select, message, Dropdown, Menu, Button } from 'antd';
-import { MoreOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
-import UserDetailsModal from './UserDetail';
-import UpdateUserDetailsModal from './UpdateUserDetail';
-import axios from 'axios';
+import { useState, forwardRef } from "react";
+import { Table, Modal, message, Select, Dropdown, Button, Menu, Avatar } from "antd";
+import { EyeOutlined, EditOutlined, MoreOutlined } from "@ant-design/icons";
+import UserDetailsModal from "./UserDetail";
+import UpdateUserDetailsModal from "./UpdateUserDetail";
+import axios from "axios";
 
 interface User {
   userId: number;
@@ -25,53 +24,62 @@ interface User {
 
 interface UserTableProps {
   users: User[];
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ users }) => {
+const UserTable = forwardRef<HTMLDivElement, UserTableProps>(({ users, setUsers }, ref) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // const openEditModal = (user: User) => {
-  //   setSelectedUser(user);
-  //   setIsEditModalOpen(true);
-  // };
-
   const handleStatusChange = async (value: string, record: User) => {
+    const newStatus = value === "Hoạt động";
     Modal.confirm({
-      title: 'Bạn có chắc chắn muốn đổi trạng thái?',
-      content: 'Hành động này sẽ thay đổi trạng thái của người dùng.',
-      okText: 'Đổi trạng thái',
-      cancelText: 'Hủy',
+      title: "Xác nhận thay đổi trạng thái",
+      content: "Bạn có chắc chắn muốn thay đổi trạng thái của người dùng này?",
+      okText: "Xác nhận",
+      cancelText: "Hủy",
       onOk: async () => {
         try {
-          await axios.put(`http://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}`, { status: value });
-          message.success('Cập nhật trạng thái thành công!');
-          // Optionally refresh the user list
+          await axios.put(
+            `http://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}/${newStatus}`
+          );
+          setUsers(
+            users.map((item) =>
+              item.userId === record.userId ? { ...item, status: newStatus } : item
+            )
+          );
+          message.success("Cập nhật trạng thái thành công!");
         } catch (error) {
-          message.error('Lỗi khi cập nhật trạng thái!');
+          console.error("Error updating status:", error);
+          message.error("Lỗi khi cập nhật trạng thái!");
         }
       },
     });
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'userId', key: 'userId' },
+    { title: "ID", dataIndex: "userId", key: "userId" },
     {
-      title: 'Ảnh đại diện',
-      dataIndex: 'avatar',
-      render: (avatar: string) => <img src={avatar} alt="Avatar" className="w-28 h-20" />,
+      title: "Ảnh đại diện",
+      dataIndex: "avatar",
+      key: "avatar",
+      render: (avatar: string) => (
+        <Avatar src={avatar} size={40} shape="square" />
+      ),
     },
-    { title: 'Tên người dùng', dataIndex: 'userName' },
-    { title: 'Email', dataIndex: 'email' },
-    { title: 'Số điện thoại', dataIndex: 'phone' },
+    { title: "Tên người dùng", dataIndex: "userName", key: "userName" },
+    { title: "Email", dataIndex: "email", key: "email" },
+    { title: "Số điện thoại", dataIndex: "phone", key: "phone" },
     {
-      title: 'Trạng thái',
-      dataIndex: 'status',
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
       render: (status: boolean, record: User) => (
         <Select
-          defaultValue={status ? 'Hoạt động' : 'Không hoạt động'}
+          value={status ? "Hoạt động" : "Không hoạt động"}
           onChange={(value) => handleStatusChange(value, record)}
+          style={{ width: 120 }}
         >
           <Select.Option value="Hoạt động">Hoạt động</Select.Option>
           <Select.Option value="Không hoạt động">Không hoạt động</Select.Option>
@@ -79,56 +87,70 @@ const UserTable: React.FC<UserTableProps> = ({ users }) => {
       ),
     },
     {
-      title: 'Tính năng',
-      key: 'actions',
+      title: "Hành động",
+      key: "actions",
       render: (_: any, record: User) => (
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => {
-                setSelectedUser(record);
-                setIsViewModalOpen(true);
-              }}>
+              <Menu.Item
+                key="view"
+                icon={<EyeOutlined />}
+                onClick={() => {
+                  setSelectedUser(record);
+                  setIsViewModalOpen(true);
+                }}
+              >
                 Xem
               </Menu.Item>
-            <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => {
-             setSelectedUser(record);
-             setIsEditModalOpen(true);
-           }}>
-             Chỉnh sửa
-           </Menu.Item>
+              <Menu.Item
+                key="edit"
+                icon={<EditOutlined />}
+                onClick={() => {
+                  setSelectedUser(record);
+                  setIsEditModalOpen(true);
+                }}
+              >
+                Chỉnh sửa
+              </Menu.Item>
             </Menu>
           }
-          trigger={['click']}
+          trigger={["click"]}
         >
-          <Button shape="circle" icon={<MoreOutlined />} />
+          <Button icon={<MoreOutlined />} />
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div className="bg-white">
+    <div ref={ref}>
       <Table
         columns={columns}
         dataSource={users}
-        rowKey="userId" // Use userId instead of id
+        rowKey="userId"
         pagination={{ pageSize: 10 }}
+        bordered
       />
-      
       <UserDetailsModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         user={selectedUser}
       />
       <UpdateUserDetailsModal
-              isOpen={isEditModalOpen}
-              onClose={() => setIsEditModalOpen(false)}
-              user={selectedUser}
-              onSave={() => {/* Refresh supplier data if needed */}}
-            />
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        user={selectedUser}
+        onSave={(updatedUser) => {
+          setUsers(
+            users.map((item) =>
+              item.userId === updatedUser.userId ? updatedUser : item
+            )
+          );
+        }}
+      />
     </div>
   );
-};
+});
 
 export default UserTable;

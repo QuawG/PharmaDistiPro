@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu, Form, message } from "antd";
+import {
+  Table,
+  Select,
+  Button,
+  Modal,
+  Input,
+  Collapse,
+  DatePicker,
+  Dropdown,
+  Menu,
+  message,
+} from "antd";
 import {
   EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
   FilterOutlined,
   FileExcelOutlined,
   PrinterOutlined,
@@ -11,13 +20,11 @@ import {
 } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import axios from "axios";
-import dayjs from "dayjs";
 
 const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
 const { Option } = Select;
 
-// Interface cho PurchaseOrder từ API
 interface Supplier {
   id: number;
   supplierName: string;
@@ -29,27 +36,12 @@ interface Supplier {
   createdDate: string;
 }
 
-interface PurchaseOrder {
-  purchaseOrderId: number;
-  purchaseOrderCode: string;
-  supplierId: number | null;
-  updatedStatusDate: string;
-  totalAmount: number;
-  status: number;
-  createdBy: string | null;
-  createDate: string;
-  amountPaid: number | null;
-  supplier: Supplier | null;
-  products?: PurchaseOrderDetail[]; // Thêm trường products để lưu chi tiết
-}
-
-// Interface cho PurchaseOrderDetail từ API
 interface Product {
   productId: number;
   productCode: string;
   manufactureName: string;
   productName: string;
-  unitId: number | null;
+  unit: string;
   categoryId: number;
   description: string;
   sellingPrice: number;
@@ -66,7 +58,30 @@ interface PurchaseOrderDetail {
   purchaseOrderId: number;
   productId: number;
   quantity: number;
+  supplyPrice: number;
   product: Product;
+}
+
+interface PurchaseOrder {
+  purchaseOrderId: number;
+  purchaseOrderCode: string;
+  supplierId: number | null;
+  updatedStatusDate: string;
+  totalAmount: number;
+  status: number;
+  createdBy: string | null;
+  createDate: string;
+  amountPaid: number | null;
+  supplier: Supplier | null;
+  products?: PurchaseOrderDetail[];
+}
+
+interface StockStatus {
+  productId: number;
+  productName: string;
+  orderedQuantity: number;
+  receivedQuantity: number;
+  shortageQuantity: number;
 }
 
 interface PurchaseOrderTableProps {
@@ -81,32 +96,29 @@ interface PurchaseOrderTableProps {
 
 const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
   handleChangePage,
-  onDelete,
-  onUpdate,
   rowSelection,
 }) => {
   const [filteredOrders, setFilteredOrders] = useState<PurchaseOrder[]>([]);
   const [allOrders, setAllOrders] = useState<PurchaseOrder[]>([]);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isStockStatusModalOpen, setIsStockStatusModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [stockStatus, setStockStatus] = useState<StockStatus[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [form] = Form.useForm();
 
   // Lấy danh sách đơn đặt hàng
   useEffect(() => {
     const fetchPurchaseOrders = async () => {
       try {
-        const token = localStorage.getItem("accessToken"); // Lấy token từ localStorage nếu cần
+        const token = localStorage.getItem("accessToken");
         const response = await axios.get("http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("Dữ liệu từ API PurchaseOrders:", response.data);
         setAllOrders(response.data.data || []);
         setFilteredOrders(response.data.data || []);
       } catch (error) {
@@ -118,7 +130,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
     fetchPurchaseOrders();
   }, []);
 
-  // Lọc dữ liệu
+  // Lọc và sắp xếp dữ liệu theo ngày tạo mới nhất
   useEffect(() => {
     let filteredData = [...allOrders];
 
@@ -140,6 +152,9 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
       });
     }
 
+    // Sắp xếp theo ngày tạo mới nhất
+    filteredData.sort((a, b) => new Date(b.createDate).getTime() - new Date(a.createDate).getTime());
+
     setFilteredOrders(filteredData);
   }, [searchTerm, statusFilter, dateRange, allOrders]);
 
@@ -152,7 +167,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("Chi tiết đơn hàng:", response.data);
       const orderDetails = allOrders.find((order) => order.purchaseOrderId === id);
       if (orderDetails) {
         setSelectedOrder({ ...orderDetails, products: response.data.data || [] });
@@ -164,18 +178,33 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
     }
   };
 
-  const openEditModal = (order: PurchaseOrder) => {
-    setSelectedOrder(order);
-    form.setFieldsValue({
-      ...order,
-      date: dayjs(order.createDate),
-      goodsIssueDate: dayjs(order.updatedStatusDate),
-    });
-    setIsEditModalOpen(true);
+  // Lấy tình trạng nhập hàng
+  const fetchStockStatus = async (id: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/CheckReceivedStockStatus/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setStockStatus(response.data.data || []);
+      setIsStockStatusModalOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi lấy tình trạng nhập hàng:", error);
+      message.error("Không thể tải tình trạng nhập hàng!");
+    }
   };
 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredOrders);
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredOrders.map((order) => ({
+        "Mã Đơn": order.purchaseOrderCode,
+        "Nhà Cung Cấp": order.supplier?.supplierName || "N/A",
+        "Ngày Đặt": new Date(order.createDate).toLocaleDateString("vi-VN"),
+        "Tổng Tiền": order.totalAmount,
+        "Trạng Thái": ["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][order.status] || "Không xác định",
+      }))
+    );
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachDonDatHang");
     XLSX.writeFile(workbook, "DanhSachDonDatHang.xlsx");
@@ -187,7 +216,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
       : filteredOrders;
 
     if (selectedOrders.length === 0) {
-      alert("Không có đơn hàng nào được chọn để in.");
+      message.error("Không có đơn hàng nào được chọn để in.");
       return;
     }
 
@@ -214,7 +243,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
               <td>${order.supplier?.supplierName || "N/A"}</td>
               <td>${new Date(order.createDate).toLocaleDateString("vi-VN")}</td>
               <td>${order.totalAmount.toLocaleString("vi-VN")} VND</td>
-              <td>${["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][order.status] || "Không xác định"}</td>
+              <td>${["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][order.status] || "Không xác định"}</td>
             </tr>
           `
             )
@@ -260,7 +289,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
       title: "Trạng Thái",
       dataIndex: "status",
       key: "status",
-      render: (status: number) => ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][status] || "Không xác định",
+      render: (status: number) => ["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][status] || "Không xác định",
     },
     {
       title: "",
@@ -276,26 +305,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
               >
                 Xem chi tiết
               </Menu.Item>
-              <Menu.Item
-                key="edit"
-                icon={<EditOutlined />}
-                onClick={() => openEditModal(record)}
-              >
-                Cập nhật
-              </Menu.Item>
-              <Menu.Item
-                key="delete"
-                icon={<DeleteOutlined />}
-                onClick={() => {
-                  Modal.confirm({
-                    title: "Xác nhận xóa",
-                    content: "Bạn có chắc chắn muốn xóa đơn hàng này?",
-                    onOk: () => onDelete(record.purchaseOrderId),
-                  });
-                }}
-              >
-                Xóa
-              </Menu.Item>
             </Menu>
           }
           trigger={["click"]}
@@ -305,35 +314,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
       ),
     },
   ];
-
-  const handleUpdateSubmit = async (values: any) => {
-    if (!selectedOrder) return;
-    const updatedOrder = {
-      ...selectedOrder,
-      ...values,
-      createDate: values.date.format("YYYY-MM-DD"),
-      updatedStatusDate: values.goodsIssueDate.format("YYYY-MM-DD"),
-    };
-    try {
-      const token = localStorage.getItem("accessToken");
-      await axios.put(`http://pharmadistiprobe.fun/api/PurchaseOrders/${updatedOrder.purchaseOrderId}`, updatedOrder, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      onUpdate(updatedOrder);
-      message.success("Cập nhật đơn hàng thành công!");
-      setIsEditModalOpen(false);
-      const updatedOrders = allOrders.map((order) =>
-        order.purchaseOrderId === updatedOrder.purchaseOrderId ? updatedOrder : order
-      );
-      setAllOrders(updatedOrders);
-      setFilteredOrders(updatedOrders);
-    } catch (error) {
-      console.error("Lỗi khi cập nhật đơn hàng:", error);
-      message.error("Cập nhật đơn hàng thất bại!");
-    }
-  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
@@ -347,7 +327,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
           Lọc
         </Button>
-        <Button type="primary" onClick={() => handleChangePage("Tạo đơn đặt hàng(PO)")}>
+        <Button type="primary" onClick={() => handleChangePage("Tạo đơn đặt hàng(PO)")} className="bg-blue-500">
           + Tạo đơn mới
         </Button>
         <Button
@@ -377,18 +357,18 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                 value={statusFilter}
                 onChange={setStatusFilter}
                 style={{ width: "100%" }}
+                allowClear
               >
                 <Option value="">Tất cả trạng thái</Option>
                 <Option value="0">Hủy</Option>
-                <Option value="1">Chờ xác nhận</Option>
-                <Option value="2">Xác nhận</Option>
-                <Option value="3">Vận chuyển</Option>
-                <Option value="4">Hoàn thành</Option>
+                <Option value="1">Chờ nhập hàng</Option>
+                <Option value="2">Thiếu hàng</Option>
+                <Option value="3">Hoàn thành</Option>
               </Select>
               <div className="col-span-2">
                 <span style={{ marginRight: 8 }}>Lọc theo ngày đặt hàng</span>
                 <RangePicker
-                  onChange={(_, dateStrings) => setDateRange(dateStrings as [string, string])}
+                  onChange={(_, dateStrings) => setDateRange(dateStrings.length === 2 ? (dateStrings as [string, string]) : null)}
                   style={{ width: "100%" }}
                 />
               </div>
@@ -398,6 +378,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                     setSearchTerm("");
                     setStatusFilter("");
                     setDateRange(null);
+                    setFilteredOrders(allOrders);
                   }}
                   style={{ width: "100%", marginTop: "10px" }}
                 >
@@ -418,129 +399,180 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
 
       {/* Modal Chi tiết đơn hàng */}
       <Modal
-        title={`Chi tiết Đơn hàng: ${selectedOrder?.purchaseOrderCode}`}
+        title={
+          <div className="text-xl font-semibold text-gray-800">
+            Chi tiết Đơn hàng: {selectedOrder?.purchaseOrderCode}
+          </div>
+        }
         open={isDetailModalOpen}
         onCancel={() => setIsDetailModalOpen(false)}
-        footer={null}
-        width={800}
+        footer={[
+          <Button key="close" onClick={() => setIsDetailModalOpen(false)}>
+            Đóng
+          </Button>,
+          <Button
+            key="checkStock"
+            type="primary"
+            onClick={() => selectedOrder && fetchStockStatus(selectedOrder.purchaseOrderId)}
+            className="bg-blue-500"
+          >
+            Kiểm tra tình trạng nhập hàng
+          </Button>,
+        ]}
+        width={900}
+        centered
+        bodyStyle={{ padding: "24px", background: "#f9fafb" }}
       >
         {selectedOrder && (
-          <div>
-            <p><strong>Mã Đơn:</strong> {selectedOrder.purchaseOrderCode}</p>
-            <p><strong>Nhà Cung Cấp:</strong> {selectedOrder.supplier?.supplierName || "N/A"}</p>
-            <p><strong>Ngày Đặt:</strong> {formatDate(selectedOrder.createDate)}</p>
-            <p><strong>Ngày Cập Nhật Trạng Thái:</strong> {formatDate(selectedOrder.updatedStatusDate)}</p>
-            <p><strong>Tổng Tiền:</strong> {selectedOrder.totalAmount.toLocaleString("vi-VN")} VND</p>
-            {/* <p><strong>Số Tiền Đã Thanh Toán:</strong> {selectedOrder.amountPaid?.toLocaleString("vi-VN") || "Chưa thanh toán"} VND</p> */}
-            <p><strong>Trạng Thái:</strong> {["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][selectedOrder.status] || "Không xác định"}</p>
-            <p><strong>Tạo Bởi:</strong> {selectedOrder.createdBy || "N/A"}</p>
+          <div className="space-y-6">
+            {/* Thông tin đơn hàng */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Thông tin chung</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Mã Đơn</p>
+                  <p className="text-base font-medium">{selectedOrder.purchaseOrderCode}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Nhà Cung Cấp</p>
+                  <p className="text-base font-medium">{selectedOrder.supplier?.supplierName || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Ngày Đặt</p>
+                  <p className="text-base font-medium">{formatDate(selectedOrder.createDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Ngày Cập Nhật Trạng Thái</p>
+                  <p className="text-base font-medium">{formatDate(selectedOrder.updatedStatusDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Tổng Tiền</p>
+                  <p className="text-base font-medium text-green-600">
+                    {selectedOrder.totalAmount.toLocaleString("vi-VN")} VND
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Trạng Thái</p>
+                  <p className="text-base font-medium">
+                    <span
+                      className={`px-2 py-1 rounded-full text-sm ${
+                        selectedOrder.status === 0
+                          ? "bg-red-100 text-red-600"
+                          : selectedOrder.status === 1
+                          ? "bg-yellow-100 text-yellow-600"
+                          : selectedOrder.status === 2
+                          ? "bg-blue-100 text-blue-600"
+                          : "bg-green-100 text-green-600"
+                      }`}
+                    >
+                      {["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][selectedOrder.status] || "Không xác định"}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Tạo Bởi</p>
+                  <p className="text-base font-medium">{selectedOrder.createdBy || "N/A"}</p>
+                </div>
+              </div>
+            </div>
 
-            <h3 className="mt-4 font-semibold">Danh sách sản phẩm</h3>
-            <Table
-              columns={[
-                { title: "Tên Sản Phẩm", dataIndex: ["product", "productName"], key: "productName" },
-                { title: "Số Lượng", dataIndex: "quantity", key: "quantity" },
-                {title: "amountPaid?", dataIndex:"amountPaid", key:"amountPaid"},
-                // {
-                //   title: "Giá Nhập",
-                //   dataIndex: ["product", "sellingPrice"],
-                //   key: "sellingPrice",
-                //   render: (price: number) => `${price.toLocaleString("vi-VN")} VND`,
-                // },
-                // {
-                //   title: "Thuế (VAT)",
-                //   dataIndex: ["product", "vat"],
-                //   key: "vat",
-                //   render: (vat: number) => `${vat}%`,
-                // },
-                // // {
-                // //   title: "Tổng Giá",
-                // //   key: "total",
-                // //   render: (_: any, record: PurchaseOrderDetail) =>
-                // //     `${(record.quantity * record.product.sellingPrice * (1 + record.product.vat / 100)).toLocaleString("vi-VN")} VND`,
-                // // },
-              ]}
-              dataSource={selectedOrder.products || []}
-              rowKey="purchaseOrderDetailId"
-              pagination={false}
-            />
+            {/* Danh sách sản phẩm */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Chi tiết đơn đặt hàng</h3>
+              <Table
+                columns={[
+                  {
+                    title: "Tên Sản Phẩm",
+                    dataIndex: ["product", "productName"],
+                    key: "productName",
+                  },
+                  {
+                    title: "Số Lượng",
+                    dataIndex: "quantity",
+                    key: "quantity",
+                    render: (quantity: number) => quantity.toLocaleString("vi-VN"),
+                  },
+                  {
+                    title: "Giá Nhập (VND)",
+                    dataIndex: "supplyPrice",
+                    key: "supplyPrice",
+                    render: (price: number) => price.toLocaleString("vi-VN"),
+                  },
+                  {
+                    title: "Thành Tiền (VND)",
+                    key: "total",
+                    render: (_: any, record: PurchaseOrderDetail) =>
+                      (record.quantity * record.supplyPrice).toLocaleString("vi-VN"),
+                  },
+                ]}
+                dataSource={selectedOrder.products || []}
+                rowKey="purchaseOrderDetailId"
+                pagination={false}
+                bordered
+                className="rounded-lg"
+              />
+            </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal Cập nhật đơn hàng */}
+      {/* Modal Tình trạng nhập hàng */}
       <Modal
-        title={`Cập nhật Đơn hàng: ${selectedOrder?.purchaseOrderCode}`}
-        open={isEditModalOpen}
-        onCancel={() => setIsEditModalOpen(false)}
-        footer={null}
-        width={800}
+        title={
+          <div className="text-xl font-semibold text-gray-800">
+            Tình trạng nhập hàng: {selectedOrder?.purchaseOrderCode}
+          </div>
+        }
+        open={isStockStatusModalOpen}
+        onCancel={() => setIsStockStatusModalOpen(false)}
+        footer={[
+          <Button key="close" onClick={() => setIsStockStatusModalOpen(false)}>
+            Đóng
+          </Button>,
+        ]}
+        width={700}
+        centered
+        bodyStyle={{ padding: "24px", background: "#f9fafb" }}
       >
-        {selectedOrder && (
-          <Form form={form} layout="vertical" onFinish={handleUpdateSubmit}>
-            <Form.Item label="Mã Đơn" name="purchaseOrderCode" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item label="Nhà Cung Cấp" name={["supplier", "supplierName"]}>
-              <Input disabled /> {/* Nhà cung cấp chỉ hiển thị, không chỉnh sửa */}
-            </Form.Item>
-            <Form.Item label="Ngày Đặt" name="date" rules={[{ required: true }]}>
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item label="Ngày Cập Nhật Trạng Thái" name="goodsIssueDate" rules={[{ required: true }]}>
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-            <Form.Item label="Tổng Tiền" name="totalAmount" rules={[{ required: true }]}>
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item label="Số Tiền Đã Thanh Toán" name="amountPaid">
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item label="Trạng Thái" name="status" rules={[{ required: true }]}>
-              <Select>
-                <Option value={0}>Hủy</Option>
-                <Option value={1}>Chờ xác nhận</Option>
-                <Option value={2}>Xác nhận</Option>
-                <Option value={3}>Vận chuyển</Option>
-                <Option value={4}>Hoàn thành</Option>
-              </Select>
-            </Form.Item>
-
-            <h3 className="mt-4 font-semibold">Danh sách sản phẩm</h3>
-            <Table
-              columns={[
-                { title: "Tên Sản Phẩm", dataIndex: ["product", "productName"], key: "productName" },
-                { title: "Số Lượng", dataIndex: "quantity", key: "quantity" },
-                {
-                  title: "Giá Nhập",
-                  dataIndex: ["product", "sellingPrice"],
-                  key: "sellingPrice",
-                  render: (price: number) => `${price.toLocaleString("vi-VN")} VND`,
-                },
-                {
-                  title: "Thuế (VAT)",
-                  dataIndex: ["product", "vat"],
-                  key: "vat",
-                  render: (vat: number) => `${vat}%`,
-                },
-                {
-                  title: "Tổng Giá",
-                  key: "total",
-                  render: (_: any, record: PurchaseOrderDetail) =>
-                    `${(record.quantity * record.product.sellingPrice * (1 + record.product.vat / 100)).toLocaleString("vi-VN")} VND`,
-                },
-              ]}
-              dataSource={selectedOrder.products || []}
-              rowKey="purchaseOrderDetailId"
-              pagination={false}
-            />
-
-            <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={() => setIsEditModalOpen(false)}>Hủy</Button>
-              <Button type="primary" htmlType="submit">Lưu</Button>
-            </div>
-          </Form>
-        )}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-700 mb-4">Chi tiết tình trạng nhập hàng</h3>
+          <Table
+            columns={[
+              {
+                title: "Tên Sản Phẩm",
+                dataIndex: "productName",
+                key: "productName",
+              },
+              {
+                title: "Số Lượng Đặt",
+                dataIndex: "orderedQuantity",
+                key: "orderedQuantity",
+                render: (quantity: number) => quantity.toLocaleString("vi-VN"),
+              },
+              {
+                title: "Số Lượng Đã Nhận",
+                dataIndex: "receivedQuantity",
+                key: "receivedQuantity",
+                render: (quantity: number) => quantity.toLocaleString("vi-VN"),
+              },
+              {
+                title: "Số Lượng còn thiếu",
+                dataIndex: "shortageQuantity",
+                key: "shortageQuantity",
+                render: (quantity: number) => (
+                  <span className={quantity > 0 ? "text-red-600" : "text-green-600"}>
+                    {quantity.toLocaleString("vi-VN")}
+                  </span>
+                ),
+              },
+            ]}
+            dataSource={stockStatus}
+            rowKey="productId"
+            pagination={false}
+            bordered
+            className="rounded-lg"
+          />
+        </div>
       </Modal>
     </div>
   );

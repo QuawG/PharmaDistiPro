@@ -1,5 +1,4 @@
-// src/components/Sidebar.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HomeIcon, InboxStackIcon, ChevronRightIcon, UserIcon, ShoppingCartIcon, ArchiveBoxIcon, ArrowRightEndOnRectangleIcon, ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import { PackageIcon, StoreIcon } from "lucide-react";
 import { useAuth } from "../../pages/Home/AuthContext"; // Import AuthContext để lấy role
@@ -27,6 +26,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
   const [activeItem, setActiveItem] = useState<string | null>(activeSidebar);
   const { user } = useAuth(); // Lấy thông tin user từ AuthContext
 
+  // Đặt màn hình mặc định cho SalesMan
+  useEffect(() => {
+    if (user?.roleName === "SalesMan" && activeSidebar !== "Danh sách nhà thuốc") {
+      setActiveItem("Danh sách nhà thuốc");
+      handleChangePage("Danh sách nhà thuốc");
+    }
+  }, [user, activeSidebar, handleChangePage]);
+
   const handleItemClick = (item: string) => {
     setActiveItem(item);
     handleChangePage(item);
@@ -34,6 +41,58 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
 
   const toggleMenu = (menu: string) => {
     setOpenMenu(openMenu === menu ? null : menu);
+  };
+
+  // Hàm kiểm tra quyền truy cập menu dựa trên vai trò
+  const canAccessMenu = (menuKey: string) => {
+    const role = user?.roleName;
+    switch (menuKey) {
+      case "Sản phẩm":
+      case "Người dùng":
+      case "Nhà cung cấp":
+        return role === "Director";
+      case "Dashboard":
+        return role === "SalesManager" || role === "Director";
+      case "Nhà thuốc":
+        return role === "SalesManager" || role === "Director" || role === "SalesMan";
+      case "Đơn đặt hàng":
+        return role === "WarehouseManager" || role === "Director";
+      case "Lô hàng":
+      case "Phiếu nhập kho":
+      case "Phiếu xuất kho":
+        return role === "SalesManager" || role === "WarehouseManager" || role === "Director";
+      case "Kho":
+        return role === "WarehouseManager" || role === "Director";
+      case "Đơn hàng":
+        return !!getOrderMenuItems().length; // Hiển thị nếu có mục con
+      default:
+        return true;
+    }
+  };
+
+  // Hàm lọc các mục con của menu dựa trên vai trò
+  const getMenuItems = (menuKey: string) => {
+    const role = user?.roleName;
+    let items = menus[menuKey as keyof typeof menus] || [];
+
+    switch (menuKey) {
+      case "Đơn đặt hàng":
+        return items.filter(item =>
+          item === "Danh sách đơn đặt hàng(PO)" ? (role === "WarehouseManager" || role === "Director") : role === "Director"
+        );
+      case "Lô hàng":
+        return items.filter(item => item === "Tạo lô hàng" ? role === "WarehouseManager" : true);
+      case "Phiếu nhập kho":
+        return items.filter(item => item === "Tạo phiếu nhập kho" ? role === "WarehouseManager" : true);
+      case "Kho":
+        return items.filter(item => item === "Tạo kho mới" ? role === "Director" : true);
+      case "Đơn hàng":
+        return getOrderMenuItems();
+      case "Phiếu xuất kho":
+        return getIssueNoteMenuItems();
+      default:
+        return items;
+    }
   };
 
   // Lọc menu "Đơn hàng" dựa trên vai trò
@@ -58,13 +117,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     }
   };
 
-  const orderMenuItems = getOrderMenuItems();
-  const issueNoteMenuItems = getIssueNoteMenuItems();
-
   // Nếu là Customer, chỉ hiển thị menu "Đơn hàng"
   const filteredMenus = user?.roleName === "Customer"
     ? { "Đơn hàng": menus["Đơn hàng"] }
-    : menus;
+    : Object.fromEntries(
+        Object.entries(menus).filter(([menuKey]) => canAccessMenu(menuKey))
+      );
 
   return (
     <div className="w-[260px] min-w-[260px] max-w-[260px] flex-shrink-0 border-r-[1px] border-r-gray-200 z-20 bg-white h-full overflow-y-auto">
@@ -73,21 +131,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
       </div>
 
       <div className="p-5 w-full">
-        {/* Dashboard */}
-        <div
-          className="px-[15px] mb-3 flex items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] hover:text-white hover:bg-[#1b2850]"
-          onClick={() => handleItemClick("Dashboard")}
-        >
-          <span className="flex items-center">
-            <HomeIcon className="mr-[6px] w-4 h-4" />
-            Dashboard
-          </span>
-        </div>
-
         {/* Render các menu */}
-        {Object.entries(filteredMenus).map(([menuKey, menuItems]) => {
-          // Chỉ hiển thị menu "Đơn hàng" nếu có mục con (orderMenuItems không rỗng) khi không phải Customer
-          if (menuKey === "Đơn hàng" && orderMenuItems.length === 0) {
+        {Object.entries(filteredMenus).map(([menuKey, _menuItems]) => {
+          const menuItems = getMenuItems(menuKey);
+          // Không hiển thị menu nếu không có mục con
+          if (menuItems.length === 0) {
             return null;
           }
 
@@ -114,23 +162,34 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
                 <ChevronRightIcon className={`w-4 h-4 transition-transform ${openMenu === menuKey ? "rotate-90" : ""}`} />
               </div>
               <ul className={`transition-all duration-300 ease-in-out overflow-hidden ${openMenu === menuKey ? "max-h-[500px]" : "max-h-0"}`}>
-              {(menuKey === "Đơn hàng" ? orderMenuItems : menuKey === "Phiếu xuất kho" ? issueNoteMenuItems : menuItems).map(
-                  (item, index) => (
-                    <li
-                      key={index}
-                      className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
-                        transition-all cursor-pointer hover:text-amber-400
-                        ${activeItem === item ? "text-[#1b2850]" : ""}`}
-                      onClick={() => handleItemClick(item)}
-                    >
-                      {item}
-                    </li>
-                  )
-                )}
+                {menuItems.map((item, index) => (
+                  <li
+                    key={index}
+                    className={`flex items-center text-[14px] gap-2 px-4 py-2 rounded-md 
+                      transition-all cursor-pointer hover:text-amber-400
+                      ${activeItem === item ? "text-[#1b2850]" : ""}`}
+                    onClick={() => handleItemClick(item)}
+                  >
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
           );
         })}
+
+        {/* Dashboard - Đặt ở cuối */}
+        {canAccessMenu("Dashboard") && (
+          <div
+            className="px-[15px] mt-3 flex items-center cursor-pointer rounded-[4px] transition-all py-2.5 text-[15px] hover:text-white hover:bg-[#1b2850]"
+            onClick={() => handleItemClick("Dashboard")}
+          >
+            <span className="flex items-center">
+              <HomeIcon className="mr-[6px] w-4 h-4" />
+              Dashboard
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

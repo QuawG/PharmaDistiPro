@@ -70,7 +70,7 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [priceRange, setPriceRange] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>(""); // Thêm trạng thái cho ô tìm kiếm
-  const orderStatuses = ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"];
+  const orderStatuses = ["Hủy","Đang chờ Thanh Toán", "Đang chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"];
   // const { user } = useAuth(); // Lấy thông tin user từ AuthContext
   const accessToken = Cookies.get("token") || localStorage.getItem("accessToken"); // Lấy token từ cookies hoặc localStorage
 
@@ -125,7 +125,7 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
         (isNaN(min) || order.totalAmount >= min) && (isNaN(max) || order.totalAmount <= max)
       );
     }
-
+    filtered.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
     setFilteredOrders(filtered);
   }, [searchTerm, statusFilter, customerFilter, dateRange, priceRange, orders]);
 
@@ -161,6 +161,49 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
         message.error(error.response?.data?.message || "Lỗi khi xác nhận đơn hàng!");
       }
     }
+  };
+
+  const handleCompleteOrder = async (orderId: number) => {
+    try {
+      const response = await axios.put(
+        `http://pharmadistiprobe.fun/api/Order/UpdateOrderStatus/${orderId}/5`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+  
+      if (response.status === 200 || response.data.success) {
+        message.success("Hoàn thành đơn hàng thành công!");
+        setFilteredOrders((prev) =>
+          prev.map((order) =>
+            order.orderId === orderId ? { ...order, status: 5 } : order
+          )
+        );
+      } else {
+        message.error(response.data.message || "Không thể hoàn thành đơn hàng!");
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi hoàn thành đơn hàng:", error);
+      if (error.response?.status === 401) {
+        message.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+      } else {
+        message.error(error.response?.data?.message || "Lỗi khi hoàn thành đơn hàng!");
+      }
+    }
+  };
+  
+  const showCompleteModal = (orderId: number) => {
+    Modal.confirm({
+      title: "Hoàn thành đơn hàng",
+      content: "Bạn có chắc chắn muốn hoàn thành đơn hàng này không?",
+      okText: "Xác nhận hoàn thành",
+      cancelText: "Hủy",
+      onOk: () => handleCompleteOrder(orderId),
+    });
   };
 
   const handleCancelOrder = async (orderId: number) => {
@@ -338,12 +381,17 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
               <Menu.Item key="view" onClick={() => { setSelectedOrder(record); fetchOrderDetails(record.orderId); }}>
                 <EyeOutlined /> Xem chi tiết
               </Menu.Item>
-              {record.status === 1 && (
+              {record.status === 2 && (
                 <Menu.Item key="confirm" onClick={() => showConfirmModal(record.orderId)}>
                   <CheckOutlined /> Xác nhận
                 </Menu.Item>
               )}
-              {record.status === 2 && (
+              {record.status === 4 && (
+                <Menu.Item key="complete" onClick={() => showCompleteModal(record.orderId)}>
+                  <CheckOutlined /> Hoàn thành
+                </Menu.Item>
+              )}
+              {record.status <= 3 && (
                 <Menu.Item key="cancel" onClick={() => showCancelModal(record.orderId)}>
                   <CloseOutlined /> Hủy đơn hàng
                 </Menu.Item>

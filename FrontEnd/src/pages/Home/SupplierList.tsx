@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { PlusIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { FileText, Table, Printer } from 'lucide-react';
+import { Input, Select, Button, Space } from 'antd';
+import { SearchOutlined, FileExcelOutlined, FileTextOutlined, PrinterOutlined } from '@ant-design/icons';
 import ExcelJS from 'exceljs';
 import SupplierTable from '../../components/Supplier/SupplierTable';
 import axios from 'axios';
@@ -11,12 +11,16 @@ interface Supplier {
   supplierName: string;
   supplierAddress: string;
   supplierPhone: string;
-  createdBy: string;  // Ensure this matches the expected type in SupplierTable
+  createdBy: string;
   createdDate: string;
   status: boolean;
 }
 
-const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> = ({ handleChangePage }) => {
+interface SupplierListPageProps {
+  handleChangePage: (page: string) => void;
+}
+
+const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage }) => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
@@ -27,7 +31,7 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
         const response = await axios.get('http://pharmadistiprobe.fun/api/Supplier/GetSupplierList');
         setSuppliers(response.data.data);
       } catch (error) {
-        console.error("Error fetching suppliers:", error);
+        console.error('Error fetching suppliers:', error);
       }
     };
 
@@ -38,11 +42,11 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
     setSearchTerm(e.target.value);
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedStatus(e.target.value);
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
   };
 
-  const filteredSuppliers = suppliers.filter(supplier => {
+  const filteredSuppliers = suppliers.filter((supplier) => {
     const matchesSearch =
       supplier.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       supplier.supplierCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,8 +58,7 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
   const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Suppliers');
-    
-    // Đặt tiêu đề cột
+
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 10 },
       { header: 'Mã nhà cung cấp', key: 'supplierCode', width: 20 },
@@ -64,9 +67,8 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
       { header: 'Số điện thoại', key: 'supplierPhone', width: 15 },
       { header: 'Trạng thái', key: 'status', width: 15 },
     ];
-  
-    // Thêm dữ liệu
-    filteredSuppliers.forEach(supplier => {
+
+    filteredSuppliers.forEach((supplier) => {
       worksheet.addRow({
         id: supplier.id,
         supplierCode: supplier.supplierCode,
@@ -76,14 +78,12 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
         status: supplier.status ? 'Hoạt động' : 'Không hoạt động',
       });
     });
-  
-    // Định dạng tiêu đề
+
     worksheet.getRow(1).font = { bold: true, size: 12 };
     worksheet.getRow(1).alignment = { horizontal: 'center' };
-  
-    // Định dạng ô
-    worksheet.eachRow({ includeEmpty: true }, (row: ExcelJS.Row, _: number) => {
-      row.eachCell({ includeEmpty: true }, (cell: ExcelJS.Cell) => {
+
+    worksheet.eachRow({ includeEmpty: true }, (row) => {
+      row.eachCell({ includeEmpty: true }, (cell) => {
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
@@ -93,70 +93,56 @@ const SupplierListPage: React.FC<{ handleChangePage: (page: string) => void; }> 
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
       });
     });
-  
-    // Xuất file
+
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'Danh_Sách_Nhà_Cung_Cấp.xlsx';
+    a.download = 'Danh_Sach_Nha_Cung_Cap.xlsx';
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
-      <div className="flex justify-between items-center mb-[25px]">
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Danh sách nhà cung cấp</h1>
-          <p className="text-sm text-gray-500">Quản lí nhà cung cấp</p>
+          <h1 className="text-xl font-semibold">Danh sách nhà cung cấp</h1>
+          <p className="text-sm text-gray-500">Quản lý nhà cung cấp</p>
         </div>
-        <button 
-          onClick={() => handleChangePage('Tạo nhà cung cấp')}
-          className="bg-[#FF9F43] cursor-pointer text-white text-sm font-bold px-4 py-2 rounded-[4px] flex items-center gap-2">
-          <PlusIcon className='w-5 h-5 font-bold'/> Tạo mới nhà cung cấp
-        </button>
+        <Button type="primary" onClick={() => handleChangePage('Tạo nhà cung cấp')}>
+          Tạo mới nhà cung cấp
+        </Button>
       </div>
-
-      <div className='bg-white rounded-lg shadow p-5'>
+      <div className="bg-white rounded-lg shadow p-4">
         <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <div className="bg-[#FF9F43] p-2 rounded-lg">
-              <FunnelIcon className="w-5 h-5 text-white" />
-            </div>
-            <input
-              type="text"
+          <Space>
+            <Input
               placeholder="Tìm kiếm..."
-              className="pl-8 pr-4 py-1 border border-gray-300 rounded-lg w-64"
+              prefix={<SearchOutlined />}
               value={searchTerm}
               onChange={handleSearch}
+              style={{ width: 200 }}
             />
-            <p>Lọc theo trạng thái</p>
-            <select
+            <Select
+              placeholder="Lọc theo trạng thái"
               value={selectedStatus}
               onChange={handleStatusChange}
-              className="border rounded p-1"
+              style={{ width: 150 }}
+              allowClear
             >
-              <option value="">Tất cả trạng thái</option>
-              <option value="Active">Hoạt động</option>
-              <option value="Inactive">Không hoạt động</option>
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <button className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-              <FileText className="w-5 h-5" />
-            </button>
-            <button onClick={exportToExcel} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
-              <Table className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
-              <Printer className="w-5 h-5" />
-            </button>
-          </div>
+              <Select.Option value="">Tất cả trạng thái</Select.Option>
+              <Select.Option value="Active">Hoạt động</Select.Option>
+              <Select.Option value="Inactive">Không hoạt động</Select.Option>
+            </Select>
+          </Space>
+          <Space>
+            <Button icon={<FileTextOutlined />} />
+            <Button icon={<FileExcelOutlined />} onClick={exportToExcel} />
+            <Button icon={<PrinterOutlined />} />
+          </Space>
         </div>
-
-        {/* Table */}
         <SupplierTable suppliers={filteredSuppliers} />
       </div>
     </div>
