@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Table, Modal, Select, message, Dropdown, Menu, Button } from 'antd';
-import { MoreOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Table, Modal, Select, message, Dropdown, Button, Menu } from 'antd';
+import { EyeOutlined, EditOutlined, MoreOutlined } from '@ant-design/icons';
 import SupplierDetailsModal from './SupplierDetail';
 import UpdateSupplierDetailsModal from './UpdateSupplierDetail';
 import axios from 'axios';
@@ -11,7 +11,7 @@ interface Supplier {
   supplierName: string;
   supplierAddress: string;
   supplierPhone: string;
-  createdBy: string;  // Ensure this matches the expected type in SupplierTable
+  createdBy: string;
   createdDate: string;
   status: boolean;
 }
@@ -27,7 +27,7 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
 
   const handleStatusChange = (value: string, record: Supplier) => {
     const newStatus = value === 'Hoạt động';
-    
+
     Modal.confirm({
       title: 'Bạn có chắc chắn muốn đổi trạng thái?',
       content: 'Hành động này sẽ thay đổi trạng thái của nhà cung cấp.',
@@ -45,17 +45,19 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id' },
-    { title: 'Mã nhà cung cấp', dataIndex: 'supplierCode' },
-    { title: 'Tên nhà cung cấp', dataIndex: 'supplierName' },
-    { title: 'Số điện thoại', dataIndex: 'supplierPhone' },
+    { title: 'ID', dataIndex: 'id', key: 'id' },
+    { title: 'Mã nhà cung cấp', dataIndex: 'supplierCode', key: 'supplierCode' },
+    { title: 'Tên nhà cung cấp', dataIndex: 'supplierName', key: 'supplierName' },
+    { title: 'Số điện thoại', dataIndex: 'supplierPhone', key: 'supplierPhone' },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
+      key: 'status',
       render: (status: boolean, record: Supplier) => (
         <Select
           defaultValue={status ? 'Hoạt động' : 'Không hoạt động'}
           onChange={(value) => handleStatusChange(value, record)}
+          style={{ width: 120 }}
         >
           <Select.Option value="Hoạt động">Hoạt động</Select.Option>
           <Select.Option value="Không hoạt động">Không hoạt động</Select.Option>
@@ -65,23 +67,30 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
     {
       title: 'Tính năng',
       key: 'actions',
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
       render: (_: any, record: Supplier) => (
         <Dropdown
           overlay={
             <Menu>
-            <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => {
-              setSelectedSupplier(record);
-              setIsViewModalOpen(true);
-            }}>
-              Xem
-            </Menu.Item>
-            <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => {
-  setSelectedSupplier(record);
-  setIsEditModalOpen(true);
-}}>
-  Chỉnh sửa
-</Menu.Item>
+              <Menu.Item
+                key="view"
+                icon={<EyeOutlined />}
+                onClick={() => {
+                  setSelectedSupplier(record);
+                  setIsViewModalOpen(true);
+                }}
+              >
+                Xem
+              </Menu.Item>
+              <Menu.Item
+                key="edit"
+                icon={<EditOutlined />}
+                onClick={() => {
+                  setSelectedSupplier(record);
+                  setIsEditModalOpen(true);
+                }}
+              >
+                Chỉnh sửa
+              </Menu.Item>
             </Menu>
           }
           trigger={['click']}
@@ -93,14 +102,25 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
   ];
 
   return (
-    <div className="bg-white">
-      <Table columns={columns} dataSource={suppliers} rowKey="id" pagination={{ pageSize: 10 }} />
-      <SupplierDetailsModal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} supplier={selectedSupplier} />
+    <div>
+      <Table
+        columns={columns}
+        dataSource={suppliers}
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+      />
+      <SupplierDetailsModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        supplier={selectedSupplier}
+      />
       <UpdateSupplierDetailsModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         supplier={selectedSupplier}
-        onSave={() => {/* Refresh supplier data if needed */}}
+        onSave={() => {
+          /* Refresh supplier data if needed */
+        }}
       />
     </div>
   );

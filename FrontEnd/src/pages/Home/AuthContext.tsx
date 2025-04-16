@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -8,7 +7,7 @@ interface User {
   username: string;
   address: string;
   avatar?: string;
-  roleName?: string; // Giữ roleName như hiện tại, hoặc đổi thành roleId nếu cần
+  roleName?: string;
 }
 
 interface AuthContextType {
@@ -19,9 +18,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Tạo instance axios riêng để dễ cấu hình interceptor
+const apiClient = axios.create({
+  baseURL: "http://pharmadistiprobe.fun/api",
+});
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
+  // Khôi phục user từ cookie khi component mount
   useEffect(() => {
     const storedUser = Cookies.get("user");
     if (storedUser) {
@@ -29,9 +34,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  // Hàm gọi API refresh token
+  const refreshAccessToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        throw new Error("Không có refresh token");
+      }
+
+      const response = await apiClient.post("/User/RefreshToken", {
+        refreshToken,
+      });
+
+      if (response.status === 200) {
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+
+        // Cập nhật token mới
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", newRefreshToken);
+        Cookies.set("token", accessToken, { expires: 7 });
+
+        return accessToken;
+      } else {
+        throw new Error("Phản hồi không hợp lệ từ server khi refresh token");
+      }
+    } catch (error: any) {
+      console.error("Refresh token failed:", error);
+      logout(); // Đăng xuất nếu refresh token thất bại
+      throw error;
+    }
+  };
+
+  // Interceptor để xử lý lỗi 401 và thử refresh token
+  useEffect(() => {
+    const interceptor = apiClient.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true; // Đánh dấu để tránh vòng lặp vô hạn
+          try {
+            const newAccessToken = await refreshAccessToken();
+            originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+            return apiClient(originalRequest); // Thử lại yêu cầu gốc
+          } catch (refreshError) {
+            return Promise.reject(refreshError);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptor khi component unmount
+    return () => {
+      apiClient.interceptors.response.eject(interceptor);
+    };
+  }, []);
+
   const login = async (username: string, password: string) => {
     try {
-      const loginResponse = await axios.post("http://pharmadistiprobe.fun/api/User/Login", {
+      const loginResponse = await apiClient.post("/User/Login", {
         userName: username,
         password,
       });
@@ -46,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("userName", userName);
         localStorage.setItem("userAvatar", userAvatar);
 
-        const profileResponse = await axios.get(`http://pharmadistiprobe.fun/api/User/GetUserById/${userId}`, {
+        const profileResponse = await apiClient.get(`/User/GetUserById/${userId}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
 
@@ -98,3 +160,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Export apiClient để sử dụng ở các file khác
+export { apiClient };

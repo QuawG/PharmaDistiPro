@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table,  Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu } from "antd";
+import { Table, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu } from "antd";
 const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
 import {
@@ -10,7 +10,7 @@ import {
   MoreOutlined,
 } from "@ant-design/icons";
 import * as XLSX from "xlsx";
-// import axios from "axios";
+import axios from "axios";
 
 interface ReceivedNote {
   receiveNoteId: number;
@@ -55,15 +55,18 @@ interface ReceivedNote {
 
 interface ReceivedNoteDetail {
   receiveNoteDetailId: number;
-  noteNumber: number;
+  noteNumber: number | null;
   productLotId: number;
   productName: string;
   productCode: string;
   lotCode: string;
   unit: string;
   actualReceived: number;
-  supplyPrice: number;
-  storageRoomName: string;
+  unitPrice: number;
+  totalAmount: number;
+  documentNumber: string | null;
+  createdBy: string | null;
+  createdDate: string | null;
 }
 
 interface ReceivedNoteTableProps {
@@ -79,7 +82,7 @@ interface ReceivedNoteTableProps {
 const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
   notes,
   handleChangePage,
-//   onUpdate,
+  // onUpdate,
   rowSelection,
 }) => {
   const [filteredNotes, setFilteredNotes] = useState<ReceivedNote[]>(notes);
@@ -90,15 +93,52 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [receivedNoteDetails, setReceivedNoteDetails] = useState<ReceivedNoteDetail[]>([]);
+  const [noteTotalAmount, setNoteTotalAmount] = useState<number>(0);
+  const [noteTotals, setNoteTotals] = useState<{ [key: number]: number }>({});
 
-  const openNoteDetails = (receiveNoteId: number) => {
+  const openNoteDetails = async (receiveNoteId: number) => {
     const note = filteredNotes.find((n) => n.receiveNoteId === receiveNoteId);
     if (note) {
       setSelectedNote(note);
-      setReceivedNoteDetails([]); // Để trống vì chưa có API chi tiết sản phẩm
+      try {
+        const response = await axios.get(`http://pharmadistiprobe.fun/api/ReceivedNote/${receiveNoteId}`);
+        const { data } = response.data;
+        setReceivedNoteDetails(data.receivedNoteDetails || []);
+        const total = (data.receivedNoteDetails || []).reduce(
+          (sum: number, detail: ReceivedNoteDetail) => sum + detail.totalAmount,
+          0
+        );
+        setNoteTotalAmount(total);
+      } catch (error) {
+        console.error("Lỗi khi lấy chi tiết phiếu:", error);
+        setReceivedNoteDetails([]);
+        setNoteTotalAmount(0);
+      }
       setIsOpen(true);
     }
   };
+
+  useEffect(() => {
+    const fetchAllTotals = async () => {
+      const totals: { [key: number]: number } = {};
+      for (const note of notes) {
+        try {
+          const response = await axios.get(`http://pharmadistiprobe.fun/api/ReceivedNote/${note.receiveNoteId}`);
+          const { data } = response.data;
+          const total = (data.receivedNoteDetails || []).reduce(
+            (sum: number, detail: ReceivedNoteDetail) => sum + detail.totalAmount,
+            0
+          );
+          totals[note.receiveNoteId] = total;
+        } catch (error) {
+          console.error(`Lỗi khi lấy chi tiết cho phiếu ${note.receiveNoteId}:`, error);
+          totals[note.receiveNoteId] = 0;
+        }
+      }
+      setNoteTotals(totals);
+    };
+    fetchAllTotals();
+  }, [notes]);
 
   const filterNotes = () => {
     let filteredData = [...notes];
@@ -116,6 +156,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
         return createdDate >= new Date(dateRange[0]) && createdDate <= new Date(dateRange[1]);
       });
     }
+    filteredData.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
     setFilteredNotes(filteredData);
   };
 
@@ -136,7 +177,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
     const dataToExport = filteredNotes.map((note) => ({
       "Mã Phiếu": note.receiveNotesCode,
       "Người Tạo": getUserNameById(note),
-      "Tổng Tiền": note.purchaseOrder?.totalAmount || 0,
+      "Tổng giá trị phiếu": noteTotals[note.receiveNoteId] || 0,
       "Ngày Tạo": new Date(note.createdDate).toLocaleDateString("vi-VN"),
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -165,7 +206,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
           <tr>
             <th>Mã Phiếu</th>
             <th>Người Tạo</th>
-            <th>Tổng Tiền</th>
+            <th>Tổng giá trị phiếu</th>
             <th>Ngày Tạo</th>
           </tr>
         </thead>
@@ -176,7 +217,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
             <tr>
               <td>${note.receiveNotesCode}</td>
               <td>${getUserNameById(note)}</td>
-              <td>${(note.purchaseOrder?.totalAmount || 0).toLocaleString()} VND</td>
+              <td>${(noteTotals[note.receiveNoteId] || 0).toLocaleString()} VND</td>
               <td>${new Date(note.createdDate).toLocaleDateString("vi-VN")}</td>
             </tr>
           `
@@ -198,11 +239,6 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
 
   const columns = [
     { title: "Mã Phiếu", dataIndex: "receiveNotesCode", key: "receiveNotesCode" },
-    // {
-    //   dataIndex: "status",
-    //   key: "status",
-    //   render: (status: string | null) => status || "Chưa xác định",
-    // },
     {
       title: "Người Tạo",
       dataIndex: "createdBy",
@@ -210,10 +246,10 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
       render: (_: any, record: ReceivedNote) => getUserNameById(record),
     },
     {
-      title: "Tổng Tiền",
+      title: "Tổng giá trị phiếu (VND)",
       key: "totalAmount",
       render: (_: any, record: ReceivedNote) =>
-        `${(record.purchaseOrder?.totalAmount || 0).toLocaleString()} VND`,
+        `${(noteTotals[record.receiveNoteId] || 0).toLocaleString()} `,
     },
     {
       title: "Ngày Tạo",
@@ -257,18 +293,19 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
     { title: "Số Lô", dataIndex: "lotCode", key: "lotCode" },
     { title: "Đơn Vị", dataIndex: "unit", key: "unit" },
     {
-      title: "Giá Nhập",
-      dataIndex: "supplyPrice",
-      key: "supplyPrice",
-      render: (price: number) => `${price.toLocaleString()} VND`,
+      title: "Đơn giá (VND)",
+      dataIndex: "unitPrice",
+      key: "unitPrice",
+      align: "right" as const,
+      render: (price: number) => `${price.toLocaleString()}`,
     },
     {
-      title: "Thành Tiền",
-      key: "totalPrice",
-      render: (_: any, record: ReceivedNoteDetail) =>
-        `${(record.actualReceived * record.supplyPrice).toLocaleString()} VND`,
+      title: "Thành Tiền (VND)",
+      dataIndex: "totalAmount",
+      key: "totalAmount",
+      align: "right" as const,
+      render: (total: number) => `${total.toLocaleString()}`,
     },
-    { title: "Tên Kho", dataIndex: "storageRoomName", key: "storageRoomName" },
   ];
 
   return (
@@ -334,7 +371,12 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
       )}
 
       <div id="printableArea">
-        <Table columns={columns} dataSource={filteredNotes} rowKey="receiveNoteId" rowSelection={rowSelection} />
+        <Table
+          columns={columns}
+          dataSource={filteredNotes}
+          rowKey="receiveNoteId"
+          rowSelection={rowSelection}
+        />
       </div>
 
       <Modal
@@ -360,6 +402,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
         onCancel={() => {
           setIsOpen(false);
           setReceivedNoteDetails([]);
+          setNoteTotalAmount(0);
         }}
         footer={
           <div style={{ textAlign: "right", padding: "8px" }}>
@@ -368,6 +411,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
               onClick={() => {
                 setIsOpen(false);
                 setReceivedNoteDetails([]);
+                setNoteTotalAmount(0);
               }}
               style={{
                 backgroundColor: "#1890ff",
@@ -417,18 +461,14 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
                   <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Mã Phiếu:</span>{" "}
                   <span style={{ color: "#262626" }}>{selectedNote.receiveNotesCode}</span>
                 </div>
-                {/* <div>
-                  <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Trạng Thái:</span>{" "}
-                  <span style={{ color: "#262626" }}>{selectedNote.status || "Chưa xác định"}</span>
-                </div> */}
                 <div>
                   <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Người Tạo:</span>{" "}
                   <span style={{ color: "#262626" }}>{getUserNameById(selectedNote)}</span>
                 </div>
                 <div>
-                  <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Tổng Tiền:</span>{" "}
+                  <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Tổng giá trị phiếu:</span>{" "}
                   <span style={{ color: "#262626", fontWeight: "600" }}>
-                    {(selectedNote.purchaseOrder?.totalAmount || 0).toLocaleString()} VND
+                    {noteTotalAmount.toLocaleString()} VND
                   </span>
                 </div>
                 <div>
@@ -439,7 +479,9 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
                 </div>
                 <div>
                   <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Mã Đơn Mua Hàng:</span>{" "}
-                  <span style={{ color: "#262626" }}>{selectedNote.purchaseOrder?.purchaseOrderCode || "N/A"}</span>
+                  <span style={{ color: "#262626" }}>
+                    {selectedNote.purchaseOrder?.purchaseOrderCode || "N/A"}
+                  </span>
                 </div>
               </div>
             </div>

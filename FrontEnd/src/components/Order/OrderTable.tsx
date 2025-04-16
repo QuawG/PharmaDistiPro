@@ -1,9 +1,8 @@
-// src/components/Order/OrderTable.tsx
 import React, { useState, useEffect } from "react";
 import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu, message } from "antd";
-import { MoreOutlined, EyeOutlined, FilterOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { MoreOutlined, EyeOutlined, FilterOutlined, ExclamationCircleOutlined, PayCircleOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+// import { useLocation, useNavigate } from "react-router-dom";
 
 const { Panel } = Collapse;
 const { Option } = Select;
@@ -66,11 +65,65 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-  const orderStatuses = ["Hủy", "Chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"];
+  // const location = useLocation();
+  // const navigate = useNavigate();
+  const orderStatuses = [
+    "Hủy",
+    "Đang chờ thanh toán",
+    "Đang chờ xác nhận",
+    "Xác nhận",
+    "Vận chuyển",
+    "Hoàn thành",
+  ];
 
   useEffect(() => {
     setFilteredOrders(orders);
   }, [orders]);
+
+  // // Xử lý callback từ VNPay
+  // useEffect(() => {
+  //   const params = new URLSearchParams(location.search);
+  //   const transactionStatus = params.get("vnp_TransactionStatus");
+  //   const orderId = params.get("vnp_TxnRef");
+
+  //   if (transactionStatus && orderId) {
+  //     if (transactionStatus === "00") {
+  //       // Thanh toán thành công
+  //       navigate(`/payment/success?orderId=${orderId}`);
+  //     } else {
+  //       // Thanh toán thất bại
+  //       navigate(`/payment/failed?orderId=${orderId}`);
+  //     }
+  //     // Xóa query params sau khi xử lý
+  //     window.history.replaceState({}, document.title, location.pathname);
+  //   }
+  // }, [location, navigate]);
+
+  const fetchOrderStatus = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(
+        `http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const updatedOrder = response.data.data;
+      if (updatedOrder) {
+        setFilteredOrders((prev) =>
+          prev.map((order) =>
+            order.orderId === orderId
+              ? { ...order, status: updatedOrder.status }
+              : order
+          )
+        );
+        onUpdate({ ...updatedOrder, orderId });
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy trạng thái đơn hàng:", error);
+      message.error("Không thể cập nhật trạng thái đơn hàng!");
+    }
+  };
 
   const removeVietnameseTones = (str: string) => {
     return str
@@ -104,9 +157,12 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
   const fetchOrderDetails = async (orderId: number) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setOrderDetails(response.data.data || []);
       setIsDetailModalOpen(true);
     } catch (error) {
@@ -143,6 +199,41 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
     }
   };
 
+  const handlePayOrder = async (order: Order) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const description = `${order.customer.userName} chuyển tiền`;
+      const response = await axios.get(
+        `http://pharmadistiprobe.fun/api/VNPay/CreatePaymentUrl`,
+        {
+          params: {
+            moneyToPay: order.totalAmount,
+            description: description,
+            orderId: order.orderId,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 201 && response.data) {
+        // Chuyển hướng đến URL thanh toán
+        window.location.href = response.data;
+      } else {
+        message.error("Không thể tạo URL thanh toán!");
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi tạo URL thanh toán:", error);
+      if (error.response?.data?.message?.includes("đơn hàng đã tồn tại hoặc đang được xử lý")) {
+        message.error("Đơn hàng này đã được thanh toán hoặc đang xử lý!");
+        fetchOrderStatus(order.orderId);
+      } else {
+        message.error("Lỗi khi tạo URL thanh toán!");
+      }
+    }
+  };
+
   const showCancelConfirm = (order: Order) => {
     Modal.confirm({
       title: "Xác nhận hủy đơn hàng",
@@ -152,6 +243,18 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
       okType: "danger",
       cancelText: "Thoát",
       onOk: () => handleCancelOrder(order.orderId),
+    });
+  };
+
+  const showPayConfirm = (order: Order) => {
+    Modal.confirm({
+      title: "Xác nhận thanh toán đơn hàng",
+      icon: <PayCircleOutlined />,
+      content: `Bạn có chắc chắn muốn thanh toán đơn hàng "${order.orderCode}" với số tiền ${order.totalAmount.toLocaleString()} VND không?`,
+      okText: "Thanh toán",
+      okType: "primary",
+      cancelText: "Thoát",
+      onOk: () => handlePayOrder(order),
     });
   };
 
@@ -197,6 +300,14 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
               >
                 <EyeOutlined /> Xem chi tiết
               </Menu.Item>
+              {record.status === 1 && (
+                <Menu.Item
+                  key="payment"
+                  onClick={() => showPayConfirm(record)}
+                >
+                  <PayCircleOutlined /> Thanh toán đơn hàng
+                </Menu.Item>
+              )}
               {record.status === 1 && (
                 <Menu.Item key="cancel" onClick={() => showCancelConfirm(record)} danger>
                   <ExclamationCircleOutlined /> Hủy đơn hàng
