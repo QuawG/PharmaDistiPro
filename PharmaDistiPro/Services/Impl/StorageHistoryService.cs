@@ -55,17 +55,21 @@ namespace PharmaDistiPro.Services.Impl
             {
                 throw new ArgumentException("Temperature must be between -50 and 100 degrees.");
             }
+
             if (request.Humidity < 0 || request.Humidity > 100)
             {
                 throw new ArgumentException("Humidity must be between 0 and 100 percent.");
             }
 
-            _logger.LogInformation("Checking StorageRoom with ID {StorageRoomId}", request.StorageRoomId);
             var storageRoom = await _storageRoomRepository.GetByIdAsync(request.StorageRoomId);
             if (storageRoom == null)
             {
                 throw new ArgumentException($"StorageRoom with ID {request.StorageRoomId} does not exist.");
             }
+
+            // Xác định múi giờ Việt Nam
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
 
             try
             {
@@ -74,23 +78,32 @@ namespace PharmaDistiPro.Services.Impl
                     StorageRoomId = request.StorageRoomId,
                     Temperature = request.Temperature.Value,
                     Humidity = request.Humidity.Value,
-                    CreatedDate = request.CreatedDate ?? DateTime.UtcNow,  // Tự động gán thời gian hiện tại nếu không có giá trị
-                    Service = request.Service ?? "Unknown"
+                    CreatedDate = request.CreatedDate ?? vietnamTime,
+                    Service = request.Service?.Trim() ?? "Unknown"
                 };
 
-                _logger.LogInformation("Inserting StorageHistory: {@History}", history);
                 await _storageHistoryRepository.InsertAsync(history);
                 await _storageHistoryRepository.SaveAsync();
 
-                _logger.LogInformation("Mapping StorageHistory to StorageHistoryDTO");
                 var result = _mapper.Map<StorageHistoryDTO>(history);
-                if (result == null)
+
+                // Kiểm tra và gửi cảnh báo nếu cần
+                if (storageRoom.Type.HasValue)
                 {
-                    _logger.LogError("AutoMapper returned null when mapping StorageHistory to StorageHistoryDTO");
-                    throw new InvalidOperationException("Failed to map StorageHistory to StorageHistoryDTO.");
+                    var (exceedsLimit, alertMessage, detail) = CheckStorageThreshold(
+                        (StorageRoomType)storageRoom.Type.Value,
+                        request.Temperature.Value,
+                        request.Humidity.Value
+                    );
+
+                    if (exceedsLimit)
+                    {
+                        await SendAlertEmailsAsync(storageRoom.StorageRoomName, alertMessage, detail);
+                        result.AlertMessage = alertMessage;
+                        result.AlertDetail = detail;
+                    }
                 }
 
-                _logger.LogInformation("Returning StorageHistoryDTO: {@Result}", result);
                 return result;
             }
             catch (Exception ex)
@@ -99,6 +112,84 @@ namespace PharmaDistiPro.Services.Impl
                 throw new Exception($"Error creating StorageHistory: {ex.Message}", ex);
             }
         }
+
+        private (bool exceedsLimit, string alertMessage, string detail) CheckStorageThreshold(StorageRoomType type, double temp, double humidity)
+        {
+            bool exceedsLimit = false;
+            string alertMessage = "";
+            string detail = "";
+
+            switch (type)
+            {
+                case StorageRoomType.Normal:
+                    if (temp < 15 || temp > 30 || humidity >= 75)
+                    {
+                        exceedsLimit = true;
+                        alertMessage = "Nhiệt độ hoặc độ ẩm của Phòng thường vượt ngưỡng (Nhiệt độ: 15-30°C; Độ ẩm < 75%)";
+                        if (temp < 15 || temp > 30)
+                            detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (15-30°C)\n";
+                        if (humidity >= 75)
+                            detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 75%)\n";
+                    }
+                    break;
+
+                case StorageRoomType.Cool:
+                    if (temp < 8 || temp > 15 || humidity >= 70)
+                    {
+                        exceedsLimit = true;
+                        alertMessage = "Nhiệt độ hoặc độ ẩm của Phòng mát vượt ngưỡng (Nhiệt độ: 8-15°C; Độ ẩm < 70%)";
+                        if (temp < 8 || temp > 15)
+                            detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (8-15°C)\n";
+                        if (humidity >= 70)
+                            detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 70%)\n";
+                    }
+                    break;
+
+                case StorageRoomType.Freezer:
+                    if (temp < 2 || temp > 8 || humidity >= 45)
+                    {
+                        exceedsLimit = true;
+                        alertMessage = "Nhiệt độ hoặc độ ẩm của Phòng đông lạnh vượt ngưỡng (Nhiệt độ: 2-8°C; Độ ẩm < 45%)";
+                        if (temp < 2 || temp > 8)
+                            detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (2-8°C)\n";
+                        if (humidity >= 45)
+                            detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 45%)\n";
+                    }
+                    break;
+            }
+
+            return (exceedsLimit, alertMessage, detail);
+        }
+
+
+
+        private async Task SendAlertEmailsAsync(string roomName, string alertMessage, string detail)
+        {
+            var users = await _userRepository.GetUsersByRoleIdAsync(2);
+            var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+
+            foreach (var user in users)
+            {
+                string emailBody = $@"
+Xin chào {user.FirstName},
+
+{alertMessage}
+
+Thông tin chi tiết:
+Phòng: {roomName}
+Ngày ghi nhận: {vietnamTime:dd/MM/yyyy HH:mm:ss} (GMT+7)
+
+{detail}
+
+Vui lòng kiểm tra và xử lý kịp thời để đảm bảo an toàn hàng hóa.
+Trân trọng,
+PharmaDistiPro
+";
+
+                await _emailService.SendEmailAsync(user.Email, "Cảnh báo môi trường kho", emailBody);
+            }
+        }
+
 
 
         public async Task<List<StorageHistoryChartDTO>> GetTop50EarliestForChartAsync(int storageRoomId)
@@ -116,7 +207,7 @@ namespace PharmaDistiPro.Services.Impl
                 var histories = await _storageHistoryRepository.GetAllAsync();
                 var result = histories
                     .Where(h => h.StorageRoomId == storageRoomId)
-                    .OrderBy(h => h.CreatedDate)
+                    .OrderByDescending(h => h.CreatedDate)
                     .Take(50)
                     .Select(h => new StorageHistoryChartDTO
                     {

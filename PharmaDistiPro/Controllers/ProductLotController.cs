@@ -128,5 +128,24 @@ public async Task<IActionResult> CheckAndUpdateExpiredLots()
 
             return Ok(response);
         }
+
+
+        [HttpGet("by-status/{status}")]
+        public async Task<IActionResult> GetProductLotsByStatus(int status)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { Message = "Invalid model state", Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
+            }
+
+            var response = await _productLotService.GetProductLotsByStatusAsync(status);
+
+            if (!response.Success)
+            {
+                return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
+            }
+
+            return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
+        }
     }
 }

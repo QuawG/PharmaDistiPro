@@ -14,8 +14,11 @@ namespace PharmaDistiPro.Services.Interface
         Task<Services.Response<ProductLotResponse>> GetProductLotById(int id);
 
         Task<Services.Response<ProductLotResponse>> CheckQuantityProduct(int productId);
-        Task<Response<string>> AutoUpdateProductLotStatusAsync();
+      
         Task<Response<int>> GetQuantityByProductIdAsync(int productId);
         Task<Response<IEnumerable<StorageRoomDTO>>> ListCompatibleStorageRoomsAsync(int productLotId);
+        Task<Response<List<ProductLotResponse>>> GetProductLotsByStatusAsync(int status);
+        Task SendProductLotStatusChangeNotificationAsync(List<ProductLotResponse> changedLots);
+        Task<Response<List<ProductLotResponse>>> AutoUpdateProductLotStatusAsync();
     }
 }

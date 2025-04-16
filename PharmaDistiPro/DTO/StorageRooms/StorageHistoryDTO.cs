@@ -10,7 +10,8 @@ namespace PharmaDistiPro.DTO.StorageRooms
         public double? Humidity { get; set; }
         public DateTime? CreatedDate { get; set; }
         public string? Service { get; set; }
-
+        public string? AlertMessage { get; set; }
+        public string? AlertDetail { get; set; }
 
         [JsonIgnore]
         public virtual StorageRoom? StorageRoom { get; set; }

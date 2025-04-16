@@ -21,9 +21,10 @@ namespace PharmaDistiPro.Helper
 {
     public class MappingProfile : Profile
     {
+        private static readonly TimeZoneInfo VietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
         public MappingProfile()
         {
-
+             
 
             #region Supplier
             CreateMap<Supplier, SupplierDTO>();
@@ -56,15 +57,17 @@ namespace PharmaDistiPro.Helper
            .ReverseMap(); // Để hỗ trợ ánh xạ 2 chiều
 
             #endregion
-
             #region StorageHistory
             CreateMap<StorageHistory, StorageHistoryDTO>()
-                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore()); // Bỏ qua StorageRoom
-            CreateMap<StorageHistoryDTO, StorageHistory>();
-
+                .ForMember(dest => dest.StorageRoom, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate)); // Ánh xạ trực tiếp, không chuyển đổi
+            CreateMap<StorageHistoryDTO, StorageHistory>()
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate)); // Ánh xạ trực tiếp
             CreateMap<StorageHistoryInputRequest, StorageHistory>()
-                .ReverseMap();
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate)); // Giữ nguyên hoặc null
+            CreateMap<StorageHistory, StorageHistoryInputRequest>();
             #endregion
+
 
 
             #region Unit
