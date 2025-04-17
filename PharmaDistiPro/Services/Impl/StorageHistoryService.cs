@@ -207,7 +207,7 @@ PharmaDistiPro
                 var histories = await _storageHistoryRepository.GetAllAsync();
                 var result = histories
                     .Where(h => h.StorageRoomId == storageRoomId)
-                    .OrderByDescending(h => h.CreatedDate)
+                   .OrderByDescending(h => h.Id)
                     .Take(50)
                     .Select(h => new StorageHistoryChartDTO
                     {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.Products;
 using PharmaDistiPro.Models;
@@ -32,6 +33,7 @@ namespace PharmaDistiPro.Controllers
 
 
         [HttpGet("ListProduct")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Response<IEnumerable<ProductDTO>>>> GetProductList()
         {
             try
@@ -107,6 +109,7 @@ namespace PharmaDistiPro.Controllers
         // POST: api/product
         // Tạo sản phẩm mới
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateProduct([FromForm] ProductInputRequest productInputRequest)
         {
             var response = await _productService.CreateNewProduct(productInputRequest);
@@ -120,6 +123,7 @@ namespace PharmaDistiPro.Controllers
         // PUT: api/product/activate/{productId}
         // Kích hoạt/Tắt sản phẩm
         [HttpPut("activate/{productId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ActivateDeactivateProduct(int productId, [FromQuery] bool update)
         {
             var response = await _productService.ActivateDeactivateProduct(productId, update);
@@ -133,6 +137,7 @@ namespace PharmaDistiPro.Controllers
         // PUT: api/product/{productId}
         // Cập nhật sản phẩm
         [HttpPut("{productId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateProduct(int productId, [FromForm] ProductInputRequest productUpdateRequest)
         {
             productUpdateRequest.ProductId = productId; // Gán ID từ route vào request

@@ -10,6 +10,7 @@ using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Impl;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Models;
+using PharmaDistiPro.Services.Interface;
 namespace PharmaDistiPro.Test.User
 {
     public class GetUserTest
@@ -17,7 +18,7 @@ namespace PharmaDistiPro.Test.User
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
         private readonly UserService _userService;
-
+        private readonly IEmailService _emailService;
         public GetUserTest()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
@@ -28,7 +29,8 @@ namespace PharmaDistiPro.Test.User
                 _mapperMock.Object,
                 null,
                 null,
-                null
+                null,
+                _emailService
             );
         }
 

@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using AutoMapper;
+using Moq;
 using PharmaDistiPro.DTO.ProductLots;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
@@ -12,12 +13,25 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
     public class GetProductLotByIdTest
     {
         private readonly Mock<IProductLotRepository> _productLotRepositoryMock;
+        private readonly Mock<IStorageRoomRepository> _storageRoomRepositoryMock;
+        private readonly Mock<IProductRepository> _productRepositoryMock;
+        private readonly Mock<IMapper> _mapperMock;
+        private readonly Mock<ILotRepository> _lotRepositoryMock;
         private readonly ProductLotService _productLotService;
 
         public GetProductLotByIdTest()
         {
             _productLotRepositoryMock = new Mock<IProductLotRepository>();
-            _productLotService = new ProductLotService(_productLotRepositoryMock.Object);
+            _storageRoomRepositoryMock = new Mock<IStorageRoomRepository>();
+            _productRepositoryMock = new Mock<IProductRepository>();
+            _mapperMock = new Mock<IMapper>();
+            _lotRepositoryMock = new Mock<ILotRepository>();
+            _productLotService = new ProductLotService(
+                _productLotRepositoryMock.Object,
+                _storageRoomRepositoryMock.Object,
+                _productRepositoryMock.Object,
+                _mapperMock.Object,
+                _lotRepositoryMock.Object);
         }
 
         [Fact]

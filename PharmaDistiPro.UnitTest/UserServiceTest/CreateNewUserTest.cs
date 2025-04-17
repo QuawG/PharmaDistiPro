@@ -8,13 +8,16 @@ using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using PharmaDistiPro.Repositories.Interface;
-using PharmaDistiPro.Services;
+using PharmaDistiPro.Services.Interface;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Services.Impl;
 using System.Linq.Expressions;
 using CloudinaryDotNet.Actions;
 using PharmaDistiPro.Helper;
+using System.Collections.Generic;
+using System.Runtime.ConstrainedExecution;
+
 namespace PharmaDistiPro.Test.User
 {
     public class CreateNewUserTest
@@ -25,16 +28,16 @@ namespace PharmaDistiPro.Test.User
         private readonly IConfiguration _configuration;
         private readonly Cloudinary _cloudinary;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
-        private readonly Mock<UserHelper> _userHelperMock;
+        private readonly Mock<IEmailService> _emailServiceMock;
         private readonly UserService _userService;
 
         public CreateNewUserTest()
         {
-            _roleRepositoryMock = new Mock<IRoleRepository>();
             _userRepositoryMock = new Mock<IUserRepository>();
+            _roleRepositoryMock = new Mock<IRoleRepository>();
             _mapperMock = new Mock<IMapper>();
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            _userHelperMock = new Mock<UserHelper>();
+            _emailServiceMock = new Mock<IEmailService>();
 
             var projectDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName;
             var configPath = Path.Combine(projectDir, "PharmaDistiPro", "appsettings.json");
@@ -57,13 +60,15 @@ namespace PharmaDistiPro.Test.User
                 _mapperMock.Object,
                 _cloudinary,
                 _configuration,
-                _httpContextAccessorMock.Object
+                _httpContextAccessorMock.Object,
+                _emailServiceMock.Object
             );
         }
 
         [Fact]
         public async Task CreateNewUser_Success()
         {
+            // Arrange
             var registerRequest = new UserInputRequest
             {
                 Email = "test@gmail.com",
@@ -77,67 +82,62 @@ namespace PharmaDistiPro.Test.User
                 EmployeeCode = "NV001",
                 TaxCode = "123456789",
                 Status = true,
-                RoleId = 1
-
+                RoleId = 5
             };
 
             var newUser = new Models.User
             {
                 Email = registerRequest.Email,
-                UserName = registerRequest.UserName
+                UserName = registerRequest.UserName,
+                RoleId = registerRequest.RoleId
             };
 
             var registerResponse = new UserDTO
             {
                 UserId = 1,
                 Email = newUser.Email,
-                UserName = newUser.UserName
+                UserName = newUser.UserName,
+                RoleId = newUser.RoleId
             };
 
-            var roles = new List<Models.Role>
-    {
-        new Models.Role { Id = 1, RoleName = "Admin" },
-        new Models.Role { Id = 5, RoleName = "Customer" }
-    };
-            _roleRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(roles);
-
-            _mapperMock.Setup(m => m.Map<Models.User>(It.IsAny<UserInputRequest>())).Returns(newUser);
+            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(registerRequest.RoleId)).ReturnsAsync(new Models.Role { Id = 5, RoleName = "Customer" });
             _userRepositoryMock.Setup(r => r.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
-
+            _userRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Models.User>());
             _userRepositoryMock.Setup(r => r.InsertAsync(It.IsAny<Models.User>())).ReturnsAsync(newUser);
-            _userRepositoryMock.Setup(r => r.SaveAsync()).Returns(Task.FromResult(1));
+            _userRepositoryMock.Setup(r => r.SaveAsync()).ReturnsAsync(1);
             _mapperMock.Setup(m => m.Map<UserDTO>(It.IsAny<Models.User>())).Returns(registerResponse);
+            _emailServiceMock.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
 
+            // Act
             var result = await _userService.CreateNewUserOrCustomer(registerRequest);
 
+            // Assert
             Assert.True(result.Success);
             Assert.Equal("Tạo mới thành công", result.Message);
             Assert.NotNull(result.Data);
             Assert.Equal(1, result.Data.UserId);
-
             _userRepositoryMock.Verify(repo => repo.InsertAsync(It.IsAny<Models.User>()), Times.Once);
-
             _userRepositoryMock.Verify(repo => repo.SaveAsync(), Times.Once);
         }
 
         [Fact]
         public async Task CreateNewUser_WhenEmailExists()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
                 Email = "loc@gmail.com",
                 UserName = "123",
-                RoleId = 1
+                RoleId = 1,
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true
             };
 
             _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-            .ReturnsAsync(new Models.User
-            {
-                Email = "loc@gmail.com",
-                UserName = "loc"
-            });
-
-
+                .ReturnsAsync(new Models.User { Email = "loc@gmail.com", UserName = "loc" });
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
@@ -150,22 +150,26 @@ namespace PharmaDistiPro.Test.User
         [Fact]
         public async Task CreateNewUser_WhenUsernameExists()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
                 Email = "loc123@gmail.com",
                 UserName = "loc",
-                RoleId = 1
+                RoleId = 1,
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true
             };
 
             _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-            .ReturnsAsync(new Models.User
-            {
-                Email = "loc@gmail.com",
-                UserName = "loc"
-            });
+                .ReturnsAsync(new Models.User { Email = "loc@gmail.com", UserName = "loc" });
 
+            // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
+            // Assert
             Assert.False(result.Success);
             Assert.Equal("Email hoặc username đã tồn tại.", result.Message);
         }
@@ -173,18 +177,24 @@ namespace PharmaDistiPro.Test.User
         [Fact]
         public async Task CreateNewUser_WhenIsRoleCustomer()
         {
+            // Arrange
             var registerRequest = new UserInputRequest
             {
                 Email = "test@gmail.com",
-                UserName = "testUser"
+                UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 5
             };
 
             var newUser = new Models.User
             {
                 Email = registerRequest.Email,
                 UserName = registerRequest.UserName,
-                RoleId = 5,
-                
+                RoleId = 5
             };
 
             var registerResponse = new UserDTO
@@ -195,49 +205,49 @@ namespace PharmaDistiPro.Test.User
                 RoleId = 5
             };
 
-            var roles = new List<Models.Role>
-    {
-        new Models.Role { Id = 1, RoleName = "Admin" },
-        new Models.Role { Id = 5, RoleName = "Customer" }
-    };
-            _roleRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(roles);
-
-            _mapperMock.Setup(m => m.Map<Models.User>(It.IsAny<UserInputRequest>())).Returns(newUser);
+            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(registerRequest.RoleId)).ReturnsAsync(new Models.Role { Id = 5, RoleName = "Customer" });
             _userRepositoryMock.Setup(r => r.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
+            _userRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Models.User>());
             _userRepositoryMock.Setup(r => r.InsertAsync(It.IsAny<Models.User>())).ReturnsAsync(newUser);
-            _userRepositoryMock.Setup(r => r.SaveAsync()).Returns(Task.FromResult(1));
+            _userRepositoryMock.Setup(r => r.SaveAsync()).ReturnsAsync(1);
             _mapperMock.Setup(m => m.Map<UserDTO>(It.IsAny<Models.User>())).Returns(registerResponse);
+            _emailServiceMock.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
 
+            // Act
             var result = await _userService.CreateNewUserOrCustomer(registerRequest);
 
+            // Assert
             Assert.True(result.Success);
             Assert.Equal("Tạo mới thành công", result.Message);
             Assert.NotNull(result.Data);
             Assert.Equal(1, result.Data.UserId);
             Assert.Equal(5, result.Data.RoleId);
             Assert.Null(result.Data.EmployeeCode);
-
             _userRepositoryMock.Verify(repo => repo.InsertAsync(It.IsAny<Models.User>()), Times.Once);
-
             _userRepositoryMock.Verify(repo => repo.SaveAsync(), Times.Once);
-
         }
 
         [Fact]
         public async Task CreateNewUser_WhenIsRoleNotCustomer()
         {
+            // Arrange
             var registerRequest = new UserInputRequest
             {
                 Email = "test@gmail.com",
-                UserName = "testUser"
+                UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
             };
 
             var newUser = new Models.User
             {
                 Email = registerRequest.Email,
                 UserName = registerRequest.UserName,
-                RoleId = 1,
-                
+                RoleId = 1
             };
 
             var registerResponse = new UserDTO
@@ -246,34 +256,29 @@ namespace PharmaDistiPro.Test.User
                 Email = newUser.Email,
                 UserName = newUser.UserName,
                 RoleId = 1,
+                EmployeeCode = "NV0"
             };
 
-            var roles = new List<Models.Role>
-    {
-        new Models.Role { Id = 1, RoleName = "Admin" },
-        new Models.Role { Id = 5, RoleName = "Customer" }
-    };
-            _roleRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(roles);
-
-            _mapperMock.Setup(m => m.Map<Models.User>(It.IsAny<UserInputRequest>())).Returns(newUser);
+            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(registerRequest.RoleId)).ReturnsAsync(new Models.Role { Id = 1, RoleName = "Admin" });
             _userRepositoryMock.Setup(r => r.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
+            _userRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Models.User>());
             _userRepositoryMock.Setup(r => r.InsertAsync(It.IsAny<Models.User>())).ReturnsAsync(newUser);
-            _userRepositoryMock.Setup(r => r.SaveAsync()).Returns(Task.FromResult(1));
+            _userRepositoryMock.Setup(r => r.SaveAsync()).ReturnsAsync(1);
             _mapperMock.Setup(m => m.Map<UserDTO>(It.IsAny<Models.User>())).Returns(registerResponse);
+            _emailServiceMock.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
 
+            // Act
             var result = await _userService.CreateNewUserOrCustomer(registerRequest);
 
+            // Assert
             Assert.True(result.Success);
-            Assert.Equal(1, result.Data.RoleId);
             Assert.Equal("Tạo mới thành công", result.Message);
             Assert.NotNull(result.Data);
             Assert.Equal(1, result.Data.UserId);
-            Assert.Null(result.Data.EmployeeCode);
-
+            Assert.Equal(1, result.Data.RoleId);
+            Assert.NotNull(result.Data.EmployeeCode);
             _userRepositoryMock.Verify(repo => repo.InsertAsync(It.IsAny<Models.User>()), Times.Once);
-
             _userRepositoryMock.Verify(repo => repo.SaveAsync(), Times.Once);
-
         }
 
         [Fact]
@@ -284,231 +289,255 @@ namespace PharmaDistiPro.Test.User
             {
                 Email = "test@gmail.com",
                 UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
                 RoleId = 1,
-                Avatar = new FormFile(new MemoryStream(new byte[10]), 0, 10, "Data", "test-file.txt") //Tệp không hợp lệ
+                Avatar = new FormFile(new MemoryStream(new byte[10]), 0, 10, "Data", "test-file.txt")
             };
 
-            var fakeUser = new Models.User
-            {
-                Email = userInput.Email,
-                UserName = userInput.UserName
-            };
-
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ReturnsAsync((Models.User)null);
-
+            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync(new Models.Role { Id = 1, RoleName = "Admin" });
+            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
             _userRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Models.User>());
 
+            // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
+            // Assert
             Assert.False(result.Success);
+            Assert.Equal("Định dạng file avatar không hợp lệ. Chỉ chấp nhận .jpg, .jpeg, .png, .gif.", result.Message);
         }
 
         [Fact]
         public async Task CreateNewUser_WhenRoleDoesNotExist_ReturnsError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
                 Email = "test@gmail.com",
                 UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
                 RoleId = 1000
             };
 
+            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync((Models.Role)null);
+            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
+            _userRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Models.User>());
+
+            // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-
+            Assert.Equal("Role không tồn tại.", result.Message);
         }
 
         [Fact]
         public async Task CreateNewUser_WhenDatabaseConnectionFails_ReturnsError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
                 Email = "test@gmail.com",
                 UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
                 RoleId = 1
             };
 
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception());
+            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync(new Models.Role { Id = 1, RoleName = "Admin" });
+            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
+            _userRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Models.User>());
+            _userRepositoryMock.Setup(repo => repo.InsertAsync(It.IsAny<Models.User>())).ThrowsAsync(new Exception("Database connection failed"));
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
+            Assert.Contains("Lỗi: Database connection failed", result.Message);
         }
-
 
         [Fact]
         public async Task CreateNewUser_WhenPhoneNull_ReturnError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
                 Email = "test@gmail.com",
                 UserName = "testUser",
-                RoleId = 1,
-                Phone = null
-
+                Password = "password",
+                Phone = null,
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
             };
-
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception("Số điện thoại không được để trống"));
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
-            Assert.True(result.Message.Contains("Số điện thoại không được để trống"));
+            Assert.Equal("Số điện thoại không được để trống.", result.Message);
         }
 
         [Fact]
-        public async Task CreateNewUser_WhenPhoneNullInvalid_ReturnError()
+        public async Task CreateNewUser_WhenPhoneInvalid_ReturnError()
         {
+            // Arrange
+          
             var userInput = new UserInputRequest
             {
                 Email = "test@gmail.com",
                 UserName = "testUser",
-                RoleId = 1,
-                Phone = "null"
-
+                Password = "password",
+                Phone = "123", // Invalid phone number
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
             };
 
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception("Số điện thoại sai định dạng"));
+            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync(new Models.Role { Id = 1, RoleName = "Admin" });
+            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
+            _userRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Models.User>());
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
-            Assert.True(result.Message.Contains("Số điện thoại sai định dạng"));
+            Assert.Equal("Số điện thoại sai định dạng.", result.Message);
         }
 
         [Fact]
         public async Task CreateNewUser_WhenUsernameInvalid_ReturnError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
                 Email = "test@gmail.com",
                 UserName = null,
-                RoleId = 1,
-
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
             };
-
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception("Tên tài khoản không được để trống"));
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
-            Assert.True(result.Message.Contains("Tên tài khoản không được để trống"));
+            Assert.Equal("Tên tài khoản không được để trống.", result.Message);
         }
 
         [Fact]
         public async Task CreateNewUser_WhenEmailInvalid_ReturnError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
                 Email = null,
-                UserName = "Testuser",
-                RoleId = 1,
-
+                UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
             };
-
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception("Email không được để trống"));
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
-            Assert.True(result.Message.Contains("Email không được để trống"));
+            Assert.Equal("Email không được để trống.", result.Message);
         }
 
         [Fact]
         public async Task CreateNewUser_AgeInvalid_ReturnError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
-                Email = null,
-                UserName = "Testuser",
-                Age = null,
-                RoleId = 1,
-
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 0,
+                Status = true,
+                RoleId = 1
             };
-
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception("Tuổi không được để trống"));
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
-            Assert.True(result.Message.Contains("Tuổi không được để trống"));
+            Assert.Equal("Tuổi không được để trống hoặc không hợp lệ.", result.Message);
         }
 
         [Fact]
         public async Task CreateNewUser_TaxcodeInvalid_ReturnError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
-                Email = null,
-                UserName = "Testuser",
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
                 TaxCode = null,
-                RoleId = 1,
-
+                Age = 25,
+                Status = true,
+                RoleId = 1
             };
-
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception("TaxCode không được để trống"));
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
-            Assert.True(result.Message.Contains("TaxCode không được để trống"));
+            Assert.Equal("TaxCode không được để trống.", result.Message);
         }
 
         [Fact]
         public async Task CreateNewUser_StatusCodeInvalid_ReturnError()
         {
+            // Arrange
             var userInput = new UserInputRequest
             {
-                Email = null,
-                UserName = "Testuser",
-                EmployeeCode = null,
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Password = "password",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
                 Status = null,
-                RoleId = 1,
-
+                RoleId = 1
             };
-
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null))
-                .ThrowsAsync(new Exception("Status không được để trống"));
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.NotEmpty(result.Message);
-            Assert.True(result.Message.Contains("Status không được để trống"));
+            Assert.Equal("Status không được để trống.", result.Message);
         }
-
     }
 }

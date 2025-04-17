@@ -401,7 +401,11 @@ namespace PharmaDistiPro.Services.Impl
                 {
                     var originalStatus = lot.Status; // Lưu trạng thái cũ
 
-                    if (lot.ExpiredDate <= now.AddMonths(3))
+                    if (lot.ExpiredDate <= now) 
+                    {
+                        lot.Status = 4; // Hết hạn
+                    }
+                    else if (lot.ExpiredDate <= now.AddMonths(3))
                     {
                         lot.Status = 0; // Sắp hết hạn – ngừng bán
                     }
@@ -413,6 +417,7 @@ namespace PharmaDistiPro.Services.Impl
                     {
                         lot.Status = 1; // Còn hạn – có thể bán
                     }
+
 
                     // Kiểm tra nếu trạng thái thay đổi
                     if (originalStatus != lot.Status)
@@ -568,7 +573,7 @@ namespace PharmaDistiPro.Services.Impl
                 var productLots = await _productLotRepository
                     .GetAllAsync(); 
                 var totalQuantity = productLots
-                    .Where(lot => lot.ProductId == productId && lot.Status == 1&& lot.Status ==2) //khong het han
+                    .Where(lot => lot.ProductId == productId &&( lot.Status == 1|| lot.Status ==2)) //khong het han
                     .Sum(lot => lot.Quantity ?? 0); 
 
                 response.Success = true;
