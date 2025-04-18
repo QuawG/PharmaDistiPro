@@ -6,6 +6,7 @@ using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Impl;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
+using System.Collections.Generic;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -15,11 +16,13 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IStorageRoomRepository _storageRoomRepository;
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper; // Khai báo _mapper
-        public ProductLotService(IProductLotRepository productLotRepository, IStorageRoomRepository storageRoomRepository, IProductRepository productRepository, IMapper mapper)
+        private readonly ILotRepository _lotRepository;
+        public ProductLotService(IProductLotRepository productLotRepository, IStorageRoomRepository storageRoomRepository, IProductRepository productRepository, IMapper mapper, ILotRepository lotRepository)
         {
             _productLotRepository = productLotRepository;
             _storageRoomRepository = storageRoomRepository;
             _productRepository = productRepository;
+            _lotRepository = lotRepository;
         }
 
         public async Task<Response<ProductLotResponse>> CheckQuantityProduct(int productId)
@@ -134,7 +137,7 @@ namespace PharmaDistiPro.Services.Impl
                         };
                     }
 
-                    // Tính dung tích cần thiết
+                    
                     double requiredVolume = product.VolumePerUnit.Value * productLotRequest.OrderQuantity.Value;
 
                     // Lấy phòng từ cache hoặc DB một lần
@@ -385,23 +388,58 @@ namespace PharmaDistiPro.Services.Impl
         }
 
 
-        public async Task<Response<string>> AutoUpdateProductLotStatusAsync()
+        public async Task<Response<List<ProductLotResponse>>> AutoUpdateProductLotStatusAsync()
         {
-            var response = new Response<string>();
+            var response = new Response<List<ProductLotResponse>>();
+            var changedLots = new List<ProductLotResponse>(); // Danh sách sản phẩm thay đổi trạng thái
             try
             {
-                var productLots = await _productLotRepository.GetAllAsync(); 
-
+                var productLots = await _productLotRepository.GetAllAsync();
                 var now = DateTime.Now;
+
                 foreach (var lot in productLots)
                 {
-                    if (lot.ExpiredDate <= now.AddMonths(3))
+                    var originalStatus = lot.Status; // Lưu trạng thái cũ
+
+                    if (lot.ExpiredDate <= now) 
+                    {
+                        lot.Status = 4; // Hết hạn
+                    }
+                    else if (lot.ExpiredDate <= now.AddMonths(3))
                     {
                         lot.Status = 0; // Sắp hết hạn – ngừng bán
+                    }
+                    else if (lot.ExpiredDate <= now.AddMonths(5))
+                    {
+                        lot.Status = 2; // Sắp hết hạn – ưu tiên xuất
                     }
                     else
                     {
                         lot.Status = 1; // Còn hạn – có thể bán
+                    }
+
+
+                    // Kiểm tra nếu trạng thái thay đổi
+                    if (originalStatus != lot.Status)
+                    {
+                        // Lấy thông tin sản phẩm (ProductName) và lưu vào danh sách
+                        string productName = "Unknown";
+                        var product = await _productRepository.GetByIdAsync(lot.ProductId);
+                        if (product != null)
+                        {
+                            productName = product.ProductName ?? "Unknown";
+                        }
+
+                        changedLots.Add(new ProductLotResponse
+                        {
+                            Id = lot.ProductLotId,
+                            ProductId = lot.ProductId,
+                            LotId = lot.LotId,
+                            Status = lot.Status,
+                            ProductName = productName,
+                            ExpiredDate = lot.ExpiredDate,
+                            ManufacturedDate = lot.ManufacturedDate
+                        });
                     }
 
                     await _productLotRepository.UpdateAsync(lot);
@@ -409,8 +447,17 @@ namespace PharmaDistiPro.Services.Impl
 
                 await _productLotRepository.SaveAsync();
 
-                response.Success = true;
-                response.Data = "Cập nhật trạng thái sản phẩm theo ngày hết hạn thành công.";
+                // Nếu có sản phẩm thay đổi trạng thái thì trả về danh sách
+                if (changedLots.Any())
+                {
+                    response.Success = true;
+                    response.Data = changedLots;
+                }
+                else
+                {
+                    response.Success = true;
+                    response.Data = new List<ProductLotResponse>(); // Nếu không có sản phẩm thay đổi, trả về danh sách rỗng
+                }
             }
             catch (Exception ex)
             {
@@ -420,6 +467,101 @@ namespace PharmaDistiPro.Services.Impl
 
             return response;
         }
+
+        public async Task SendProductLotStatusChangeNotificationAsync(List<ProductLotResponse> changedLots)
+        {
+            // Tạo thông báo về danh sách sản phẩm thay đổi trạng thái
+            var message = $"Có {changedLots.Count} sản phẩm thay đổi trạng thái hôm nay:\n";
+            foreach (var lot in changedLots)
+            {
+                message += $"- Sản phẩm: {lot.ProductName}, Trạng thái mới: {lot.Status}, Ngày hết hạn: {lot.ExpiredDate.ToString()}\n";
+            }
+
+
+
+        }
+
+        public async Task<Response<List<ProductLotResponse>>> GetProductLotsByStatusAsync(int status)
+        {
+            var response = new Response<List<ProductLotResponse>>();
+
+            try
+            {
+                // Kiểm tra giá trị status hợp lệ (0, 1, 2)
+                if (status != 0 && status != 1 && status != 2)
+                {
+                    response.Success = false;
+                    response.Message = "Trạng thái không hợp lệ. Chỉ chấp nhận giá trị 0 (ngừng bán), 1 (còn hạn), hoặc 2 (ưu tiên xuất).";
+                    response.StatusCode = 400;
+                    return response;
+                }
+
+                // Lấy danh sách ProductLot theo status
+                var productLots = await _productLotRepository.GetByConditionAsync(x => x.Status == status);
+
+                // Kiểm tra nếu danh sách rỗng
+                if (productLots == null || !productLots.Any())
+                {
+                    response.Success = false;
+                    response.Message = $"Không tìm thấy lô sản phẩm nào với trạng thái {status}.";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Mapping thủ công sang ProductLotResponse
+                var productLotDtos = new List<ProductLotResponse>();
+                foreach (var lot in productLots)
+                {
+                    // Lấy ProductName từ ProductId
+                    string productName = "Unknown";
+                    var product = await _productRepository.GetByIdAsync(lot.ProductId);
+                    if (product != null)
+                    {
+                        productName = product.ProductName ?? "Unknown";
+                    }
+
+                    // Lấy LotCode từ LotId
+                    string lotCode = "Unknown";
+                    var lotRecord = await _lotRepository.GetByIdAsync(lot.LotId);
+                    if (lotRecord != null)
+                    {
+                        lotCode = lotRecord.LotCode ?? "Unknown";
+                    }
+
+                    productLotDtos.Add(new ProductLotResponse
+                    {
+                        Id = lot.ProductLotId,
+                        LotId = lot.LotId,
+                        ProductId = lot.ProductId,
+                        Quantity = lot.Quantity,
+                        ManufacturedDate = lot.ManufacturedDate,
+                        ExpiredDate = lot.ExpiredDate,
+                        SupplyPrice = lot.SupplyPrice,
+                        OrderQuantity = lot.OrderQuantity,
+                        Status = lot.Status,
+                        StorageRoomId = lot.StorageRoomId,
+                        LotCode = lotCode,
+                        ProductName = productName
+                    });
+                }
+
+                response.Success = true;
+                response.Data = productLotDtos;
+                response.Message = $"Lấy danh sách lô sản phẩm với trạng thái {status} thành công.";
+                response.StatusCode = 200;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Lỗi khi lấy danh sách lô sản phẩm: {ex.Message}";
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
+
+
 
 
         // Get quantity product can bye
@@ -431,7 +573,7 @@ namespace PharmaDistiPro.Services.Impl
                 var productLots = await _productLotRepository
                     .GetAllAsync(); 
                 var totalQuantity = productLots
-                    .Where(lot => lot.ProductId == productId && lot.Status == 1) //khong het han
+                    .Where(lot => lot.ProductId == productId &&( lot.Status == 1|| lot.Status ==2)) //khong het han
                     .Sum(lot => lot.Quantity ?? 0); 
 
                 response.Success = true;

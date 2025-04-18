@@ -105,24 +105,35 @@ namespace PharmaDistiPro.Services.Impl
         public async Task<Response<StorageRoomDTO>> CreateNewStorageRoom(StorageRoomInputRequest storageRoomInputRequest)
         {
             var response = new Response<StorageRoomDTO>();
-
             try
             {
-                // Kiểm tra trùng mã hoặc tên
-                var existingStorageRoom = await _storageRoomRepository.GetSingleByConditionAsync(
-                    x => x.StorageRoomCode.Equals(storageRoomInputRequest.StorageRoomCode) ||
-                         x.StorageRoomName.Equals(storageRoomInputRequest.StorageRoomName));
+                // Kiểm tra trùng tên
+                var existingStorageRoom = await _storageRoomRepository.GetSingleByConditionAsync(x =>
+                    x.StorageRoomName.Equals(storageRoomInputRequest.StorageRoomName));
 
                 if (existingStorageRoom != null)
                 {
                     response.Success = false;
-                    response.Message = "Code và tên đã tồn tại.";
+                    response.Message = "Tên kho đã tồn tại.";
+                    return response;
+                }
+
+                // Tạo StorageRoomCode tự động (SRC001, SRC002, ...)
+                var storageRoomCount = await _storageRoomRepository.CountAsync(x=>true);
+                var newCode = $"SRC{storageRoomCount + 1:D3}"; // Định dạng số thứ tự thành 3 chữ số (001, 002, ...)
+
+                // Kiểm tra mã code có trùng không (đề phòng trường hợp bất thường)
+                var existingCode = await _storageRoomRepository.GetSingleByConditionAsync(x => x.StorageRoomCode == newCode);
+                if (existingCode != null)
+                {
+                    response.Success = false;
+                    response.Message = "Mã kho đã tồn tại.";
                     return response;
                 }
 
                 var newStorageRoom = _mapper.Map<StorageRoom>(storageRoomInputRequest);
+                newStorageRoom.StorageRoomCode = newCode; // Gán mã code tự động
                 newStorageRoom.CreatedDate = DateTime.Now;
-                // Gán RemainingRoomVolume bằng Capacity
                 newStorageRoom.RemainingRoomVolume = storageRoomInputRequest.Capacity;
 
                 await _storageRoomRepository.InsertAsync(newStorageRoom);
@@ -143,6 +154,7 @@ namespace PharmaDistiPro.Services.Impl
                 response.Message = $"Lỗi: {ex.Message}";
                 return response;
             }
+          
         }
 
         // Activate/Deactivate

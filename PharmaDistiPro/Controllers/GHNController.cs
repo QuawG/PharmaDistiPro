@@ -61,8 +61,8 @@ namespace PharmaDistiPro.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpPost("calculate-fee/{orderId}")]
-        public async Task<IActionResult> CalculateOrderFee(CreateOrderRequest orderRequest)
+        [HttpPost("calculate-fee")]
+        public async Task<IActionResult> CalculateOrderFee(FeeRequest orderRequest)
         {
             if (!ModelState.IsValid)
             {

@@ -6,10 +6,12 @@ using Moq;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Impl;
+using PharmaDistiPro.Services.Interface;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,50 +22,67 @@ namespace PharmaDistiPro.Test.User
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
         private readonly UserService _userService;
-
+        private readonly IEmailService _emailService;
         public ResetPasswordTest()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
             _mapperMock = new Mock<IMapper>(); 
-            _userService = new UserService(_userRepositoryMock.Object, _mapperMock.Object, null, null, null);
+            _userService = new UserService(_userRepositoryMock.Object, _mapperMock.Object, null, null, null,_emailService);
         }
-
-
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+            }
+        }
         [Fact]
         public async Task Test_ResetPassword_Success()
         {
+            // Arrange
             var fakeResetPasswordRequest = new ResetPasswordRequest
             {
                 Email = "test@example.com",
                 OTP = "123",
-                Password = "newpassword",
-                ConfirmPassword = "newpassword"
+                Password = "newpassword"
             };
 
-            var fakeUser = new Models.User
+            CreatePasswordHash("newpassword", out byte[] expectedPasswordHash, out byte[] expectedPasswordSalt);
+
+            var fakeUser = new PharmaDistiPro.Models.User
             {
+                UserId = 1,
                 Email = "test@example.com",
                 ResetPasswordOtp = "123",
                 ResetpasswordOtpexpriedTime = DateTime.Now.AddMinutes(5)
             };
 
-            _userRepositoryMock
-                .Setup(repo => repo.GetUserByEmail(fakeResetPasswordRequest.Email))
+            _userRepositoryMock.Setup(repo => repo.GetUserByEmail(fakeResetPasswordRequest.Email))
                 .ReturnsAsync(fakeUser);
 
-            _userRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Models.User>()))
-                .Callback<Models.User>(u => u.Password = fakeResetPasswordRequest.Password);
+            _userRepositoryMock.Setup(repo => repo.UpdateUser(It.IsAny<PharmaDistiPro.Models.User>()))
+                .Callback<PharmaDistiPro.Models.User>(u =>
+                {
+                    u.Password = expectedPasswordHash;
+                    u.PasswordSalt = expectedPasswordSalt;
+                    u.ResetPasswordOtp = null;
+                    u.ResetpasswordOtpexpriedTime = null;
+                })
+                .ReturnsAsync(fakeUser);
 
+            // Act
             var result = await _userService.ResetPassword(fakeResetPasswordRequest);
 
+            // Assert
+            Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
             Assert.Equal("Password reset successfully", result.Message);
-
-            _userRepositoryMock.Verify(repo => repo.UpdateUser(It.Is<Models.User>(u =>
-                u.Password == "newpassword" &&
+            _userRepositoryMock.Verify(repo => repo.UpdateUser(It.Is<PharmaDistiPro.Models.User>(u =>
+                u.Password != null &&
+                u.PasswordSalt != null &&
                 u.ResetPasswordOtp == null &&
-                u.ResetpasswordOtpexpriedTime == null
-            )), Times.Once);
+                u.ResetpasswordOtpexpriedTime == null)), Times.Once());
         }
 
         [Fact]

@@ -6,6 +6,7 @@ using Moq;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Impl;
+using PharmaDistiPro.Services.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace PharmaDistiPro.Test.User
         private readonly Cloudinary _cloudinary;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly UserService _userService;
-
+        private readonly IEmailService _emailService;
         public ActivateUserTest()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
@@ -51,7 +52,9 @@ namespace PharmaDistiPro.Test.User
                 _mapperMock.Object,
                 _cloudinary,  
                 _configuration,
-                _httpContextAccessorMock.Object
+                _httpContextAccessorMock.Object,
+                _emailService
+
             );
         }
 

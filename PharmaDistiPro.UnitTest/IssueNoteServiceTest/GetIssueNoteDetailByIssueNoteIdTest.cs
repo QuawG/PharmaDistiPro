@@ -22,6 +22,8 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
         private readonly Mock<IIssueNoteRepository> _issueNoteRepositoryMock;
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IIssueNoteDetailsRepository> _issueNoteDetailsRepositoryMock;
+        private readonly Mock<IProductRepository> _productRepositoryMock;
+        private readonly Mock<IStorageRoomRepository> _storageRoomRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly IssueNoteService _issueNoteService;
@@ -34,6 +36,8 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
             _productLotRepositoryMock = new Mock<IProductLotRepository>();
             _issueNoteRepositoryMock = new Mock<IIssueNoteRepository>();
             _issueNoteDetailsRepositoryMock = new Mock<IIssueNoteDetailsRepository>();
+            _productRepositoryMock = new Mock<IProductRepository>();
+            _storageRoomRepositoryMock = new Mock<IStorageRoomRepository>();
             _mapperMock = new Mock<IMapper>();
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
             _issueNoteService = new IssueNoteService(
@@ -44,7 +48,9 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
                 _productLotRepositoryMock.Object,
                 _mapperMock.Object,
                 _userRepositoryMock.Object,
-                _httpContextAccessorMock.Object
+                _httpContextAccessorMock.Object,
+                _productRepositoryMock.Object,
+                _storageRoomRepositoryMock.Object
             );
         }
 

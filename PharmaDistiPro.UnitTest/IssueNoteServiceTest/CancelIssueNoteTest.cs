@@ -16,38 +16,45 @@ namespace PharmaDistiPro.UnitTest.IssueNoteServiceTest
 {
     public class CancelIssueNoteTest
     {
-        private readonly Mock<IOrderRepository> _orderRepositoryMock;
-        private readonly Mock<IOrdersDetailRepository> _ordersDetailRepositoryMock;
-        private readonly Mock<IProductLotRepository> _productLotRepositoryMock;
-        private readonly Mock<IIssueNoteRepository> _issueNoteRepositoryMock;
-        private readonly Mock<IUserRepository> _userRepositoryMock;
-        private readonly Mock<IIssueNoteDetailsRepository> _issueNoteDetailsRepositoryMock;
-        private readonly Mock<IMapper> _mapperMock;
-        private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
-        private readonly IssueNoteService _issueNoteService;
+        
+            private readonly Mock<IOrderRepository> _orderRepositoryMock;
+            private readonly Mock<IOrdersDetailRepository> _ordersDetailRepositoryMock;
+            private readonly Mock<IProductLotRepository> _productLotRepositoryMock;
+            private readonly Mock<IIssueNoteRepository> _issueNoteRepositoryMock;
+            private readonly Mock<IUserRepository> _userRepositoryMock;
+            private readonly Mock<IIssueNoteDetailsRepository> _issueNoteDetailsRepositoryMock;
+            private readonly Mock<IProductRepository> _productRepositoryMock; // Thêm
+            private readonly Mock<IStorageRoomRepository> _storageRoomRepositoryMock; // Thêm
+            private readonly Mock<IMapper> _mapperMock;
+            private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
+            private readonly IssueNoteService _issueNoteService;
 
-        public CancelIssueNoteTest()
-        {
-            _userRepositoryMock = new Mock<IUserRepository>();
-            _orderRepositoryMock = new Mock<IOrderRepository>();
-            _ordersDetailRepositoryMock = new Mock<IOrdersDetailRepository>();
-            _productLotRepositoryMock = new Mock<IProductLotRepository>();
-            _issueNoteRepositoryMock = new Mock<IIssueNoteRepository>();
-            _issueNoteDetailsRepositoryMock = new Mock<IIssueNoteDetailsRepository>();
-            _mapperMock = new Mock<IMapper>();
-            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            _issueNoteService = new IssueNoteService(
-                _orderRepositoryMock.Object,
-                _issueNoteRepositoryMock.Object,
-                _issueNoteDetailsRepositoryMock.Object,
-                _ordersDetailRepositoryMock.Object,
-                _productLotRepositoryMock.Object,
-                _mapperMock.Object,
-                _userRepositoryMock.Object,
-                _httpContextAccessorMock.Object
-            );
-        }
-        [Fact]
+            public CancelIssueNoteTest()
+            {
+                _userRepositoryMock = new Mock<IUserRepository>();
+                _orderRepositoryMock = new Mock<IOrderRepository>();
+                _ordersDetailRepositoryMock = new Mock<IOrdersDetailRepository>();
+                _productLotRepositoryMock = new Mock<IProductLotRepository>();
+                _issueNoteRepositoryMock = new Mock<IIssueNoteRepository>();
+                _issueNoteDetailsRepositoryMock = new Mock<IIssueNoteDetailsRepository>();
+                _productRepositoryMock = new Mock<IProductRepository>(); // Khởi tạo
+                _storageRoomRepositoryMock = new Mock<IStorageRoomRepository>(); // Khởi tạo
+                _mapperMock = new Mock<IMapper>();
+                _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+                _issueNoteService = new IssueNoteService(
+                    _orderRepositoryMock.Object,
+                    _issueNoteRepositoryMock.Object,
+                    _issueNoteDetailsRepositoryMock.Object,
+                    _ordersDetailRepositoryMock.Object,
+                    _productLotRepositoryMock.Object,
+                    _mapperMock.Object,
+                    _userRepositoryMock.Object,
+                    _httpContextAccessorMock.Object,
+                    _productRepositoryMock.Object, // Thêm
+                    _storageRoomRepositoryMock.Object // Thêm
+                );
+            }
+            [Fact]
         public async Task CreateIssueNoteTest_WhenNotIssuedFound_ReturnNullData()
         {
             _issueNoteRepositoryMock

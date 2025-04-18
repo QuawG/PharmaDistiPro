@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Repositories.Impl;
@@ -33,7 +34,6 @@ namespace PharmaDistiPro
 
             builder.Services.AddScoped<IVnpay, Vnpay>();
             #endregion
-
 
             // Swagger
             builder.Services.AddEndpointsApiExplorer();
@@ -146,7 +146,6 @@ namespace PharmaDistiPro
             builder.Services.AddScoped<INoteCheckRepository, NoteCheckRepository>();
             builder.Services.AddScoped<INoteCheckDetailsRepository, NoteCheckDetailsRepository>();
             builder.Services.AddScoped<IStorageHistoryRepository, StorageHistoryRepository>();
-            
 
             // Services
             builder.Services.AddScoped<ISupplierService, SupplierService>();
@@ -168,6 +167,15 @@ namespace PharmaDistiPro
             // AutoMapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+            #region Hangfire Configuration
+            // Hangfire Configuration (SQL Server storage)
+            builder.Services.AddHangfire(config =>
+                config.UseSqlServerStorage(connectionString));
+
+            // Add Hangfire server
+            builder.Services.AddHangfireServer();
+            #endregion
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -179,6 +187,11 @@ namespace PharmaDistiPro
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+
+            #region Hangfire Dashboard
+            // Hangfire Dashboard
+            app.UseHangfireDashboard("/hangfire");
+            #endregion
 
             app.Run();
         }

@@ -14,6 +14,7 @@ using System.Linq;
 using System;
 using System.Linq.Expressions;
 using CloudinaryDotNet.Actions;
+using PharmaDistiPro.Helper.Enums;
 
 namespace PharmaDistiPro.UnitTest.ProductServiceTest
 {
@@ -404,10 +405,10 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 CategoryId = 1,
                 Vat = 10,
                 Status = true,
-                Storageconditions = 1,
+                Storageconditions = StorageCondition.Normal,
                 SellingPrice = 10
             };
-
+          
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
             var subCategory = new Category { Id = 2, CategoryMainId = 1 };
 

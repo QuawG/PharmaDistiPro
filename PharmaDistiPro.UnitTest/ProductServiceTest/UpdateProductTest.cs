@@ -3,6 +3,7 @@ using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using PharmaDistiPro.DTO.Products;
+using PharmaDistiPro.Helper.Enums;
 using PharmaDistiPro.Models;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Impl;
@@ -52,7 +53,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Cool,
             };
 
             var existingProduct = new Product
@@ -181,7 +182,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Cool,
             };
 
             var existingProduct = new Product
@@ -232,7 +233,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Cool,
             };
 
             var existingProduct = new Product
@@ -283,7 +284,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Cool,
             };
 
             var existingProduct = new Product
@@ -334,7 +335,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Normal
             };
 
             var existingProduct = new Product
@@ -385,7 +386,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Normal
             };
 
             var existingProduct = new Product
@@ -436,7 +437,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Normal
             };
 
             var existingProduct = new Product
@@ -487,7 +488,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 1,
                 Status = true,
-                Storageconditions = 1
+                Storageconditions = StorageCondition.Normal
             };
 
             var existingProduct = new Product
@@ -502,7 +503,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
                 ProductCode = "ProductCode",
                 CategoryId = 2,
                 Status = true,
-                Storageconditions = 2
+                Storageconditions = 1
             };
 
             _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingProduct);

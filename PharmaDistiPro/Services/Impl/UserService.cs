@@ -25,14 +25,17 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IEmailService _emailService;
 
-        public UserService(IUserRepository user, IMapper mapper, Cloudinary cloudinary, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+
+        public UserService(IUserRepository user, IMapper mapper, Cloudinary cloudinary, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IEmailService emailService)
         {
             _userRepository = user;
             _mapper = mapper;
             _cloudinary = cloudinary;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
+            _emailService = emailService;
         }
         #region User and Customer Management
 
@@ -138,9 +141,8 @@ return response;
                 // Kiểm tra xem user đã tồn tại chưa 
                 var existingUser = await _userRepository.GetSingleByConditionAsync(x => x.Email.Equals(userInputRequest.Email) || x.UserName.Equals(userInputRequest.UserName));
 
-                //dem so user trong he thong
-                var countUserList = _userRepository.GetAllAsync().Result.Count();
-
+                // Đếm số user trong hệ thống
+                var countUserList = (await _userRepository.GetAllAsync()).Count();
 
                 if (existingUser != null)
                 {
@@ -151,46 +153,71 @@ return response;
 
                 // Upload avatar lên Cloudinary nếu cần
                 if (userInputRequest.Avatar != null)
+                {
+                    var uploadParams = new ImageUploadParams()
                     {
-                        var uploadParams = new ImageUploadParams()
-                        {
-                            File = new FileDescription(userInputRequest.Avatar.FileName, userInputRequest.Avatar.OpenReadStream()),
-                            PublicId = Path.GetFileNameWithoutExtension(userInputRequest.Avatar.FileName)
-                        };
+                        File = new FileDescription(userInputRequest.Avatar.FileName, userInputRequest.Avatar.OpenReadStream()),
+                        PublicId = Path.GetFileNameWithoutExtension(userInputRequest.Avatar.FileName)
+                    };
 
-                        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                        imageUrl = uploadResult.SecureUri.ToString();
+                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                    imageUrl = uploadResult.SecureUri.ToString();
                 }
-                // update employeecode
-                if (userInputRequest.RoleId != 5) userInputRequest.EmployeeCode = ConstantStringHelper.EmployeeCode + countUserList;
 
+              
+                if (userInputRequest.RoleId != 5)
+                {
+                    userInputRequest.EmployeeCode = ConstantStringHelper.EmployeeCode + countUserList;
+                }
 
                 // Map dữ liệu từ DTO sang Entity
                 var newUser = new User
                 {
-
                     UserName = userInputRequest.UserName,
                     Email = userInputRequest.Email,
                     FirstName = userInputRequest.FirstName,
-                    LastName = userInputRequest.LastName ,
+                    LastName = userInputRequest.LastName,
                     Phone = userInputRequest.Phone,
                     TaxCode = userInputRequest.TaxCode,
-                    RoleId = userInputRequest.RoleId
+                    RoleId = userInputRequest.RoleId,
+                    Avatar = imageUrl,
+                    CreatedDate = DateTime.Now,
+                    Status = true,
+                    CreatedBy = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext)
                 };
-                   
-                
-                newUser.Avatar = imageUrl;
-                newUser.CreatedDate = DateTime.Now;
-                newUser.Status = true;
+
+                // Tạo password hash và salt
                 CreatePasswordHash(userInputRequest.Password, out byte[] passwordHash, out byte[] passwordSalt);
                 newUser.Password = passwordHash;
-                newUser.CreatedBy = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
                 newUser.PasswordSalt = passwordSalt;
+
                 // Thêm mới user vào database
                 await _userRepository.InsertAsync(newUser);
                 await _userRepository.SaveAsync();
 
-                // Trả về dữ liệu đã tạo mới
+               
+                string subject = "Chào mừng bạn đến với PharmaDistiPro - Thông tin tài khoản";
+                string body = $@"Kính gửi {newUser.FirstName} {newUser.LastName},
+
+Tài khoản của bạn đã được tạo thành công. Dưới đây là thông tin đăng nhập:
+
+Tên đăng nhập: {newUser.UserName}
+Mật khẩu: {userInputRequest.Password}
+Email: {newUser.Email}
+
+Vui lòng đăng nhập và đổi mật khẩu để đảm bảo an toàn.
+
+Trân trọng,
+Đội ngũ PharmaDistiPro";
+
+                bool emailSent = await _emailService.SendEmailAsync(newUser.Email, subject, body);
+                if (!emailSent)
+                {
+                    // Log lỗi gửi email nhưng không làm thất bại toàn bộ thao tác
+                    Console.WriteLine($"Không thể gửi email đến {newUser.Email}");
+                }
+
+             
                 response.Message = "Tạo mới thành công";
                 response.Success = true;
                 response.Data = _mapper.Map<UserDTO>(newUser);
