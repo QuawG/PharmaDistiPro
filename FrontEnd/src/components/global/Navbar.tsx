@@ -44,7 +44,7 @@ export default function Navbar() {
   const handleLogout = () => {
     console.log("Đăng xuất...");
     logout(); // Gọi hàm logout từ AuthContext
-    navigate("/signin");
+    navigate("/");
   };
 
   return (

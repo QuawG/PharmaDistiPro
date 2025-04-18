@@ -9,7 +9,7 @@ const menus = {
   "Người dùng": ["Danh sách người dùng", "Tạo người dùng"],
   "Nhà cung cấp": ["Danh sách nhà cung cấp", "Tạo nhà cung cấp"],
   "Đơn đặt hàng": ["Danh sách đơn đặt hàng(PO)", "Tạo đơn đặt hàng(PO)"],
-  "Đơn hàng": ["Danh sách đơn hàng", "Tạo đơn hàng"], // Sẽ lọc dựa trên role
+  "Đơn hàng": ["Danh sách đơn hàng", "Tạo đơn hàng"],
   "Lô hàng": ["Danh sách lô hàng", "Tạo lô hàng"],
   "Phiếu nhập kho": ["Danh sách phiếu nhập", "Tạo phiếu nhập kho"],
   "Phiếu xuất kho": ["Danh sách phiếu xuất kho"],
@@ -48,6 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     const role = user?.roleName;
     switch (menuKey) {
       case "Sản phẩm":
+        return role === "Director" || role === "SalesManager";
       case "Người dùng":
       case "Nhà cung cấp":
         return role === "Director";
@@ -76,6 +77,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
     let items = menus[menuKey as keyof typeof menus] || [];
 
     switch (menuKey) {
+      case "Sản phẩm":
+        if (role === "SalesManager") {
+          return items.filter(item =>
+            item === "Danh sách sản phẩm" || item === "Chủng loại" || item === "Danh sách danh mục thuốc"
+          );
+        }
+        return items;
+      case "Nhà thuốc":
+        if (role !== "SalesMan") {
+          return items.filter(item => item !== "Tạo nhà thuốc");
+        }
+        return items;
       case "Đơn đặt hàng":
         return items.filter(item =>
           item === "Danh sách đơn đặt hàng(PO)" ? (role === "WarehouseManager" || role === "Director") : role === "Director"

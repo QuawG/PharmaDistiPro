@@ -87,7 +87,7 @@ interface StockStatus {
 interface PurchaseOrderTableProps {
   handleChangePage: (page: string, purchaseOrderId?: number) => void;
   onDelete: (id: number) => void;
-  onUpdate: (updatedOrder: PurchaseOrder) => void;
+  // onUpdate: (updatedOrder: PurchaseOrder) => void;
   rowSelection?: {
     selectedRowKeys: React.Key[];
     onChange: (selectedRowKeys: React.Key[], selectedRows: PurchaseOrder[]) => void;
@@ -182,12 +182,63 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
   const fetchStockStatus = async (id: number) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/CheckReceivedStockStatus/${id}`, {
+
+      // Lấy chi tiết đơn hàng để có danh sách sản phẩm đầy đủ
+      const orderResponse = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setStockStatus(response.data.data || []);
+
+      const orderDetails = orderResponse.data.data || [];
+      const order = allOrders.find((o) => o.purchaseOrderId === id);
+
+      if (!order) {
+        throw new Error("Không tìm thấy đơn hàng!");
+      }
+
+      let fullStockStatus: StockStatus[];
+
+      // Nếu đơn hàng đã hoàn thành (status = 3), tất cả sản phẩm phải có shortageQuantity = 0
+      if (order.status === 3) {
+        fullStockStatus = orderDetails.map((detail: PurchaseOrderDetail) => ({
+          productId: detail.productId,
+          productName: detail.product.productName,
+          orderedQuantity: detail.quantity,
+          receivedQuantity: detail.quantity, // Đã hoàn thành nên nhận đủ
+          shortageQuantity: 0,
+        }));
+      } else {
+        // Lấy tình trạng nhập hàng cho các trạng thái khác
+        const stockResponse = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/CheckReceivedStockStatus/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const stockData = stockResponse.data.data || [];
+
+        // Tạo danh sách đầy đủ các sản phẩm từ chi tiết đơn hàng
+        fullStockStatus = orderDetails.map((detail: PurchaseOrderDetail) => {
+          const stockItem = stockData.find((item: StockStatus) => item.productId === detail.productId) || {
+            productId: detail.productId,
+            productName: detail.product.productName,
+            orderedQuantity: detail.quantity,
+            receivedQuantity: 0,
+            shortageQuantity: detail.quantity,
+          };
+
+          return {
+            productId: detail.productId,
+            productName: detail.product.productName,
+            orderedQuantity: detail.quantity,
+            receivedQuantity: stockItem.receivedQuantity,
+            shortageQuantity: detail.quantity - stockItem.receivedQuantity,
+          };
+        });
+      }
+
+      setStockStatus(fullStockStatus);
       setIsStockStatusModalOpen(true);
     } catch (error) {
       console.error("Lỗi khi lấy tình trạng nhập hàng:", error);
@@ -556,7 +607,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                 render: (quantity: number) => quantity.toLocaleString("vi-VN"),
               },
               {
-                title: "Số Lượng còn thiếu",
+                title: "Số Lượng Còn Thiếu",
                 dataIndex: "shortageQuantity",
                 key: "shortageQuantity",
                 render: (quantity: number) => (

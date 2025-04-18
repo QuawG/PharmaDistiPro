@@ -962,7 +962,7 @@ const NewOrder: React.FC = () => {
                   width: "100%",
                   height: "48px",
                   borderRadius: "4px",
-                  background: "#1a3c34",
+                  // background: "#1890ff",
                   border: "none",
                   fontSize: "16px",
                   transition: "all 0.3s",

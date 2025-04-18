@@ -13,6 +13,7 @@ import {
   Legend,
   Title as ChartTitle,
 } from 'chart.js';
+import { useAuth } from '../../pages/Home/AuthContext';
 
 ChartJS.register(
   CategoryScale,
@@ -304,31 +305,52 @@ const SensorChartModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   roomId: number;
-}> = ({ isOpen, onClose, roomId }) => {
+  roomName: string;
+}> = ({ isOpen, onClose, roomId, roomName }) => {
   const [hasSensor, setHasSensor] = useState<boolean | null>(null);
   const [historyData, setHistoryData] = useState<SensorData[]>([]);
   const [displayData, setDisplayData] = useState<SensorData[]>([]);
+  const [latestSensorData, setLatestSensorData] = useState<SensorData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(30);
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
+
+      // Check for sensor and fetch historical data
       axios
         .get(`http://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${roomId}`)
         .then((response) => {
           setHasSensor(response.data);
           if (response.data) {
+            // Fetch historical data
             axios
               .get(`http://pharmadistiprobe.fun/api/StorageHistory/Top50Earliest/${roomId}`)
               .then((historyResponse) => {
-                const data = historyResponse.data; // Assumed to be sorted oldest to newest
+                const data = historyResponse.data.sort(
+                  (a: SensorData, b: SensorData) =>
+                    new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime()
+                );
                 setHistoryData(data);
-                setDisplayData(data.slice(0, 30)); // Oldest 30 points
-                setCurrentIndex(30);
+                if (data.length >= 20) {
+                  setDisplayData([data[19]]);
+                } else {
+                  setDisplayData([]);
+                }
               })
               .catch(() => {
                 message.error('Lỗi khi lấy dữ liệu lịch sử cảm biến!');
+              });
+
+            // Fetch latest sensor data
+            axios
+              .get(`http://pharmadistiprobe.fun/api/StorageHistory/Newest/${roomId}`)
+              .then((latestResponse) => {
+                setLatestSensorData(latestResponse.data);
+              })
+              .catch(() => {
+                message.error('Lỗi khi lấy dữ liệu cảm biến mới nhất!');
+                setLatestSensorData(null);
               });
           }
         })
@@ -342,19 +364,18 @@ const SensorChartModal: React.FC<{
     } else {
       setHistoryData([]);
       setDisplayData([]);
-      setCurrentIndex(30);
+      setLatestSensorData(null);
     }
   }, [isOpen, roomId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isOpen && hasSensor && currentIndex < historyData.length) {
+    if (isOpen && hasSensor && displayData.length < historyData.length) {
       interval = setInterval(() => {
         setDisplayData((prev) => {
-          const nextIndex = currentIndex + 1;
-          if (nextIndex <= historyData.length) {
-            setCurrentIndex(nextIndex);
-            return [...prev, historyData[nextIndex - 1]]; // Add next point in chronological order
+          const nextLength = prev.length + 1;
+          if (nextLength <= historyData.length) {
+            return historyData.slice(0, nextLength);
           }
           clearInterval(interval!);
           return prev;
@@ -364,45 +385,95 @@ const SensorChartModal: React.FC<{
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isOpen, hasSensor, currentIndex, historyData]);
+  }, [isOpen, hasSensor, displayData.length, historyData]);
+
+  // Format date label
+  const formatDateLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+  };
 
   const temperatureChartData = {
-    labels: displayData.map((data) => new Date(data.createdDate).toLocaleTimeString()),
+    labels: displayData.map((data) => formatDateLabel(data.createdDate)),
     datasets: [
       {
         label: 'Nhiệt độ (°C)',
         data: displayData.map((data) => data.temperature),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        fill: false,
-        tension: 0.1,
+        borderColor: 'rgba(255, 99, 132, 0.8)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgba(255, 99, 132, 1)',
+        fill: true,
+        tension: 0.4,
       },
     ],
   };
 
   const humidityChartData = {
-    labels: displayData.map((data) => new Date(data.createdDate).toLocaleTimeString()),
+    labels: displayData.map((data) => formatDateLabel(data.createdDate)),
     datasets: [
       {
         label: 'Độ ẩm (%)',
         data: displayData.map((data) => data.humidity),
-        borderColor: 'rgb(54, 162, 235)',
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        fill: false,
-        tension: 0.1,
+        borderColor: 'rgba(54, 162, 235, 0.8)',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+        fill: true,
+        tension: 0.4,
       },
     ],
   };
 
   const temperatureChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          font: {
+            size: 14,
+            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+          },
+         Justin: '#333',
+        },
       },
       title: {
         display: true,
         text: 'Biểu đồ Nhiệt độ',
+        font: {
+          size: 18,
+          family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+        },
+        color: '#333',
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: {
+          size: 14,
+        },
+        bodyFont: {
+          size: 12,
+        },
+        padding: 10,
+        callbacks: {
+          label: (context: any) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}°C`,
+          title: (tooltipItems: any[]) => formatDateLabel(displayData[tooltipItems[0].dataIndex].createdDate),
+        },
       },
     },
     scales: {
@@ -410,30 +481,95 @@ const SensorChartModal: React.FC<{
         title: {
           display: true,
           text: 'Thời gian',
+          font: {
+            size: 14,
+          },
+          color: '#333',
+        },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          font: {
+            size: 12,
+          },
+          color: '#555',
+        },
+        grid: {
+          display: false,
         },
       },
       y: {
         title: {
           display: true,
           text: 'Nhiệt độ (°C)',
+          font: {
+            size: 14,
+          },
+          color: '#333',
+        },
+        ticks: {
+          font: {
+            size: 12,
+          },
+          color: '#555',
+          callback: (tickValue: string | number) => {
+            const value = typeof tickValue === 'string' ? parseFloat(tickValue) : tickValue;
+            return Number.isFinite(value) ? `${value.toFixed(1)}°C` : '';
+          },
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
         },
         suggestedMin: 0,
+        suggestedMax: 40,
       },
     },
     animation: {
       duration: 1000,
+      easing: 'easeInOutQuad' as const,
     },
   };
 
   const humidityChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          font: {
+            size: 14,
+            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+          },
+          color: '#333',
+        },
       },
       title: {
         display: true,
         text: 'Biểu đồ Độ ẩm',
+        font: {
+          size: 18,
+          family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+        },
+        color: '#333',
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: {
+          size: 14,
+        },
+        bodyFont: {
+          size: 12,
+        },
+        padding: 10,
+        callbacks: {
+          label: (context: any) => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`,
+          title: (tooltipItems: any[]) => formatDateLabel(displayData[tooltipItems[0].dataIndex].createdDate),
+        },
       },
     },
     scales: {
@@ -441,18 +577,52 @@ const SensorChartModal: React.FC<{
         title: {
           display: true,
           text: 'Thời gian',
+          font: {
+            size: 14,
+          },
+          color: '#333',
+        },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          font: {
+            size: 12,
+          },
+          color: '#555',
+        },
+        grid: {
+          display: false,
         },
       },
       y: {
         title: {
           display: true,
           text: 'Độ ẩm (%)',
+          font: {
+            size: 14,
+          },
+          color: '#333',
+        },
+        ticks: {
+          font: {
+            size: 12,
+          },
+          color: '#555',
+          callback: (tickValue: string | number) => {
+            const value = typeof tickValue === 'string' ? parseFloat(tickValue) : tickValue;
+            return Number.isFinite(value) ? `${value.toFixed(1)}%` : '';
+          },
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
         },
         suggestedMin: 0,
+        suggestedMax: 100,
       },
     },
     animation: {
       duration: 1000,
+      easing: 'easeInOutQuad' as const,
     },
   };
 
@@ -463,26 +633,38 @@ const SensorChartModal: React.FC<{
       footer={[<Button key="close" type="primary" onClick={onClose}>Đóng</Button>]}
       closeIcon={<CloseOutlined />}
       centered
-      title="Giám sát môi trường kho"
-      width={800}
+      title={`Giám sát môi trường kho (Kho ${roomName})`}
+      width={900}
     >
-      <div style={{ padding: 16 }}>
+      <div style={{ padding: 24 }}>
         {loading ? (
           <Text>Đang tải dữ liệu...</Text>
         ) : hasSensor === false ? (
           <Text>Phòng này không có cảm biến.</Text>
         ) : (
           <>
-            <div style={{ marginBottom: 24 }}>
-              <AntTitle level={5}>Biểu đồ nhiệt độ</AntTitle>
+            {latestSensorData && (
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>Dữ liệu mới nhất ({formatDateLabel(latestSensorData.createdDate)}):</Text>
+                <div style={{ padding: 8, background: '#f5f5f5', borderRadius: 4 }}>
+                  Nhiệt độ: {latestSensorData.temperature.toFixed(1)}°C, Độ ẩm: {latestSensorData.humidity.toFixed(1)}%
+                </div>
+              </div>
+            )}
+            <div style={{ marginBottom: 32, height: 300 }}>
+              <AntTitle level={5} style={{ marginBottom: 16 }}>
+                Biểu đồ Nhiệt độ
+              </AntTitle>
               {displayData.length > 0 ? (
                 <Line data={temperatureChartData} options={temperatureChartOptions} />
               ) : (
                 <Text>Không có dữ liệu để hiển thị.</Text>
               )}
             </div>
-            <div>
-              <AntTitle level={5}>Biểu đồ độ ẩm</AntTitle>
+            <div style={{ marginBottom: 32, height: 300 }}>
+              <AntTitle level={5} style={{ marginBottom: 16 }}>
+                Biểu đồ Độ ẩm
+              </AntTitle>
               {displayData.length > 0 ? (
                 <Line data={humidityChartData} options={humidityChartOptions} />
               ) : (
@@ -498,6 +680,7 @@ const SensorChartModal: React.FC<{
 
 // Main StorageRoomTable Component
 const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => {
+  const { user } = useAuth();
   const [selectedRoom, setSelectedRoom] = useState<StorageRoom | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -548,16 +731,31 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (status: boolean, room: StorageRoom) => (
-        <Select
-          value={status ? 'Hoạt động' : 'Không hoạt động'}
-          onChange={(value) => handleStatusChange(value, room)}
-          style={{ width: 120 }}
-        >
-          <Option value="Hoạt động">Hoạt động</Option>
-          <Option value="Không hoạt động">Không hoạt động</Option>
-        </Select>
-      ),
+      render: (status: boolean, room: StorageRoom) => {
+        const statusText = status ? 'Hoạt động' : 'Không hoạt động';
+        if (user?.roleName === 'Director') {
+          return (
+            <Select
+              value={statusText}
+              onChange={(value) => handleStatusChange(value, room)}
+              style={{ width: 120 }}
+            >
+              <Option value="Hoạt động">Hoạt động</Option>
+              <Option value="Không hoạt động">Không hoạt động</Option>
+            </Select>
+          );
+        }
+        return (
+          <span
+            style={{
+              color: status ? '#52c41a' : '#f5222d',
+              fontWeight: '500',
+            }}
+          >
+            {statusText}
+          </span>
+        );
+      },
     },
     {
       title: 'Hành động',
@@ -576,16 +774,18 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
               >
                 Xem
               </Menu.Item>
-              <Menu.Item
-                key="edit"
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setSelectedRoom(room);
-                  setIsEditModalOpen(true);
-                }}
-              >
-                Chỉnh sửa
-              </Menu.Item>
+              {user?.roleName === 'Director' && (
+                <Menu.Item
+                  key="edit"
+                  icon={<EditOutlined />}
+                  onClick={() => {
+                    setSelectedRoom(room);
+                    setIsEditModalOpen(true);
+                  }}
+                >
+                  Chỉnh sửa
+                </Menu.Item>
+              )}
               <Menu.Item
                 key="sensor"
                 icon={<LineChartOutlined />}
@@ -641,6 +841,7 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
               setSelectedRoom(null);
             }}
             roomId={selectedRoom.storageRoomId}
+            roomName={selectedRoom.storageRoomName}
           />
         </>
       )}

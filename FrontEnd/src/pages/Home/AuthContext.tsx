@@ -12,29 +12,29 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  loading: boolean; // Thêm trạng thái loading
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Tạo instance axios riêng để dễ cấu hình interceptor
 const apiClient = axios.create({
   baseURL: "http://pharmadistiprobe.fun/api",
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true); // Khởi tạo loading là true
 
-  // Khôi phục user từ cookie khi component mount
   useEffect(() => {
     const storedUser = Cookies.get("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    setLoading(false); // Sau khi kiểm tra, đặt loading là false
   }, []);
 
-  // Hàm gọi API refresh token
   const refreshAccessToken = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
@@ -49,7 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.status === 200) {
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
 
-        // Cập nhật token mới
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", newRefreshToken);
         Cookies.set("token", accessToken, { expires: 7 });
@@ -60,23 +59,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       console.error("Refresh token failed:", error);
-      logout(); // Đăng xuất nếu refresh token thất bại
+      logout();
       throw error;
     }
   };
 
-  // Interceptor để xử lý lỗi 401 và thử refresh token
   useEffect(() => {
     const interceptor = apiClient.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
         if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true; // Đánh dấu để tránh vòng lặp vô hạn
+          originalRequest._retry = true;
           try {
             const newAccessToken = await refreshAccessToken();
             originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-            return apiClient(originalRequest); // Thử lại yêu cầu gốc
+            return apiClient(originalRequest);
           } catch (refreshError) {
             return Promise.reject(refreshError);
           }
@@ -85,7 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Cleanup interceptor khi component unmount
     return () => {
       apiClient.interceptors.response.eject(interceptor);
     };
@@ -147,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -161,5 +158,4 @@ export const useAuth = () => {
   return context;
 };
 
-// Export apiClient để sử dụng ở các file khác
 export { apiClient };

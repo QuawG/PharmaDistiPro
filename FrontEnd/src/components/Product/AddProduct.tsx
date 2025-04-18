@@ -23,6 +23,14 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
   const [fileList, setFileList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Check if user is authorized (Director role)
+  useEffect(() => {
+    if (user && user.roleName !== 'Director') {
+      message.error('Bạn không có quyền truy cập trang này!');
+      handleChangePage('Danh sách sản phẩm');
+    }
+  }, [user, handleChangePage]);
+
   // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
@@ -65,6 +73,11 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
       return;
     }
 
+    if (!user || !user.customerId) {
+      message.error('Không thể xác định người tạo sản phẩm. Vui lòng đăng nhập lại!');
+      return;
+    }
+
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
@@ -86,11 +99,11 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
       formDataToSend.append('status', values.status);
       formDataToSend.append('description', values.description);
       formDataToSend.append('sellingPrice', values.sellingPrice.toString());
-      formDataToSend.append('storageconditions', storageConditionValue.toString()); // Ensure valid number
+      formDataToSend.append('storageconditions', storageConditionValue.toString());
       formDataToSend.append('weight', values.weight.toString());
       formDataToSend.append('vat', values.vat.toString());
       formDataToSend.append('volumePerUnit', values.volumePerUnit.toString());
-      formDataToSend.append('createdBy', user?.customerId.toString() || '');
+      formDataToSend.append('createdBy', user.customerId.toString());
 
       // Append image files
       fileList.forEach((file: any) => {
@@ -109,7 +122,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
         weight: values.weight,
         vat: values.vat,
         volumePerUnit: values.volumePerUnit,
-        createdBy: user?.customerId,
+        createdBy: user.customerId,
       });
 
       // Send request to API
@@ -120,7 +133,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
         },
       });
 
-      console.log('API response:', response.data); // Log full response
+      console.log('API response:', response.data);
 
       if (response.status === 201) {
         message.success('Thêm sản phẩm thành công!');
@@ -140,6 +153,13 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
     }
   };
 
+  // Redirect if no user is logged in
+  if (!user) {
+    message.error('Vui lòng đăng nhập để thêm sản phẩm!');
+    handleChangePage('Danh sách sản phẩm');
+    return null;
+  }
+
   return (
     <div className="p-6 w-full transition-all rounded-lg shadow-sm mt-[60px] bg-[#fafbfe]">
       <div className="mb-6">
@@ -154,7 +174,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
           onFinish={handleSubmit}
           initialValues={{
             status: 'true',
-            storageconditions: '1', // Default to "Bảo quản thường"
+            storageconditions: '1',
           }}
         >
           <Row gutter={16}>
@@ -254,17 +274,16 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
               </Form.Item>
             </Col>
             <Col xs={24} md={12} lg={8}>
-            <Form.Item
-  label="Điều kiện bảo quản"
-  name="storageconditions"
-  rules={[{ required: true, message: 'Vui lòng chọn điều kiện bảo quản!' }]}
->
-  <Select placeholder="Chọn điều kiện bảo quản">
-    <Option value="1">Bảo quản thường (Nhiệt độ: 15-30°C; Độ ẩm &lt; 75%)</Option>
-    <Option value="2">Bảo quản lạnh (Nhiệt độ: 2-8°C; Độ ẩm &lt; 45%)</Option>
-    <Option value="3">Bảo quản mát (Nhiệt độ: 8-15°C; Độ ẩm &lt; 70%)</Option>
-  </Select>
-</Form.Item>
+              <Form.Item
+                label="Điều kiện bảo quản"
+                name="storageconditions"
+                rules={[{ required: true, message: 'Vui lòng chọn điều kiện bảo quản!' }]}
+              >
+                <Select placeholder="Chọn điều kiện bảo quản">
+                   <Option value="1">Bảo quản thường (Nhiệt độ: 15-30°C; Độ ẩm &lt; 75%)</Option>
+                    <Option value="2">Bảo quản lạnh (Nhiệt độ: 2-8°C; Độ ẩm &lt; 45%)</Option>
+                     <Option value="3">Bảo quản mát (Nhiệt độ: 8-15°C; Độ ẩm &lt; 70%)</Option> </Select>
+              </Form.Item>
             </Col>
             <Col xs={24} md={12} lg={8}>
               <Form.Item

@@ -1,6 +1,6 @@
 import { useState, forwardRef } from "react";
 import { Table, Modal, message, Select, Dropdown, Button, Menu, Avatar } from "antd";
-import { EyeOutlined, EditOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
+import { EyeOutlined,   MoreOutlined } from "@ant-design/icons";
 import CustomerDetailsModal from "./CustomerDetail";
 import UpdateCustomerDetailsModal from "./UpdateCustomerDetail";
 import axios from "axios";
@@ -31,25 +31,25 @@ const CustomerTable = forwardRef<HTMLDivElement, CustomerTableProps>(({ customer
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const handleDelete = (customer: Customer) => {
-    Modal.confirm({
-      title: "Xác nhận xóa",
-      content: "Bạn có chắc chắn muốn xóa khách hàng này? Hành động này không thể hoàn tác.",
-      okText: "Xóa",
-      okType: "danger",
-      cancelText: "Hủy",
-      onOk: async () => {
-        try {
-          await axios.delete(`http://pharmadistiprobe.fun/api/Customer/DeleteCustomer/${customer.userId}`);
-          setCustomers(customers.filter((item) => item.userId !== customer.userId));
-          message.success("Xóa khách hàng thành công!");
-        } catch (error) {
-          console.error("Error deleting customer:", error);
-          message.error("Lỗi khi xóa khách hàng!");
-        }
-      },
-    });
-  };
+  // const handleDelete = (customer: Customer) => {
+  //   Modal.confirm({
+  //     title: "Xác nhận xóa",
+  //     content: "Bạn có chắc chắn muốn xóa khách hàng này? Hành động này không thể hoàn tác.",
+  //     okText: "Xóa",
+  //     okType: "danger",
+  //     cancelText: "Hủy",
+  //     onOk: async () => {
+  //       try {
+  //         await axios.delete(`http://pharmadistiprobe.fun/api/Customer/DeleteCustomer/${customer.userId}`);
+  //         setCustomers(customers.filter((item) => item.userId !== customer.userId));
+  //         message.success("Xóa khách hàng thành công!");
+  //       } catch (error) {
+  //         console.error("Error deleting customer:", error);
+  //         message.error("Lỗi khi xóa khách hàng!");
+  //       }
+  //     },
+  //   });
+  // };
 
   const handleStatusChange = async (value: string, record: Customer) => {
     const newStatus = value === "Hoạt động";
@@ -122,7 +122,7 @@ const CustomerTable = forwardRef<HTMLDivElement, CustomerTableProps>(({ customer
               >
                 Xem
               </Menu.Item>
-              <Menu.Item
+              {/* <Menu.Item
                 key="edit"
                 icon={<EditOutlined />}
                 onClick={() => {
@@ -131,15 +131,15 @@ const CustomerTable = forwardRef<HTMLDivElement, CustomerTableProps>(({ customer
                 }}
               >
                 Chỉnh sửa
-              </Menu.Item>
-              <Menu.Item
+              </Menu.Item> */}
+              {/* <Menu.Item
                 key="delete"
                 icon={<DeleteOutlined />}
                 danger
                 onClick={() => handleDelete(record)}
               >
                 Xóa
-              </Menu.Item>
+              </Menu.Item> */}
             </Menu>
           }
           trigger={["click"]}
