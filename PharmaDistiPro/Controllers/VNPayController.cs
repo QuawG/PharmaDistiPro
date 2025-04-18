@@ -105,17 +105,28 @@ namespace PharmaDistiPro.Controllers
 
                     if (paymentResult.IsSuccess)
                     {
+                        
+
+                          var Url = $"http://pharmadistiproweb.pro.vn/payment/success?orderId={txnRef}";
+                    
                         Console.WriteLine($"✅ Callback thành công:");
                         Console.WriteLine($"➡️  Mã giao dịch (TxnRef): {txnRef}");
                         Console.WriteLine($"➡️  Mã thanh toán (TransactionNo): {transactionNo}");
-                        return Ok(resultDescription);
+                        return Redirect(Url);
                     }
                     Console.WriteLine("FAILED");
-                    return BadRequest(resultDescription);
+
+
+
+                    var UrlFail = $"http://pharmadistiproweb.pro.vn/payment/failed?orderId={txnRef}";
+                   
+
+                    return Redirect($"http://pharmadistiproweb.pro.vn/payment/failed?orderId={txnRef}");
                 }
                 catch (Exception ex)
                 {
                     return BadRequest(ex.Message);
+
                 }
             }
 
