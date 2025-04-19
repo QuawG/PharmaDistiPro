@@ -197,7 +197,7 @@ namespace PharmaDistiPro.Services.Impl
             orderRequest.ClientOrderCode = orders.OrderCode;
             orderRequest.Coupon = "";
             // order info
-            orderRequest.Weight = 500;
+            orderRequest.Weight = (int)(orderDetails.Sum(s=>s.Product.Weight)*1000);
             List<OrderItem> listItem = new List<OrderItem>();
             foreach (var orderDetail in orderDetails)
             {
@@ -209,7 +209,7 @@ namespace PharmaDistiPro.Services.Impl
                 item.Height = 6;
                 item.Length = 8;
                 item.Width = 8;
-                item.Weight = (int)orderDetail.Product.Weight;
+                item.Weight = (int)orderDetail.Product.Weight *1000;
                 listItem.Add(item);
             }
             orderRequest.Items = listItem;
