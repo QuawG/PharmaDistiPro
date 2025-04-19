@@ -11,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import axios from "axios";
+import { useAuth } from "../../pages/Home/AuthContext";
 
 interface IssueNote {
   id: number;
@@ -84,6 +85,7 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
   onUpdate,
   rowSelection,
 }) => {
+  const { user } = useAuth(); // Get user from AuthContext
   const [filteredNotes, setFilteredNotes] = useState<IssueNote[]>(notes);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<IssueNote | null>(null);
@@ -273,17 +275,32 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
       title: "Trạng Thái",
       dataIndex: "status",
       key: "status",
-      render: (status: number, record: IssueNote) => (
-        <Select
-          value={String(status)}
-          onChange={(value) => handleStatusChange(record.id, value)}
-          style={{ width: 120 }}
-        >
-          <Select.Option value="0">Hủy</Select.Option>
-          <Select.Option value="1">Đang xử lý</Select.Option>
-          <Select.Option value="2">Đã xuất</Select.Option>
-        </Select>
-      ),
+      render: (status: number, record: IssueNote) => {
+        const statusText = ["Chờ xử lý", "Đã xử lý", "Đã xuất"][status] || status;
+        if (user?.roleName === "WarehouseManager") {
+          return (
+            <Select
+              value={String(status)}
+              onChange={(value) => handleStatusChange(record.id, value)}
+              style={{ width: 120 }}
+            >
+              <Select.Option value="0">Hủy</Select.Option>
+              <Select.Option value="1">Đang xử lý</Select.Option>
+              <Select.Option value="2">Đã xuất</Select.Option>
+            </Select>
+          );
+        }
+        return (
+          <span
+            style={{
+              color: status === 0 ? "#f5222d" : status === 1 ? "#fa8c16" : "#52c41a",
+              fontWeight: "500",
+            }}
+          >
+            {statusText}
+          </span>
+        );
+      },
     },
     {
       title: "Người Tạo",

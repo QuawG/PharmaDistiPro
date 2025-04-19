@@ -1,18 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./Home/AuthContext";
+import { apiClient } from "./Home/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 
-const SignIn: React.FC = () => {
+const SendOTP: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignIn = async () => {
-    if (!username || !password) {
-      toast.error("Vui lòng nhập tên đăng nhập và mật khẩu!", {
+  const handleSendOTP = async () => {
+    if (!email) {
+      toast.error("Vui lòng nhập email!", {
         position: "top-right",
         duration: 3000,
       });
@@ -21,15 +19,36 @@ const SignIn: React.FC = () => {
 
     setLoading(true);
     try {
-      await login(username, password);
-      toast.success("Đăng nhập thành công!", {
-        position: "top-right",
-        duration: 3000,
-      });
-      navigate("/home");
+      console.log("Email gửi đi:", email);
+
+      const response = await apiClient.post(
+        "/User/SentOTP",
+        `"${email}"`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            accept: "*/*",
+          },
+        }
+      );
+
+      console.log("Phản hồi từ API:", response.data);
+
+      if (typeof response.data === "string" && response.data.includes("OTP sent successfully")) {
+        toast.success("Mã OTP đã được gửi đến email của bạn!", {
+          position: "top-right",
+          duration: 3000,
+        });
+        navigate("/reset-password", { state: { email } });
+      } else {
+        toast.error(response.data || "Gửi OTP thất bại!", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
     } catch (error: any) {
-      console.error("Lỗi đăng nhập:", error);
-      toast.error(error.message || "Đăng nhập thất bại!", {
+      console.error("Lỗi gửi OTP:", error);
+      toast.error(error.response?.data || "Gửi OTP thất bại!", {
         position: "top-right",
         duration: 3000,
       });
@@ -42,48 +61,38 @@ const SignIn: React.FC = () => {
     <div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-white">
       <Toaster />
 
-      {/* Phần bên trái - Form đăng nhập */}
+      {/* Phần bên trái - Form gửi OTP */}
       <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-8">
         {/* Logo */}
         <img src="/img/logoPharma.png" alt="Vinh Nguyen Pharmadistipro Logo" className="w-32 mb-8" />
 
         {/* Tiêu đề */}
-        <h2 className="text-3xl font-bold text-[#00A8E8] mb-2">Đăng Nhập</h2>
-        <p className="text-gray-600 mb-8">Vui lòng đăng nhập để tiếp tục</p>
+        <h2 className="text-3xl font-bold text-[#00A8E8] mb-2">Quên Mật Khẩu?</h2>
+        <p className="text-gray-600 mb-8">
+          Đừng lo! Vui lòng nhập email liên kết với tài khoản của bạn.
+        </p>
 
         {/* Form */}
         <div className="w-full max-w-sm">
           <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">Tên đăng nhập</label>
+            <label className="block text-gray-700 font-medium mb-2">Email</label>
             <input
-              type="text"
-              placeholder="Nhập tên đăng nhập của bạn"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder="Nhập email của bạn"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A8E8] focus:border-[#00A8E8] outline-none transition-all duration-200"
             />
           </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">Mật khẩu</label>
-            <input
-              type="password"
-              placeholder="Nhập mật khẩu của bạn"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A8E8] focus:border-[#00A8E8] outline-none transition-all duration-200"
-            />
-          </div>
-
           <button
-            onClick={() => navigate("/send-otp")}
-            className="text-[#00A8E8] font-medium hover:underline mb-6"
+            onClick={() => navigate("/")}
+            className="text-[#00A8E8] font-medium hover:underline mb-6 "
           >
-            Quên mật khẩu?
+            Quay về đăng nhập
           </button>
 
           <button
-            onClick={handleSignIn}
+            onClick={handleSendOTP}
             className={`w-full py-3 rounded-lg font-medium text-white transition-all duration-300 ${
               loading
                 ? "bg-gray-400 cursor-not-allowed"
@@ -116,7 +125,7 @@ const SignIn: React.FC = () => {
                 Đang xử lý...
               </div>
             ) : (
-              "Đăng Nhập"
+              "Gửi"
             )}
           </button>
         </div>
@@ -126,7 +135,7 @@ const SignIn: React.FC = () => {
       <div className="lg:w-1/2 w-full h-64 lg:h-screen bg-[#FFCA99] flex items-center justify-center">
         <img
           src="/img/illustration.png"
-          alt="Sign In Illustration"
+          alt="Forgot Password Illustration"
           className="max-w-full max-h-full object-contain"
         />
       </div>
@@ -134,4 +143,4 @@ const SignIn: React.FC = () => {
   );
 };
 
-export default SignIn;
+export default SendOTP;

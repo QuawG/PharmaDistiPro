@@ -38,7 +38,7 @@ interface Lot {
 interface LotTableProps {
   handleChangePage: (page: string, lotId?: number) => void;
   onDelete: (id: number) => void;
-  onUpdate: (updatedLot: ProductLot) => void;
+  // onUpdate: (updatedLot: ProductLot) => void;
   rowSelection?: {
     selectedRowKeys: React.Key[];
     onChange: (selectedRowKeys: React.Key[], selectedRows: ProductLot[]) => void;

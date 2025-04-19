@@ -1,18 +1,18 @@
 import React, { useState } from "react";
 import LotTable from "../../components/Lot/LotTable";
 
-interface ProductLot {
-  id: number;
-  lotId: number;
-  productId: number;
-  quantity: number;
-  manufacturedDate: string;
-  expiredDate: string;
-  supplyPrice: number;
-  status: number | null;
-  productName: string;
-  lotCode: string;
-}
+// interface ProductLot {
+//   id: number;
+//   lotId: number;
+//   productId: number;
+//   quantity: number;
+//   manufacturedDate: string;
+//   expiredDate: string;
+//   supplyPrice: number;
+//   status: number | null;
+//   productName: string;
+//   lotCode: string;
+// }
 
 interface LotListPageProps {
   handleChangePage: (page: string, lotId?: number) => void;
@@ -32,10 +32,10 @@ const LotListPage: React.FC<LotListPageProps> = ({ handleChangePage }) => {
   };
 
   // Hàm xử lý khi cập nhật lô (có thể gọi API PUT nếu cần)
-  const handleUpdate = (updatedLot: ProductLot) => {
-    console.log("Cập nhật lô:", updatedLot);
-    // Gọi API PUT nếu có: axios.put(`http://pharmadistiprobe.fun/api/ProductLot/${updatedLot.id}`, updatedLot);
-  };
+  // const handleUpdate = (updatedLot: ProductLot) => {
+  //   console.log("Cập nhật lô:", updatedLot);
+  //   // Gọi API PUT nếu có: axios.put(`http://pharmadistiprobe.fun/api/ProductLot/${updatedLot.id}`, updatedLot);
+  // };
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
@@ -51,7 +51,7 @@ const LotListPage: React.FC<LotListPageProps> = ({ handleChangePage }) => {
           <LotTable
             handleChangePage={handleChangePage}
             onDelete={handleDelete}
-            onUpdate={handleUpdate}
+            // onUpdate={handleUpdate}
             rowSelection={{
               selectedRowKeys,
               onChange: handleRowSelectionChange,
