@@ -90,7 +90,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = null,
                 CategoryId = 1,
-                ProductCode = null
+                ProductCode = null,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -123,7 +124,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = null,
                 CategoryId = 1,
-                Status = null
+                Status = null,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -157,7 +159,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = null,
                 CategoryId = 1,
-                SellingPrice = null
+                SellingPrice = null,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -191,7 +194,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = null,
                 CategoryId = 1,
-                SellingPrice = -1
+                SellingPrice = -1,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -225,7 +229,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = null,
                 CategoryId = 1,
-                Vat = null
+                Vat = null,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -259,7 +264,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = null,
                 CategoryId = 1,
-                Vat = -1
+                Vat = -1,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -292,7 +298,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             var request = new ProductInputRequest
             {
                 ProductName = null,
-                CategoryId = 1
+                CategoryId = 1,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -325,7 +332,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = "Thuốc ho",
                 CategoryId = 1,
-                ManufactureName = null
+                ManufactureName = null,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -368,7 +376,8 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             {
                 ProductName = "Test Product",
                 CategoryId = 1,
-                Images = mockImages
+                Images = mockImages,
+                Storageconditions = StorageCondition.Cool
             };
 
             var category = new Category { Id = 1, CategoryMainId = 1, CategoryCode = "TH" };
@@ -429,7 +438,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             var result = await _productService.CreateNewProduct(request);
 
             Assert.True(result.Success);
-            Assert.Equal("Tạo mới sản phẩm thành công", result.Message);
+            Assert.Equal("Tạo mới sản phẩm thành công. Điều kiện bảo quản: Bảo quản thường", result.Message);
         }
     }
 }

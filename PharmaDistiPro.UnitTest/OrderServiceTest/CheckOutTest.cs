@@ -180,7 +180,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 OrderId = 1,
                 OrderCode = "ORD001",
                 CreatedDate = DateTime.Now,
-                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN,
                 UpdatedStatusDate = DateTime.Now,
                 CustomerId = 1,
                 DistrictId = 1482,
@@ -197,7 +197,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 OrderId = 1,
                 OrderCode = "ORD001",
                 CreatedDate = DateTime.Now,
-                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN,
                 UpdatedStatusDate = DateTime.Now,
                 CustomerId = 1,
                 DistrictId = 1482,
@@ -252,7 +252,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             Assert.NotNull(result.Data);
             Assert.True(result.Success);
             Assert.Equal(order.OrderId, result.Data.OrderId);
-            Assert.Equal((int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN, result.Data.Status);
+            Assert.Equal((int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN, result.Data.Status);
 
             _orderRepositoryMock.Verify(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()), Times.Once);
             _ordersDetailRepositoryMock.Verify(repo => repo.AddOrdersDetails(It.IsAny<List<OrdersDetail>>()), Times.Once);

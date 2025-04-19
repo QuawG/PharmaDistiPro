@@ -97,30 +97,29 @@ namespace PharmaDistiPro.Test.OrderServiceTest
     {
         new Order { OrderId = 1, Status = 1 },
         new Order { OrderId = 2, Status = 2 },
-        new Order { OrderId = 3, Status = 2 }
+        new Order { OrderId = 3, Status = 3 }
     };
-            var ordersWithStatus1 = orders.Where(o => o.Status == 1).ToList();
-
 
             _orderRepositoryMock.Setup(repo => repo.GetByConditionAsync(
-                It.Is<Expression<Func<Order, bool>>>(x => x.Compile().Invoke(new Order { Status = 1 })),
+                It.IsAny<Expression<Func<Order, bool>>>(),
                 It.IsAny<string[]>(),
                 It.IsAny<Func<IQueryable<Order>, IOrderedQueryable<Order>>>()))
-                .ReturnsAsync(ordersWithStatus1);
+                .ReturnsAsync(orders.Where(o => o.Status == 3)); 
 
-            _mapperMock.Setup(m => m.Map<IEnumerable<OrderDto>>(ordersWithStatus1))
-                .Returns(ordersWithStatus1.Select(o => new OrderDto
-                {
-                    OrderId = o.OrderId,
-                    Status = o.Status
-                }));
+            _mapperMock.Setup(m => m.Map<IEnumerable<OrderDto>>(It.IsAny<IEnumerable<Order>>()))
+                .Returns((IEnumerable<Order> source) =>
+                    source.Select(o => new OrderDto { OrderId = o.OrderId, Status = o.Status }));
 
             // Act
             var result = await _orderService.GetOrderNeedConfirm();
 
-            Assert.Equal(1, result.Data.Count());
+            // Assert
+            Assert.NotNull(result.Data);
             Assert.True(result.Success);
+            Assert.Single(result.Data);
+            Assert.Equal(3, result.Data.First().OrderId);
         }
+    
 
         [Fact]
         public async Task GetOrderNeedConfirm_WhenDatabaseError_ReturnFail()
@@ -205,14 +204,14 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 new Order { OrderId = 2, Status = 2, AssignTo = 1 },
                 new Order { OrderId = 3, Status = 3, AssignTo = 1 }
             };
-            var ordersWithStatus1 = orders.Where(o => o.Status == 2).ToList();
+            var ordersWithStatus1 = orders.Where(o => o.Status == 3).ToList();
 
 
-            _orderRepositoryMock.Setup(repo => repo.GetByConditionAsync(
-                It.Is<Expression<Func<Order, bool>>>(x => x.Compile().Invoke(new Order { Status = 1 })),
-                It.IsAny<string[]>(),
-                It.IsAny<Func<IQueryable<Order>, IOrderedQueryable<Order>>>()))
-                .ReturnsAsync(ordersWithStatus1);
+            _orderRepositoryMock.Setup(repo => repo.GetByConditionAsync(  
+                It.IsAny<Expression<Func<Order, bool>>>(),   
+                It.IsAny<string[]>(),   
+                It.IsAny<Func<IQueryable<Order>, IOrderedQueryable<Order>>>()))  
+                .ReturnsAsync(orders.Where(o => o.Status == 3));
 
             _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
                 .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });

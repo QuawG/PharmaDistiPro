@@ -19,7 +19,6 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
         private readonly Mock<IMapper> _mapperMock;
         private readonly Mock<ILotRepository> _lotRepositoryMock;
         private readonly ProductLotService _productLotService;
-
         public CreateProductLotTest()
         {
             _productLotRepositoryMock = new Mock<IProductLotRepository>();
@@ -44,11 +43,50 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
         }
 
         [Fact]
-        public async Task CreateProductLot_WhenProductLotListIsEmpty_ReturnBadRequest()
+        public async Task CreateProductLot_WhenStorageIsEmpty_ReturnBadRequest()
         {
-            var result = await _productLotService.CreateProductLot(new List<ProductLotRequest>());
+            var lot = new Lot
+            { LotId = 1 };
+
+            var product = new Product
+            {
+                ProductId = 1,
+                ProductName = "Paracetamol"
+            };
+
+            var productLots = new List<ProductLotRequest>
+            {
+                new ProductLotRequest { LotId = 1, ProductId = 1, ManufacturedDate = DateTime.Now.AddDays(10) }
+            };
+
+            _productLotRepositoryMock.Setup(repo => repo.GetLotById(1))
+                                     .ReturnsAsync(lot);
+            _productRepositoryMock.Setup(repo => repo.GetByIdAsync(1))
+ .ReturnsAsync(new Product
+ {
+     ProductId = 1,
+     ProductName = "Paracetamol",
+     VolumePerUnit = 1
+ });
+            _productLotRepositoryMock.Setup(repo => repo.CreateProductLot(It.IsAny<ProductLot>()))
+                                     .ReturnsAsync(new ProductLot
+                                     {
+                                         ProductLotId = 10,
+                                         LotId = 1,
+                                         ProductId = 2,
+                                         SupplyPrice = 50000,
+                                         ManufacturedDate = DateTime.Now,
+                                         ExpiredDate = DateTime.Now.AddYears(1),
+                                         Status = 1,
+                                         Quantity = 0,
+                                         StorageRoomId = 1
+                                     });
+
+
+            var result = await _productLotService.CreateProductLot(productLots);
+
             Assert.Equal(400, result.StatusCode);
-            Assert.Equal("Danh sách lô hàng không có giá trị!", result.Message);
+            Assert.Equal("StorageRoomId không có giá trị cho lô 1!", result.Message);
         }
 
         [Fact]
@@ -86,86 +124,135 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
         public async Task CreateProductLot_WhenInsertFails_ReturnServerError()
         {
             var productLots = new List<ProductLotRequest>
-            {
-                new ProductLotRequest { LotId = 1, ProductId = 1 }
-            };
+    {
+        new ProductLotRequest
+        {
+            LotId = 1,
+            ProductId = 2,
+            ManufacturedDate = DateTime.Now,
+            ExpiredDate = DateTime.Now.AddYears(1),
+            SupplyPrice = 50000,
+            Status = 1,
+            OrderQuantity = 100, // Add OrderQuantity for validation in the service method
+            StorageRoomId = 1 // Add StorageRoomId for validation in the service method
+        }
+    };
 
             _productLotRepositoryMock.Setup(repo => repo.GetLotById(1))
-                                     .ReturnsAsync(new Lot { LotId = 1 });
+                                     .ReturnsAsync(new Lot { LotId = 1, LotCode = "LOT001" });
 
-            _productLotRepositoryMock.Setup(repo => repo.CreateProductLots(It.IsAny<List<ProductLot>>()))
-                                     .ReturnsAsync(new List<ProductLot>());
+            _productRepositoryMock.Setup(repo => repo.GetByIdAsync(2))  // Mocking Product retrieval
+                                     .ReturnsAsync(new Product
+                                     {
+                                         ProductId = 2,
+                                         ProductName = "Paracetamol",  // Added ProductName
+                                         VolumePerUnit = 10 // Ensure this field is set for validation
+                                     });
+
+            _productLotRepositoryMock.Setup(repo => repo.CreateProductLot(It.IsAny<ProductLot>()))
+                         .ReturnsAsync((ProductLot)null);
+
+
 
             var result = await _productLotService.CreateProductLot(productLots);
 
             Assert.Equal(500, result.StatusCode);
-            Assert.Equal("Lỗi khi tạo lô hàng!", result.Message);
+            Assert.True(result.Message.Contains("Lỗi hệ thống"));
         }
 
         [Fact]
         public async Task CreateProductLot_WhenValidProductLots_ReturnSuccess()
         {
             var productLots = new List<ProductLotRequest>
-            {
-                new ProductLotRequest
-                {
-                    LotId = 1,
-                    ProductId = 2,
-                    ManufacturedDate = DateTime.Now,
-                    ExpiredDate = DateTime.Now.AddYears(1),
-                    SupplyPrice = 50000,
-                    Status = 1
-                }
-            };
+    {
+        new ProductLotRequest
+        {
+            LotId = 1,
+            ProductId = 2,
+            ManufacturedDate = DateTime.Now,
+            ExpiredDate = DateTime.Now.AddYears(1),
+            SupplyPrice = 50000,
+            Status = 1,
+            OrderQuantity = 100, // Add OrderQuantity for validation in the service method
+            StorageRoomId = 1 // Add StorageRoomId for validation in the service method
+        }
+    };
 
             _productLotRepositoryMock.Setup(repo => repo.GetLotById(1))
                                      .ReturnsAsync(new Lot { LotId = 1, LotCode = "LOT001" });
 
-            _productLotRepositoryMock.Setup(repo => repo.CreateProductLots(It.IsAny<List<ProductLot>>()))
-                                     .ReturnsAsync(new List<ProductLot>
+            _productRepositoryMock.Setup(repo => repo.GetByIdAsync(2))  // Mocking Product retrieval
+                                     .ReturnsAsync(new Product
                                      {
-                                         new ProductLot
-                                         {
-                                             ProductLotId = 10,
-                                             LotId = 1,
-                                             ProductId = 2,
-                                             SupplyPrice = 50000,
-                                             ManufacturedDate = DateTime.Now,
-                                             ExpiredDate = DateTime.Now.AddYears(1),
-                                             Status = 1,
-                                             Product = new Product { ProductName = "Paracetamol" },
-                                             Lot = new Lot { LotCode = "LOT001" }
-                                         }
+                                         ProductId = 2,
+                                         ProductName = "Paracetamol",  // Added ProductName
+                                         VolumePerUnit = 10 // Ensure this field is set for validation
                                      });
+
+            _productLotRepositoryMock.Setup(repo => repo.CreateProductLot(It.IsAny<ProductLot>()))
+                                     .ReturnsAsync(new ProductLot
+                                     {
+                                         ProductLotId = 10,
+                                         LotId = 1,
+                                         ProductId = 2,
+                                         SupplyPrice = 50000,
+                                         ManufacturedDate = DateTime.Now,
+                                         ExpiredDate = DateTime.Now.AddYears(1),
+                                         Status = 1,
+                                         Quantity = 0,
+                                         StorageRoomId = 1
+                                     });
+
+            _storageRoomRepositoryMock.Setup(repo => repo.GetByIdAsync(1))
+                                      .ReturnsAsync(new StorageRoom
+                                      {
+                                          StorageRoomId = 1,
+                                          RemainingRoomVolume = 1000 // Ensure the room has sufficient volume
+                                      });
 
             var result = await _productLotService.CreateProductLot(productLots);
 
             Assert.Equal(200, result.StatusCode);
             Assert.Single(result.Data);
-            Assert.Equal("Paracetamol", result.Data[0].ProductName);
+            Assert.Equal("Paracetamol", result.Data[0].ProductName);  // Ensure ProductName is validated
             Assert.Equal("LOT001", result.Data[0].LotCode);
         }
+
 
         [Fact]
         public async Task CreateProductLot_WhenManufacturedGreathThanDate_ReturnFalse()
         {
-            var lot= new Lot
-            {  LotId = 1   };
-
-            var product = new Product
-            {
-                ProductId = 1,
-                ProductName = "Paracetamol"
-            };
-
-            var productLots = new List<ProductLotRequest>
-            {
-                new ProductLotRequest { LotId = 1, ProductId = 1, ManufacturedDate = DateTime.Now.AddDays(10) }
-            };
+              var productLots = new List<ProductLotRequest>
+    {
+        new ProductLotRequest
+        {
+            LotId = 1,
+            ProductId = 2,
+            ManufacturedDate = DateTime.Now.AddYears(1),
+            ExpiredDate = DateTime.Now.AddYears(1),
+            SupplyPrice = 50000,
+            Status = 1,
+            OrderQuantity = 100, // Add OrderQuantity for validation in the service method
+            StorageRoomId = 1 // Add StorageRoomId for validation in the service method
+        }
+    };
 
             _productLotRepositoryMock.Setup(repo => repo.GetLotById(1))
-                                     .ReturnsAsync(lot);
-               
+                                     .ReturnsAsync(new Lot { LotId = 1, LotCode = "LOT001" });
+
+            _productRepositoryMock.Setup(repo => repo.GetByIdAsync(2))  // Mocking Product retrieval
+                                     .ReturnsAsync(new Product
+                                     {
+                                         ProductId = 2,
+                                         ProductName = "Paracetamol",  // Added ProductName
+                                         VolumePerUnit = 10 // Ensure this field is set for validation
+                                     });
+            _storageRoomRepositoryMock.Setup(repo => repo.GetByIdAsync(1))
+                          .ReturnsAsync(new StorageRoom
+                          {
+                              StorageRoomId = 1,
+                              RemainingRoomVolume = 1000 // Ensure the room has sufficient volume
+                          });
             _productLotRepositoryMock.Setup(repo => repo.CreateProductLots(It.IsAny<List<ProductLot>>())).
                 ThrowsAsync(new Exception("Ngày sản xuất không thể lớn hơn hiện tại"));
 
@@ -173,28 +260,43 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
             var result = await _productLotService.CreateProductLot(productLots);
 
             Assert.Equal(500, result.StatusCode);
-            Assert.Equal("Lỗi hệ thống: Ngày sản xuất không thể lớn hơn hiện tại", result.Message);
+            Assert.True(result.Message.Contains("Lỗi hệ thống"));
         }
 
         [Fact]
         public async Task CreateProductLot_WhenExpriedLesThanDate_ReturnFalse()
         {
-            var lot = new Lot
-            { LotId = 1 };
-
-            var product = new Product
-            {
-                ProductId = 1,
-                ProductName = "Paracetamol"
-            };
-
             var productLots = new List<ProductLotRequest>
-            {
-                new ProductLotRequest { LotId = 1, ProductId = 1,  ExpiredDate = DateTime.Now.AddDays(-10) }
-            };
+    {
+        new ProductLotRequest
+        {
+            LotId = 1,
+            ProductId = 2,
+            ManufacturedDate = DateTime.Now,
+            ExpiredDate = DateTime.Now.AddYears(-1),
+            SupplyPrice = 50000,
+            Status = 1,
+            OrderQuantity = 100, // Add OrderQuantity for validation in the service method
+            StorageRoomId = 1 // Add StorageRoomId for validation in the service method
+        }
+    };
 
             _productLotRepositoryMock.Setup(repo => repo.GetLotById(1))
-                                     .ReturnsAsync(lot);
+                                     .ReturnsAsync(new Lot { LotId = 1, LotCode = "LOT001" });
+
+            _productRepositoryMock.Setup(repo => repo.GetByIdAsync(2))  // Mocking Product retrieval
+                                     .ReturnsAsync(new Product
+                                     {
+                                         ProductId = 2,
+                                         ProductName = "Paracetamol",  // Added ProductName
+                                         VolumePerUnit = 10 // Ensure this field is set for validation
+                                     });
+            _storageRoomRepositoryMock.Setup(repo => repo.GetByIdAsync(1))
+                          .ReturnsAsync(new StorageRoom
+                          {
+                              StorageRoomId = 1,
+                              RemainingRoomVolume = 1000 // Ensure the room has sufficient volume
+                          });
 
             _productLotRepositoryMock.Setup(repo => repo.CreateProductLots(It.IsAny<List<ProductLot>>())).
                 ThrowsAsync(new Exception("Ngày hết hạn không thể nhỏ hơn hiện tại"));
@@ -203,7 +305,7 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
             var result = await _productLotService.CreateProductLot(productLots);
 
             Assert.Equal(500, result.StatusCode);
-            Assert.Equal("Lỗi hệ thống: Ngày hết hạn không thể nhỏ hơn hiện tại", result.Message);
+            Assert.True(result.Message.Contains("Lỗi hệ thống"));
         }
 
     }

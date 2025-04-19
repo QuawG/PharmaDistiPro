@@ -93,7 +93,7 @@ namespace PharmaDistiPro.UnitTest.OrderServiceTest
         {
             var orders = new List<Order>
             {
-                new Order { OrderId = 4, CreatedDate = DateTime.Now, Status = 4 },
+                new Order { OrderId = 4, CreatedDate = DateTime.Now, Status = 5 },
                 new Order { OrderId = 2, CreatedDate = DateTime.Now, Status = 3 }
             };
 
@@ -119,8 +119,8 @@ namespace PharmaDistiPro.UnitTest.OrderServiceTest
 
             var orders = new List<Order>
             {
-                new Order { OrderId = 1, Status = 4, CreatedDate = new DateTime(2024, 1, 10) },
-                new Order { OrderId = 2, Status = 4, CreatedDate = new DateTime(2024, 1, 15) },
+                new Order { OrderId = 1, Status = 5, CreatedDate = new DateTime(2024, 1, 10) },
+                new Order { OrderId = 2, Status = 5, CreatedDate = new DateTime(2024, 1, 15) },
                 new Order { OrderId = 3, Status = 2, CreatedDate = new DateTime(2024, 2, 1) }
             };
 

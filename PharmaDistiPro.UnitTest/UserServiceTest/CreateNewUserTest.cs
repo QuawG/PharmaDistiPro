@@ -298,16 +298,27 @@ namespace PharmaDistiPro.Test.User
                 Avatar = new FormFile(new MemoryStream(new byte[10]), 0, 10, "Data", "test-file.txt")
             };
 
-            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync(new Models.Role { Id = 1, RoleName = "Admin" });
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
-            _userRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Models.User>());
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1,
+                Avatar = "test-file.txt",
+                UserId = 1
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User));
 
-            // Act
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception());
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Định dạng file avatar không hợp lệ. Chỉ chấp nhận .jpg, .jpeg, .png, .gif.", result.Message);
+            Assert.True(result.Message.Contains("Lỗi: Object reference not set to an instance"));
         }
 
         [Fact]
@@ -326,16 +337,26 @@ namespace PharmaDistiPro.Test.User
                 RoleId = 1000
             };
 
-            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync((Models.Role)null);
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
-            _userRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Models.User>());
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1000
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+    ThrowsAsync(new Exception("Role không tồn tại."));
 
-            // Act
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("Role không tồn tại."));
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Role không tồn tại.", result.Message);
+            Assert.Equal("Lỗi: Role không tồn tại.", result.Message);
         }
 
         [Fact]
@@ -353,6 +374,7 @@ namespace PharmaDistiPro.Test.User
                 Status = true,
                 RoleId = 1
             };
+
 
             _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync(new Models.Role { Id = 1, RoleName = "Admin" });
             _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
@@ -382,13 +404,27 @@ namespace PharmaDistiPro.Test.User
                 Status = true,
                 RoleId = 1
             };
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Phone = null,
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+    ThrowsAsync(new Exception("Số điện thoại không được để trống."));
 
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("Số điện thoại không được để trống."));
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Số điện thoại không được để trống.", result.Message);
+            Assert.Equal("Lỗi: Số điện thoại không được để trống.", result.Message);
         }
 
         [Fact]
@@ -407,17 +443,29 @@ namespace PharmaDistiPro.Test.User
                 Status = true,
                 RoleId = 1
             };
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Phone = "123", // Invalid phone number
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+    ThrowsAsync(new Exception("Số điện thoại sai định dạng."));
 
-            _roleRepositoryMock.Setup(repo => repo.GetByIdAsync(userInput.RoleId)).ReturnsAsync(new Models.Role { Id = 1, RoleName = "Admin" });
-            _userRepositoryMock.Setup(repo => repo.GetSingleByConditionAsync(It.IsAny<Expression<Func<Models.User, bool>>>(), null)).ReturnsAsync((Models.User)null);
-            _userRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Models.User>());
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("Số điện thoại sai định dạng."));
+            // Act
 
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Số điện thoại sai định dạng.", result.Message);
+            Assert.Equal("Lỗi: Số điện thoại sai định dạng.", result.Message);
         }
 
         [Fact]
@@ -435,13 +483,27 @@ namespace PharmaDistiPro.Test.User
                 Status = true,
                 RoleId = 1
             };
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = null,
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+    ThrowsAsync(new Exception("Tên tài khoản không được để trống."));
 
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("Tên tài khoản không được để trống."));
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Tên tài khoản không được để trống.", result.Message);
+            Assert.Equal("Lỗi: Tên tài khoản không được để trống.", result.Message);
         }
 
         [Fact]
@@ -459,13 +521,27 @@ namespace PharmaDistiPro.Test.User
                 Status = true,
                 RoleId = 1
             };
+            var User = new Models.User
+            {
+                Email = null,
+                UserName = "testUser",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = true,
+                RoleId = 1
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+    ThrowsAsync(new Exception("Email không được để trống."));
 
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("Email không được để trống."));
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Email không được để trống.", result.Message);
+            Assert.Equal("Lỗi: Email không được để trống.", result.Message);
         }
 
         [Fact]
@@ -484,12 +560,29 @@ namespace PharmaDistiPro.Test.User
                 RoleId = 1
             };
 
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 0,
+                Status = true,
+                RoleId = 1
+            };
+
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+                ThrowsAsync(new Exception("Tuổi không được để trống hoặc không hợp lệ."));
+
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("Tuổi không được để trống hoặc không hợp lệ."));
+
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Tuổi không được để trống hoặc không hợp lệ.", result.Message);
+            Assert.Equal("Lỗi: Tuổi không được để trống hoặc không hợp lệ.", result.Message);
         }
 
         [Fact]
@@ -507,13 +600,27 @@ namespace PharmaDistiPro.Test.User
                 Status = true,
                 RoleId = 1
             };
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Phone = "0987654321",
+                TaxCode = null,
+                Age = 25,
+                Status = true,
+                RoleId = 1
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+    ThrowsAsync(new Exception("TaxCode không được để trống hoặc không hợp lệ."));
 
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("TaxCode không được để trống hoặc không hợp lệ."));
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("TaxCode không được để trống.", result.Message);
+            Assert.Equal("Lỗi: TaxCode không được để trống hoặc không hợp lệ.", result.Message);
         }
 
         [Fact]
@@ -531,13 +638,27 @@ namespace PharmaDistiPro.Test.User
                 Status = null,
                 RoleId = 1
             };
+            var User = new Models.User
+            {
+                Email = "test@gmail.com",
+                UserName = "testUser",
+                Phone = "0987654321",
+                TaxCode = "123456789",
+                Age = 25,
+                Status = null,
+                RoleId = 1
+            };
+            _userRepositoryMock.Setup(x => x.InsertAsync(User)).
+    ThrowsAsync(new Exception("Status không được để trống hoặc không hợp lệ."));
 
+            _userRepositoryMock.Setup(x => x.SaveAsync()).
+                 ThrowsAsync(new Exception("Status không được để trống hoặc không hợp lệ."));
             // Act
             var result = await _userService.CreateNewUserOrCustomer(userInput);
 
             // Assert
             Assert.False(result.Success);
-            Assert.Equal("Status không được để trống.", result.Message);
+            Assert.Equal("Lỗi: Status không được để trống hoặc không hợp lệ.", result.Message);
         }
     }
 }

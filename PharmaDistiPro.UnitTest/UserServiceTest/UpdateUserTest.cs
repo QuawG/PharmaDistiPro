@@ -104,7 +104,7 @@ namespace PharmaDistiPro.Test.User
             var result = await _userService.UpdateUser(userUpdateRequest);
 
             Assert.False(result.Success);
-            Assert.Equal("Database connection error", result.Message);
+            Assert.Equal("Lỗi: Database connection error", result.Message);
         }
 
         [Fact]
@@ -247,7 +247,7 @@ namespace PharmaDistiPro.Test.User
 
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Vai trò không tồn tại", result.Message);
+            Assert.Equal("Lỗi: Vai trò không tồn tại", result.Message);
         }
 
         [Fact]
@@ -284,7 +284,7 @@ namespace PharmaDistiPro.Test.User
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Số điện thoại không được để trống", result.Message);
+            Assert.Equal("Lỗi: Số điện thoại không được để trống", result.Message);
         }
 
         [Fact]
@@ -322,7 +322,7 @@ namespace PharmaDistiPro.Test.User
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Số điện thoại không hợp lệ", result.Message);
+            Assert.Equal("Lỗi: Số điện thoại không hợp lệ", result.Message);
         }
 
         [Fact]
@@ -355,7 +355,7 @@ namespace PharmaDistiPro.Test.User
             var result = await _userService.UpdateUser(userUpdateRequest);
 
             Assert.False(result.Success);
-            Assert.Equal("Tên đăng nhập không được thay đổi", result.Message);
+            Assert.Equal("Lỗi: Tên đăng nhập không được thay đổi", result.Message);
         }
 
         [Fact]
@@ -393,7 +393,7 @@ namespace PharmaDistiPro.Test.User
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Email không được thay đổi", result.Message);
+            Assert.Equal("Lỗi: Email không được thay đổi", result.Message);
         }
 
         [Fact]
@@ -434,7 +434,7 @@ namespace PharmaDistiPro.Test.User
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Tuổi không được để trống", result.Message);
+            Assert.Equal("Lỗi: Tuổi không được để trống", result.Message);
         }
 
         [Fact]
@@ -474,7 +474,7 @@ namespace PharmaDistiPro.Test.User
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Tax code không được thay đổi", result.Message);
+            Assert.Equal("Lỗi: Tax code không được thay đổi", result.Message);
         }
 
         [Fact]
@@ -515,7 +515,7 @@ namespace PharmaDistiPro.Test.User
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("First name không được để trống", result.Message);
+            Assert.Equal("Lỗi: First name không được để trống", result.Message);
         }
 
         [Fact]
@@ -556,7 +556,7 @@ namespace PharmaDistiPro.Test.User
             // Assert
             Assert.False(result.Success);
             Assert.NotEmpty(result.Message);
-            Assert.Equal("Last name không được để trống", result.Message);
+            Assert.Equal("Lỗi: Last name không được để trống", result.Message);
         }
     }
 }

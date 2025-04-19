@@ -83,7 +83,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
 
             // Assert
             Assert.True(response.Success);
-            Assert.Equal("Cập nhật thành công", response.Message);
+            Assert.Equal("Cập nhật thành công.", response.Message);
             Assert.Equal("Updated Product", response.Data.ProductName);
         }
 
@@ -100,7 +100,7 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
 
             // Assert
             Assert.False(response.Success);
-            Assert.Equal("Không tìm thấy sản phẩm", response.Message);
+            Assert.Equal("Không tìm thấy sản phẩm.", response.Message);
         }
 
         [Fact]
