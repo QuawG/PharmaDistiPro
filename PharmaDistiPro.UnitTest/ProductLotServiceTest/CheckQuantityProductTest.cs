@@ -42,28 +42,26 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
             };
 
             _productLotRepositoryMock.Setup(repo => repo.CheckQuantityProduct(1))
-                                     .ReturnsAsync(productLot);
+                                     .ReturnsAsync(100);
 
             var result = await _productLotService.CheckQuantityProduct(1);
 
             Assert.Equal(200, result.StatusCode);
             Assert.Equal("Thành công", result.Message);
             Assert.NotNull(result.Data);
-            Assert.Equal(1, result.Data.ProductId);
-            Assert.Equal(100, result.Data.Quantity);
+            Assert.Equal(100, result.Data);
         }
 
         [Fact]
         public async Task CheckQuantityProduct_WhenProductLotNotFound_ReturnMessage()
         {
             _productLotRepositoryMock.Setup(repo => repo.CheckQuantityProduct(1))
-                                     .ReturnsAsync((ProductLot)null);
+                                     .ReturnsAsync(0);
 
             var result = await _productLotService.CheckQuantityProduct(1);
 
             Assert.Equal(200, result.StatusCode);
             Assert.Equal("Không tìm thấy sản phẩm trong kho", result.Message);
-            Assert.Null(result.Data);
         }
 
         [Fact]
@@ -82,7 +80,7 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
         public async Task CheckQuantityProduct_WhenIdNull_ReturnError()
         {
             _productLotRepositoryMock.Setup(repo => repo.CheckQuantityProduct(1))
-                         .ReturnsAsync((ProductLot)null);
+                         .ReturnsAsync(0);
 
             var result = await _productLotService.CheckQuantityProduct(0);
 

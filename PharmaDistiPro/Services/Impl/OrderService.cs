@@ -29,10 +29,12 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IProductRepository _productRepository;
         public OrderService(IOrderRepository orderRepository,
            IIssueNoteRepository issuteNoteRepository,
+           IProductRepository productRepository,
            IOrdersDetailRepository ordersDetailRepository,
            IMapper mapper, IUserRepository userRepository, IHttpContextAccessor httpContextAccessor)
         {
             _orderRepository = orderRepository;
+            _productRepository = productRepository;
             _ordersDetailRepository = ordersDetailRepository;
             _mapper = mapper;
             _userRepository = userRepository;
@@ -112,15 +114,23 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<OrderDto>();
             try
             {
+             
+
+                #region Create Order
+                var order = _mapper.Map<Models.Order>(orderRequestDto);
                 double? totalAmount = 0;
 
                 //var productList = productList
 
-                foreach (var orderDetails in orderRequestDto.OrdersDetails)
+                if (orderRequestDto.OrdersDetails != null)
                 {
-                    var product = _productRepository.GetById(orderDetails.ProductId);
-                    totalAmount += (product.SellingPrice * orderDetails.Quantity + product.SellingPrice * orderDetails.Quantity * product.Vat / 100);
+                    foreach (var orderDetails in orderRequestDto.OrdersDetails)
+                    {
+                        var product = _productRepository.GetById(orderDetails.ProductId);
+                        totalAmount += (product.SellingPrice * orderDetails.Quantity + product.SellingPrice * orderDetails.Quantity * product.Vat / 100);
+                    }
                 }
+
 
                 // totalAmount += totalAmount * 0.05 + totalAmount;
 
@@ -130,9 +140,6 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Tính sai giá trị đơn hàng";
                     return response;
                 }
-
-                #region Create Order
-                var order = _mapper.Map<Models.Order>(orderRequestDto);
                 order.CreatedDate = DateTime.Now;
                 order.StockReleaseDate = null;
                 order.ConfirmedBy = null;

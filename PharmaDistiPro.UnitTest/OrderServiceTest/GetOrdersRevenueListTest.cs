@@ -33,7 +33,7 @@ namespace PharmaDistiPro.UnitTest.OrderServiceTest
 
             _orderService = new OrderService(
                 _orderRepositoryMock.Object,
-                null,
+                null,null,
                 _ordersDetailRepositoryMock.Object,
                 _mapperMock.Object,
                 _userRepositoryMock.Object,

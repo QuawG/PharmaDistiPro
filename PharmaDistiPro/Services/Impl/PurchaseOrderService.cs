@@ -33,6 +33,14 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<PurchaseOrdersDto>();
             try
             {
+ 
+
+                // Tạo PurchaseOrder
+                var purchaseOrder = _mapper.Map<PurchaseOrder>(purchaseOrdersRequestDto);
+                purchaseOrder.UpdatedStatusDate = DateTime.Now;
+                purchaseOrder.Status = (int)PurchaseOrderStatus.CHO_NHAP_HANG;
+                purchaseOrder.CreateDate = DateTime.Now;
+
                 decimal? totalAmount = 0;
 
                 foreach (var poDetails in purchaseOrdersRequestDto.PurchaseOrdersDetails)
@@ -46,14 +54,6 @@ namespace PharmaDistiPro.Services.Impl
                     response.Message = "Tổng tiền đơn hàng sai";
                     return response;
                 }
-
-                // Tạo PurchaseOrder
-                var purchaseOrder = _mapper.Map<PurchaseOrder>(purchaseOrdersRequestDto);
-                purchaseOrder.UpdatedStatusDate = DateTime.Now;
-                purchaseOrder.Status = (int)PurchaseOrderStatus.CHO_NHAP_HANG;
-                purchaseOrder.CreateDate = DateTime.Now;
-
-
                 await _purchaseOrderRepository.InsertPurchaseOrderAsync(purchaseOrder);
                 await _purchaseOrderRepository.SaveAsync();
 
@@ -66,6 +66,7 @@ namespace PharmaDistiPro.Services.Impl
                         detail.PurchaseOrderId = purchaseOrder.PurchaseOrderId;
                         return detail;
                     }).ToList();
+                    
 
                 // Thêm danh sách chi tiết đơn hàng cùng lúc
                 await _purchaseOrdersDetailRepository.InsertRangeAsync(purchaseOrderDetails);

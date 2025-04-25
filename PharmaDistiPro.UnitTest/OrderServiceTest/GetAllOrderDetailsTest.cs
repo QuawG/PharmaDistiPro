@@ -20,10 +20,12 @@ namespace PharmaDistiPro.Test.OrderServiceTest
     {
         private readonly Mock<IOrderRepository> _orderRepositoryMock;
         private readonly Mock<IOrdersDetailRepository> _ordersDetailRepositoryMock;
+        private readonly Mock<IProductRepository> _productRepositoryMock;
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly OrderService _orderService;
+
 
         public GetAllOrderDetailsTest()
         {
@@ -31,11 +33,13 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             _ordersDetailRepositoryMock = new Mock<IOrdersDetailRepository>();
             _userRepositoryMock = new Mock<IUserRepository>();
             _mapperMock = new Mock<IMapper>();
+            _productRepositoryMock = new Mock<IProductRepository>();
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
             _orderService = new OrderService(
                 _orderRepositoryMock.Object,
                 null,
+                _productRepositoryMock.Object,
                 _ordersDetailRepositoryMock.Object,
                 _mapperMock.Object,
                 _userRepositoryMock.Object,

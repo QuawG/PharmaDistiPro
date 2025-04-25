@@ -16,7 +16,7 @@ namespace PharmaDistiPro.Repositories.Interface
         Task<Product> GetProductByIdAsync(int productId);
         Task UpdateAsyncProductLot(ProductLot productLot);
 
-        Task<ProductLot> CheckQuantityProduct(int productId);
+        Task<int> CheckQuantityProduct(int productId);
 
     }
 }

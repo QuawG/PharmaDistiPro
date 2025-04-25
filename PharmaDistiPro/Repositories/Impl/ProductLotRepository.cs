@@ -68,23 +68,20 @@ namespace PharmaDistiPro.Repositories.Impl
             await _context.SaveChangesAsync(); // Phải có dòng này
         }
 
-        public async Task<ProductLot> CheckQuantityProduct(int productId)
+        public async Task<int> CheckQuantityProduct(int productId)
         {
-            var groupedData = await _context.ProductLots
-                .Where(x => x.ProductId == productId && x.ExpiredDate >= DateTime.Now.AddMonths(3))
-                .ToListAsync(); 
+            var productLots = await _context.ProductLots.ToListAsync();
 
-            var result = groupedData
-                .GroupBy(x => x.ProductId)
-                .Select(g => new ProductLot
-                {
-                    ProductId = g.Key,
-                    Quantity = g.Sum(x => x.Quantity),
-                    ExpiredDate = g.Max(x => x.ExpiredDate) 
-                })
-                .FirstOrDefault();
+            var totalOrderedQuantity = await _context.OrdersDetails
+        .Where(x => x.ProductId == productId &&
+                 x.Order.Status == (int)Common.Enums.OrderStatus.XAC_NHAN)
+        .SumAsync(x => x.Quantity ?? 0);
 
-            return result;
+            var totalQuantity = productLots
+                .Where(lot => lot.ProductId == productId && (lot.Status == 1 || lot.Status == 2))
+                .Sum(lot => lot.Quantity ?? 0);
+
+            return totalQuantity - totalOrderedQuantity;
         }
     }
 }
