@@ -12,7 +12,5 @@ namespace PharmaDistiPro.DTO.Categorys
         public int? CreatedBy { get; set; }
         public DateTime? CreatedDate { get; set; }
 
-        
-
     }
 }

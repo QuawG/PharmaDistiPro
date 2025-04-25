@@ -442,7 +442,7 @@ Trân trọng,
                 issuer: _configuration["JWT:Issuer"],
                 audience: _configuration["JWT:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15), // Access token chỉ sống 15 phút
+                expires: DateTime.UtcNow.AddHours(3), // Access token chỉ sống 15 phút
                 signingCredentials: new SigningCredentials(
                     new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:key"])),
                     SecurityAlgorithms.HmacSha256

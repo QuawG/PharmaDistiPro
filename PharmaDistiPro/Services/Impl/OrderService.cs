@@ -10,6 +10,7 @@ using PharmaDistiPro.DTO.Products;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
+using PharmaDistiPro.Repositories.Impl;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
 using System.Collections;
@@ -25,7 +26,7 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
+        private readonly IProductRepository _productRepository;
         public OrderService(IOrderRepository orderRepository,
            IIssueNoteRepository issuteNoteRepository,
            IOrdersDetailRepository ordersDetailRepository,
@@ -111,6 +112,25 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<OrderDto>();
             try
             {
+                double? totalAmount = 0;
+
+                //var productList = productList
+
+                foreach (var orderDetails in orderRequestDto.OrdersDetails)
+                {
+                    var product = _productRepository.GetById(orderDetails.ProductId);
+                    totalAmount += (product.SellingPrice * orderDetails.Quantity + product.SellingPrice * orderDetails.Quantity * product.Vat / 100);
+                }
+
+                // totalAmount += totalAmount * 0.05 + totalAmount;
+
+                if (totalAmount != orderRequestDto.TotalAmount)
+                {
+                    response.Success = false;
+                    response.Message = "Tính sai giá trị đơn hàng";
+                    return response;
+                }
+
                 #region Create Order
                 var order = _mapper.Map<Models.Order>(orderRequestDto);
                 order.CreatedDate = DateTime.Now;
@@ -119,7 +139,7 @@ namespace PharmaDistiPro.Services.Impl
                 order.Status = (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN;
                 order.UpdatedStatusDate = DateTime.Now;
                 order.CustomerId = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
-          
+
 
 
                 await _orderRepository.InsertOrderAsync(order);

@@ -440,5 +440,11 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             Assert.True(result.Success);
             Assert.Equal("Tạo mới sản phẩm thành công. Điều kiện bảo quản: Bảo quản thường", result.Message);
         }
+        // bo
+
+       
+
+
+       
     }
 }

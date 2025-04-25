@@ -140,5 +140,103 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             Assert.Equal("Trạng thái không được rỗng", result.Message);
         }
 
+
+        // Bổ sung
+
+        [Fact]
+        public async Task ActivateDeactivateProduct_WithNegativeProductId_ShouldReturnNotFound()
+        {
+            // Arrange
+            _mockProductRepository.Setup(r => r.GetByIdAsync(-1)).ReturnsAsync((Product)null);
+
+            // Act
+            var result = await _productService.ActivateDeactivateProduct(-1, true);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Null(result.Data);
+            Assert.Equal("Không tìm thấy sản phẩm", result.Message);
+        }
+
+        [Fact]
+        public async Task ActivateDeactivateProduct_WhenRepositoryUpdateFails_ShouldReturnFailure()
+        {
+            // Arrange
+            var product = new Product { ProductId = 1, Status = false };
+            _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+            _mockProductRepository.Setup(r => r.UpdateAsync(product)).ThrowsAsync(new Exception("Lỗi cập nhật cơ sở dữ liệu"));
+            _mockMapper.Setup(m => m.Map<ProductDTO>(product)).Returns(new ProductDTO { ProductId = 1, Status = true });
+
+            // Act
+            var result = await _productService.ActivateDeactivateProduct(1, true);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Null(result.Data);
+            Assert.Equal("Lỗi cập nhật cơ sở dữ liệu", result.Message);
+        }
+
+
+        [Fact]
+        public async Task ActivateDeactivateProduct_WhenSaveAsyncFails_ShouldReturnFailure()
+        {
+            // Arrange
+            var product = new Product { ProductId = 1, Status = false };
+            _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+            _mockProductRepository.Setup(r => r.UpdateAsync(product));
+            _mockProductRepository.Setup(r => r.SaveAsync()).ThrowsAsync(new Exception("Lỗi lưu cơ sở dữ liệu"));
+            _mockMapper.Setup(m => m.Map<ProductDTO>(product)).Returns(new ProductDTO { ProductId = 1, Status = true });
+
+            // Act
+            var result = await _productService.ActivateDeactivateProduct(1, true);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Null(result.Data);
+            Assert.Equal("Lỗi lưu cơ sở dữ liệu", result.Message);
+        }
+
+        [Fact]
+        public async Task ActivateDeactivateProduct_WhenMapperFails_ShouldReturnFailure()
+        {
+            // Arrange
+            var product = new Product { ProductId = 1, Status = false };
+            _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+            _mockProductRepository.Setup(r => r.UpdateAsync(product));
+            _mockProductRepository.Setup(r => r.SaveAsync());
+            _mockMapper.Setup(m => m.Map<ProductDTO>(product)).Throws(new Exception("Lỗi ánh xạ dữ liệu"));
+
+            // Act
+            var result = await _productService.ActivateDeactivateProduct(1, true);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Null(result.Data);
+            Assert.Equal("Lỗi ánh xạ dữ liệu", result.Message);
+        }
+
+        
+
+        [Fact]
+        public async Task ActivateDeactivateProduct_WithNullProductFromRepository_ShouldReturnNotFound()
+        {
+            // Arrange
+            _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((Product)null);
+
+            // Act
+            var result = await _productService.ActivateDeactivateProduct(1, false);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Null(result.Data);
+            Assert.Equal("Không tìm thấy sản phẩm", result.Message);
+            _mockProductRepository.Verify(r => r.UpdateAsync(It.IsAny<Product>()), Times.Never);
+            _mockProductRepository.Verify(r => r.SaveAsync(), Times.Never);
+        }
+
+
+       
+
     }
+
 }

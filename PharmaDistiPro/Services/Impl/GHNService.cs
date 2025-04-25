@@ -209,7 +209,7 @@ namespace PharmaDistiPro.Services.Impl
                 item.Height = 6;
                 item.Length = 8;
                 item.Width = 8;
-                item.Weight = (int)orderDetail.Product.Weight *1000;
+                item.Weight = (int)   (orderDetail.Product.Weight *1000);
                 listItem.Add(item);
             }
             orderRequest.Items = listItem;
