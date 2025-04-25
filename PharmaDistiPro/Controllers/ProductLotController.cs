@@ -85,7 +85,7 @@ namespace PharmaDistiPro.Controllers
             {
                 return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
             }
-            return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
+            return Ok(new { response.Message, Quantity = response.Data });
         }
 
 

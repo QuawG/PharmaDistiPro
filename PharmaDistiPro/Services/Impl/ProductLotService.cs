@@ -27,11 +27,12 @@ namespace PharmaDistiPro.Services.Impl
 
         public async Task<Response<int>> CheckQuantityProduct(int productId)
         {
+            var response = new Response<int>();
             try
             {
-                var productLot = await _productLotRepository.CheckQuantityProduct(productId);
+                var checkQuantity = await _productLotRepository.CheckQuantityProduct(productId);
 
-                if (productLot == 0)
+                if (checkQuantity == 0)
                 {
                     return new Response<int>
                     {
@@ -39,14 +40,10 @@ namespace PharmaDistiPro.Services.Impl
                         Message = "Không tìm thấy sản phẩm trong kho"
                     };
                 }
-
-
-                return new Response<int>
-                {
-                    StatusCode = 200,
-                    Message = "Thành công",
-                    Data = productLot
-                };
+                response.Success = true;
+                response.Data = checkQuantity;
+                response.Message = "Lấy tổng số lượng sản phẩm thành công.";
+                return response;
             }
             catch (Exception ex)
             {

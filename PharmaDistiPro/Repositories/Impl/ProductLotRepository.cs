@@ -74,14 +74,19 @@ namespace PharmaDistiPro.Repositories.Impl
 
             var totalOrderedQuantity = await _context.OrdersDetails
         .Where(x => x.ProductId == productId &&
-                 x.Order.Status == (int)Common.Enums.OrderStatus.XAC_NHAN)
+                ( x.Order.Status == (int)Common.Enums.OrderStatus.XAC_NHAN ||
+                  x.Order.Status == (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN ||
+                   x.Order.Status == (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN)
+                 )
         .SumAsync(x => x.Quantity ?? 0);
 
             var totalQuantity = productLots
                 .Where(lot => lot.ProductId == productId && (lot.Status == 1 || lot.Status == 2))
                 .Sum(lot => lot.Quantity ?? 0);
 
-            return totalQuantity - totalOrderedQuantity;
+            var QuantityReserved = totalQuantity - totalOrderedQuantity;
+
+            return QuantityReserved;
         }
     }
 }
