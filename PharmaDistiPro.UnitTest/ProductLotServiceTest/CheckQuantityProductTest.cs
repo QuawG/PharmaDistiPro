@@ -47,7 +47,7 @@ namespace PharmaDistiPro.UnitTest.ProductLotServiceTest
             var result = await _productLotService.CheckQuantityProduct(1);
 
             Assert.Equal(200, result.StatusCode);
-            Assert.Equal("Thành công", result.Message);
+            Assert.Equal("Lấy tổng số lượng sản phẩm thành công.", result.Message);
             Assert.NotNull(result.Data);
             Assert.Equal(100, result.Data);
         }

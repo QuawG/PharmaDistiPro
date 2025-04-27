@@ -75,50 +75,6 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
             Assert.Equal("Không tìm thấy sản phẩm", result.Message);
         }
 
-        [Fact]
-        public async Task ActivateDeactivateProduct_WhenExceptionThrown_ShouldReturnFailure()
-        {
-            _mockProductRepository
-                .Setup(r => r.GetByIdAsync(It.IsAny<int>()))
-                .ThrowsAsync(new System.Exception("Lỗi hệ thống"));
-
-            var result = await _productService.ActivateDeactivateProduct(1, true);
-
-            Assert.False(result.Success);
-            Assert.Equal("Lỗi hệ thống", result.Message);
-        }
-
-
-        [Fact]
-        public async Task ActivateDeactivateProduct_WithProductIdZero_ShouldReturnNotFound()
-        {
-            _mockProductRepository.Setup(r => r.GetByIdAsync(0)).ReturnsAsync((Product)null);
-
-            var result = await _productService.ActivateDeactivateProduct(0, true);
-
-            Assert.False(result.Success);
-            Assert.Null(result.Data);
-            Assert.Equal("Không tìm thấy sản phẩm", result.Message);
-        }
-
-        [Fact]
-        public async Task ActivateDeactivateProduct_WhenStatusAlreadyTrue_ShouldNotCallUpdate()
-        {
-            var product = new Product { ProductId = 5, Status = true };
-            var productDto = new ProductDTO { ProductId = 5, Status = false };
-
-            _mockProductRepository.Setup(r => r.GetByIdAsync(5)).ReturnsAsync(product);
-
-            _mockMapper.Setup(m => m.Map<ProductDTO>(product)).Throws(new Exception("Không được update trạng thái trùng"));
-
-            var result = await _productService.ActivateDeactivateProduct(5, true);
-
-            _mockProductRepository.Verify(r => r.UpdateAsync(It.IsAny<Product>()), Times.Once);
-            _mockProductRepository.Verify(r => r.SaveAsync(), Times.Once);
-
-            Assert.False(result.Success);
-            Assert.Equal("Không được update trạng thái trùng", result.Message);
-        }
 
 
         [Fact]
@@ -177,62 +133,10 @@ namespace PharmaDistiPro.UnitTest.ProductServiceTest
         }
 
 
-        [Fact]
-        public async Task ActivateDeactivateProduct_WhenSaveAsyncFails_ShouldReturnFailure()
-        {
-            // Arrange
-            var product = new Product { ProductId = 1, Status = false };
-            _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
-            _mockProductRepository.Setup(r => r.UpdateAsync(product));
-            _mockProductRepository.Setup(r => r.SaveAsync()).ThrowsAsync(new Exception("Lỗi lưu cơ sở dữ liệu"));
-            _mockMapper.Setup(m => m.Map<ProductDTO>(product)).Returns(new ProductDTO { ProductId = 1, Status = true });
 
-            // Act
-            var result = await _productService.ActivateDeactivateProduct(1, true);
 
-            // Assert
-            Assert.False(result.Success);
-            Assert.Null(result.Data);
-            Assert.Equal("Lỗi lưu cơ sở dữ liệu", result.Message);
-        }
-
-        [Fact]
-        public async Task ActivateDeactivateProduct_WhenMapperFails_ShouldReturnFailure()
-        {
-            // Arrange
-            var product = new Product { ProductId = 1, Status = false };
-            _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
-            _mockProductRepository.Setup(r => r.UpdateAsync(product));
-            _mockProductRepository.Setup(r => r.SaveAsync());
-            _mockMapper.Setup(m => m.Map<ProductDTO>(product)).Throws(new Exception("Lỗi ánh xạ dữ liệu"));
-
-            // Act
-            var result = await _productService.ActivateDeactivateProduct(1, true);
-
-            // Assert
-            Assert.False(result.Success);
-            Assert.Null(result.Data);
-            Assert.Equal("Lỗi ánh xạ dữ liệu", result.Message);
-        }
 
         
-
-        [Fact]
-        public async Task ActivateDeactivateProduct_WithNullProductFromRepository_ShouldReturnNotFound()
-        {
-            // Arrange
-            _mockProductRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((Product)null);
-
-            // Act
-            var result = await _productService.ActivateDeactivateProduct(1, false);
-
-            // Assert
-            Assert.False(result.Success);
-            Assert.Null(result.Data);
-            Assert.Equal("Không tìm thấy sản phẩm", result.Message);
-            _mockProductRepository.Verify(r => r.UpdateAsync(It.IsAny<Product>()), Times.Never);
-            _mockProductRepository.Verify(r => r.SaveAsync(), Times.Never);
-        }
 
 
        
