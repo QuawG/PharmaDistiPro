@@ -45,7 +45,7 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id', key: 'id' },
+    // { title: 'ID', dataIndex: 'id', key: 'id' },
     { title: 'Mã nhà cung cấp', dataIndex: 'supplierCode', key: 'supplierCode' },
     { title: 'Tên nhà cung cấp', dataIndex: 'supplierName', key: 'supplierName' },
     { title: 'Số điện thoại', dataIndex: 'supplierPhone', key: 'supplierPhone' },

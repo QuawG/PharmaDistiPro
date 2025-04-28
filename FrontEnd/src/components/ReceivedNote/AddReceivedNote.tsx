@@ -307,13 +307,13 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
     <div style={{ padding: 24, background: "#f5f5f5", minHeight: "100vh" }}>
       <Title level={3}>Tạo phiếu nhập kho</Title>
       <Form layout="vertical" form={form}>
-        <Form.Item
+        {/* <Form.Item
           label="Mã phiếu"
           name="receiveNotesCode"
           rules={[{ required: true, message: "Mã phiếu không được để trống!" }]}
         >
           <InputNumber style={{ width: "100%" }} disabled />
-        </Form.Item>
+        </Form.Item> */}
         <Form.Item
           label="Đơn hàng"
           name="purchaseOrderId"

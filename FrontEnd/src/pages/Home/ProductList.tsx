@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Select, Button, Space, Collapse } from 'antd';
-import { SearchOutlined, FileExcelOutlined, PrinterOutlined, FilterOutlined } from '@ant-design/icons';
+import { SearchOutlined,  FilterOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import ProductTable from '../../components/Product/ProductTable';
 
@@ -133,9 +133,9 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
           <h1 className="text-xl font-semibold text-gray-900">Danh sách sản phẩm</h1>
           <p className="text-sm text-gray-500">Quản lý sản phẩm</p>
         </div>
-        <Button type="primary" onClick={() => handleChangePage('Tạo sản phẩm')}>
+        {/* <Button type="primary" onClick={() => handleChangePage('Tạo sản phẩm')}>
           Tạo mới sản phẩm
-        </Button>
+        </Button> */}
       </div>
 
       {/* Search and Actions */}
@@ -153,14 +153,14 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
               Lọc
             </Button>
           </Space>
-          <Space>
+          {/* <Space>
             <Button icon={<FileExcelOutlined />} onClick={() => {
               // Move exportToExcel logic here if needed
             }} />
             <Button icon={<PrinterOutlined />} onClick={() => {
               // Move printTable logic here if needed
             }} />
-          </Space>
+          </Space> */}
         </div>
 
         {showFilters && (

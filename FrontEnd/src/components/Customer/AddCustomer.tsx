@@ -11,7 +11,7 @@ export default function AddCustomer() {
         email: '',
         phone: '',
         address: '',
-        status: false, // Sử dụng kiểu boolean cho status
+        status: true, // Sử dụng kiểu boolean cho status
         password: '',
         employeeCode: '',
         taxCode: '',

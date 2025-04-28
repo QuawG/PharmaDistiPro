@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Select, Space, Typography, Row, Col, Card } from 'antd';
-import { PlusOutlined, FilterOutlined, FileTextOutlined, TableOutlined, PrinterOutlined } from '@ant-design/icons';
-import * as XLSX from 'xlsx';
+import {  Input, Select, Space, Typography, Row, Col, Card } from 'antd';
+import {  FilterOutlined,   } from '@ant-design/icons';
+// import * as XLSX from 'xlsx';
 import StorageRoomTable from '../../components/StorageRoom/StorageRoomTable';
 import axios from 'axios';
 
@@ -29,7 +29,7 @@ interface StorageRoom {
   createdDate: string;
 }
 
-const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({ handleChangePage }) => {
+const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({  }) => {
   const [storageRooms, setStorageRooms] = useState<StorageRoom[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
@@ -77,12 +77,12 @@ const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }
     return matchesSearch && matchesStatus;
   });
 
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredRooms);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'StorageRooms');
-    XLSX.writeFile(workbook, 'StorageRooms.xlsx');
-  };
+  // const exportToExcel = () => {
+  //   const worksheet = XLSX.utils.json_to_sheet(filteredRooms);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, 'StorageRooms');
+  //   XLSX.writeFile(workbook, 'StorageRooms.xlsx');
+  // };
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
@@ -92,13 +92,13 @@ const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }
           <Text type="secondary">Quản lý kho</Text>
         </Col>
         <Col>
-          <Button
+          {/* <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => handleChangePage('Tạo kho mới')}
           >
             Tạo kho mới
-          </Button>
+          </Button> */}
         </Col>
       </Row>
 
@@ -127,13 +127,13 @@ const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }
             </Space>
           </Col>
           <Col xs={24} md={12} lg={16} style={{ textAlign: 'right' }}>
-            <Space>
+            {/* <Space>
               <Button icon={<FileTextOutlined />} />
               <Button icon={<TableOutlined />} onClick={exportToExcel}>
                 Xuất Excel
               </Button>
               <Button icon={<PrinterOutlined />} />
-            </Space>
+            </Space> */}
           </Col>
         </Row>
 

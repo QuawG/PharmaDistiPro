@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Input, Button, Select, Typography, Space } from "antd";
-import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { Input,  Select, Typography, Space } from "antd";
+import {  SearchOutlined } from "@ant-design/icons";
 import UserTable from "../../components/User/UserTable";
 import axios from "axios";
 
@@ -24,7 +24,7 @@ interface User {
 }
 
 const UserListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
-  handleChangePage,
+  // handleChangePage,
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,13 +67,13 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
           </div>
           <Space>
            
-            <Button
+            {/* <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => handleChangePage("Tạo người dùng")}
             >
               Tạo người dùng mới
-            </Button>
+            </Button> */}
           </Space>
         </div>
         <Space>

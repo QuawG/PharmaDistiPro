@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu } from "antd";
+import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, notification } from "antd";
 import {
   EyeOutlined,
   FilterOutlined,
@@ -18,13 +18,22 @@ interface ProductLot {
   id: number;
   lotId: number;
   productId: number;
-  quantity: number | null; // Cập nhật để chấp nhận null
+  quantity: number | null;
   manufacturedDate: string;
   expiredDate: string;
-  supplyPrice: number | null; // Cập nhật để chấp nhận null
-  status: number | null;
+  supplyPrice: number | null;
+  status: 0 | 1 | 2 | null; // 0: Ngừng bán, 1: Còn hạn, 2: Ưu tiên xuất
   productName: string;
   lotCode: string;
+  unit: string;
+  storageRoomId: number;
+}
+
+interface Product {
+  productId: number;
+  productName: string;
+  unit: string;
+  [key: string]: any;
 }
 
 interface Lot {
@@ -38,7 +47,6 @@ interface Lot {
 interface LotTableProps {
   handleChangePage: (page: string, lotId?: number) => void;
   onDelete: (id: number) => void;
-  // onUpdate: (updatedLot: ProductLot) => void;
   rowSelection?: {
     selectedRowKeys: React.Key[];
     onChange: (selectedRowKeys: React.Key[], selectedRows: ProductLot[]) => void;
@@ -46,7 +54,7 @@ interface LotTableProps {
 }
 
 const LotTable: React.FC<LotTableProps> = ({
-  handleChangePage,
+  // handleChangePage,
   rowSelection,
 }) => {
   const [filteredLots, setFilteredLots] = useState<ProductLot[]>([]);
@@ -61,53 +69,121 @@ const LotTable: React.FC<LotTableProps> = ({
   const [lotCodeFilter, setLotCodeFilter] = useState<string>("");
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [prevLots, setPrevLots] = useState<ProductLot[]>([]);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusModalLots, setStatusModalLots] = useState<ProductLot[]>([]);
+  const [statusModalTitle, setStatusModalTitle] = useState<string>("");
+
+  // Hàm ánh xạ trạng thái thành văn bản
+  const getStatusText = (status: 0 | 1 | 2 | null) => {
+    switch (status) {
+      case 0:
+        return "Ngừng bán";
+      case 1:
+        return "Còn hạn";
+      case 2:
+        return "Ưu tiên xuất";
+      default:
+        return "Không xác định";
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      // Fetch ProductLots
+      const lotResponse = await axios.get("http://pharmadistiprobe.fun/api/ProductLot");
+      const productLots = lotResponse.data.data || [];
+
+      // Fetch Products to get unit
+      const productResponse = await axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct");
+      const products = productResponse.data.data || [];
+
+      // Map products to a lookup object
+      const productMap = products.reduce((acc: { [key: number]: Product }, product: Product) => {
+        acc[product.productId] = product;
+        return acc;
+      }, {});
+
+      // Merge unit into ProductLots
+      const validLots = productLots.map((lot: ProductLot) => {
+        const product = productMap[lot.productId];
+        return {
+          ...lot,
+          quantity: lot.quantity ?? 0,
+          supplyPrice: lot.supplyPrice ?? 0,
+          productName: lot.productName || "Không xác định",
+          lotCode: lot.lotCode || "N/A",
+          unit: product?.unit || "N/A",
+        };
+      });
+
+      // Kiểm tra thay đổi trạng thái
+      if (prevLots.length > 0) {
+        validLots.forEach((newLot: ProductLot) => {
+          const prevLot = prevLots.find((lot: ProductLot) => lot.id === newLot.id);
+          if (prevLot && prevLot.status !== newLot.status) {
+            notification.info({
+              message: "Thay đổi trạng thái",
+              description: (
+                <div>
+                  Lô <strong>{newLot.lotCode}</strong> đã đổi trạng thái thành{" "}
+                  <strong>{getStatusText(newLot.status)}</strong>.
+                  <br />
+                  <Button
+                    type="link"
+                    onClick={() => {
+                      setStatusModalLots(
+                        validLots.filter((lot: ProductLot) => lot.status === newLot.status)
+                      );
+                      setStatusModalTitle(`Danh sách lô: ${getStatusText(newLot.status)}`);
+                      setIsStatusModalOpen(true);
+                    }}
+                    style={{ padding: 0, marginTop: 8 }}
+                  >
+                    Xem danh sách
+                  </Button>
+                </div>
+              ),
+              duration: 5,
+            });
+          }
+        });
+      }
+
+      setPrevLots(validLots);
+      setAllLots(validLots);
+      setFilteredLots(validLots);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách sản phẩm trong lô hoặc sản phẩm:", error);
+    }
+
+    try {
+      // Fetch Lot Codes
+      const lotResponse = await axios.get("http://pharmadistiprobe.fun/api/Lot");
+      let lotCodesArray: string[] = [];
+      if (Array.isArray(lotResponse.data)) {
+        lotCodesArray = lotResponse.data.map((lot: Lot) => lot.lotCode || "N/A");
+      } else if (lotResponse.data && Array.isArray(lotResponse.data.data)) {
+        lotCodesArray = lotResponse.data.data.map((lot: Lot) => lot.lotCode || "N/A");
+      }
+      setLotCodes(lotCodesArray);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách mã lô:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchProductLots = async () => {
-      try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/ProductLot");
-        // Lọc và sửa dữ liệu để tránh null/undefined
-        const validLots = (response.data.data || []).map((lot: ProductLot) => ({
-          ...lot,
-          quantity: lot.quantity ?? 0, // Gán mặc định 0 nếu null
-          supplyPrice: lot.supplyPrice ?? 0, // Gán mặc định 0 nếu null
-          productName: lot.productName || "Không xác định", // Đảm bảo có giá trị
-          lotCode: lot.lotCode || "N/A",
-        }));
-        setAllLots(validLots);
-        setFilteredLots(validLots);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách sản phẩm trong lô:", error);
-      }
-    };
-
-    const fetchLotCodes = async () => {
-      try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/Lot");
-        let lotCodesArray: string[] = [];
-        if (Array.isArray(response.data)) {
-          lotCodesArray = response.data.map((lot: Lot) => lot.lotCode || "N/A");
-        } else if (response.data && Array.isArray(response.data.data)) {
-          lotCodesArray = response.data.data.map((lot: Lot) => lot.lotCode || "N/A");
-        }
-        setLotCodes(lotCodesArray);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách mã lô:", error);
-      }
-    };
-
-    fetchProductLots();
-    fetchLotCodes();
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
-  // Hàm tính ngày ngừng bán (trước ngày hết hạn 3 tháng)
   const calculateStopSellingDate = (expiredDate: string) => {
     const date = new Date(expiredDate);
     date.setMonth(date.getMonth() - 3);
     return date.toISOString().split("T")[0];
   };
 
-  // Hàm tính số ngày còn hạn (từ ngày ngừng bán đến ngày sản xuất)
   const calculateRemainingDays = (manufacturedDate: string, expiredDate: string) => {
     const stopSellingDate = new Date(calculateStopSellingDate(expiredDate));
     const manufactured = new Date(manufacturedDate);
@@ -115,7 +191,6 @@ const LotTable: React.FC<LotTableProps> = ({
     return daysLeft < 0 ? 0 : daysLeft;
   };
 
-  // Hàm định dạng số ngày còn hạn thành "số tháng số ngày"
   const formatRemainingDays = (manufacturedDate: string, expiredDate: string) => {
     const daysLeft = calculateRemainingDays(manufacturedDate, expiredDate);
     const months = Math.floor(daysLeft / 30);
@@ -127,17 +202,17 @@ const LotTable: React.FC<LotTableProps> = ({
     let filteredData = [...allLots];
 
     if (searchTerm.trim()) {
-      filteredData = filteredData.filter((lot) =>
+      filteredData = filteredData.filter((lot: ProductLot) =>
         lot.productName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (statusFilter) {
-      filteredData = filteredData.filter((lot) => String(lot.status) === statusFilter);
+      filteredData = filteredData.filter((lot: ProductLot) => String(lot.status) === statusFilter);
     }
 
     if (priceFilter) {
-      filteredData = filteredData.filter((lot) => {
+      filteredData = filteredData.filter((lot: ProductLot) => {
         const price = lot.supplyPrice || 0;
         switch (priceFilter) {
           case "0-100000":
@@ -153,7 +228,7 @@ const LotTable: React.FC<LotTableProps> = ({
     }
 
     if (remainingDaysFilter) {
-      filteredData = filteredData.filter((lot) => {
+      filteredData = filteredData.filter((lot: ProductLot) => {
         const remainingDays = calculateRemainingDays(lot.manufacturedDate, lot.expiredDate);
         switch (remainingDaysFilter) {
           case "0-30":
@@ -169,11 +244,11 @@ const LotTable: React.FC<LotTableProps> = ({
     }
 
     if (lotCodeFilter) {
-      filteredData = filteredData.filter((lot) => lot.lotCode === lotCodeFilter);
+      filteredData = filteredData.filter((lot: ProductLot) => lot.lotCode === lotCodeFilter);
     }
 
     if (dateRange) {
-      filteredData = filteredData.filter((lot) => {
+      filteredData = filteredData.filter((lot: ProductLot) => {
         const createdDate = new Date(lot.manufacturedDate);
         return createdDate >= new Date(dateRange[0]) && createdDate <= new Date(dateRange[1]);
       });
@@ -184,30 +259,39 @@ const LotTable: React.FC<LotTableProps> = ({
 
   const fetchLotDetail = async (id: number) => {
     try {
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/ProductLot/${id}`);
-      const lot = response.data.data;
-      // Đảm bảo dữ liệu chi tiết không có null
+      const [lotResponse, productResponse] = await Promise.all([
+        axios.get(`http://pharmadistiprobe.fun/api/ProductLot/${id}`),
+        axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct"),
+      ]);
+
+      const lot = lotResponse.data.data;
+      const products = productResponse.data.data || [];
+      const product = products.find((p: Product) => p.productId === lot.productId);
+
       setSelectedLot({
         ...lot,
         quantity: lot.quantity ?? 0,
         supplyPrice: lot.supplyPrice ?? 0,
         productName: lot.productName || "Không xác định",
         lotCode: lot.lotCode || "N/A",
+        unit: product?.unit || "N/A",
       });
       setIsDetailModalOpen(true);
     } catch (error) {
-      console.error("Lỗi khi lấy chi tiết lô:", error);
+      console.error("Lỗi khi lấy chi tiết lô hoặc sản phẩm:", error);
     }
   };
 
   const exportToExcel = () => {
-    const dataToExport = filteredLots.map((lot) => ({
+    const dataToExport = filteredLots.map((lot: ProductLot) => ({
       "Mã Lô": lot.lotCode,
       "Tên Sản Phẩm": lot.productName,
       "Số Lượng": lot.quantity ?? 0,
       "Giá Nhập": (lot.supplyPrice ?? 0).toLocaleString("vi-VN"),
       "Số Ngày Còn Hạn": formatRemainingDays(lot.manufacturedDate, lot.expiredDate),
       "Ngày Sản Xuất": new Date(lot.manufacturedDate).toLocaleDateString("vi-VN"),
+      "Đơn Vị Tính": lot.unit,
+      "Trạng Thái": getStatusText(lot.status),
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
@@ -217,7 +301,7 @@ const LotTable: React.FC<LotTableProps> = ({
 
   const printTable = () => {
     const selectedLots = rowSelection?.selectedRowKeys.length
-      ? filteredLots.filter((lot) => rowSelection.selectedRowKeys.includes(lot.id))
+      ? filteredLots.filter((lot: ProductLot) => rowSelection.selectedRowKeys.includes(lot.id))
       : filteredLots;
 
     if (selectedLots.length === 0) {
@@ -238,12 +322,14 @@ const LotTable: React.FC<LotTableProps> = ({
             <th>Giá Nhập</th>
             <th>Số Ngày Còn Hạn</th>
             <th>Ngày Sản Xuất</th>
+            <th>Đơn Vị Tính</th>
+            <th>Trạng Thái</th>
           </tr>
         </thead>
         <tbody>
           ${selectedLots
             .map(
-              (lot) => `
+              (lot: ProductLot) => `
             <tr>
               <td>${lot.lotCode}</td>
               <td>${lot.productName}</td>
@@ -251,6 +337,8 @@ const LotTable: React.FC<LotTableProps> = ({
               <td style="text-align: right;">${(lot.supplyPrice ?? 0).toLocaleString("vi-VN")} VND</td>
               <td>${formatRemainingDays(lot.manufacturedDate, lot.expiredDate)}</td>
               <td>${new Date(lot.manufacturedDate).toLocaleDateString("vi-VN")}</td>
+              <td>${lot.unit}</td>
+              <td>${getStatusText(lot.status)}</td>
             </tr>
           `
             )
@@ -297,13 +385,21 @@ const LotTable: React.FC<LotTableProps> = ({
       render: (quantity: number | null) => (quantity ?? 0).toLocaleString(),
     },
     {
-      title: "Giá Nhập (VND)  ",
+      title: "Giá Nhập (VND)",
       dataIndex: "supplyPrice",
       key: "supplyPrice",
       align: "right" as const,
       width: 150,
       sorter: (a: ProductLot, b: ProductLot) => (a.supplyPrice ?? 0) - (b.supplyPrice ?? 0),
       render: (price: number | null) => `${(price ?? 0).toLocaleString("vi-VN")}`,
+    },
+    {
+      title: "Trạng Thái",
+      dataIndex: "status",
+      key: "status",
+      width: 120,
+      sorter: (a: ProductLot, b: ProductLot) => (a.status ?? -1) - (b.status ?? -1),
+      render: (status: 0 | 1 | 2 | null) => getStatusText(status),
     },
     {
       title: "Số Ngày Còn Hạn",
@@ -316,37 +412,59 @@ const LotTable: React.FC<LotTableProps> = ({
       render: (_: any, record: ProductLot) =>
         formatRemainingDays(record.manufacturedDate, record.expiredDate),
     },
-    // {
-    //   title: "Ngày Sản Xuất",
-    //   dataIndex: "manufacturedDate",
-    //   key: "manufacturedDate",
-    //   width: 120,
-    //   sorter: (a: ProductLot, b: ProductLot) =>
-    //     new Date(a.manufacturedDate).getTime() - new Date(b.manufacturedDate).getTime(),
-    //   render: (date: string) => formatDate(date),
-    // },
     {
-      title: "Hành động",
+      title: "",
       key: "actions",
       width: 80,
-      render: (_: any, record: ProductLot) => (
-        <Dropdown
-          overlay={
-            <Menu>
-              <Menu.Item
-                key="view"
-                icon={<EyeOutlined />}
-                onClick={() => fetchLotDetail(record.id)}
-              >
-                Xem chi tiết
-              </Menu.Item>
-            </Menu>
-          }
-          trigger={["click"]}
-        >
-          <Button shape="circle" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      render: (_: any, record: ProductLot) => {
+        const menuItems = [
+          {
+            key: "view",
+            icon: <EyeOutlined />,
+            label: "Xem chi tiết",
+            onClick: () => fetchLotDetail(record.id),
+          },
+        ];
+
+        return (
+          <Dropdown
+            menu={{ items: menuItems }}
+            trigger={["click"]}
+          >
+            <Button shape="circle" icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  const statusModalColumns = [
+    {
+      title: "Mã Lô",
+      dataIndex: "lotCode",
+      key: "lotCode",
+      width: 120,
+    },
+    {
+      title: "Tên Sản Phẩm",
+      dataIndex: "productName",
+      key: "productName",
+      width: 200,
+    },
+    {
+      title: "Số Lượng",
+      dataIndex: "quantity",
+      key: "quantity",
+      align: "right" as const,
+      width: 100,
+      render: (quantity: number | null) => (quantity ?? 0).toLocaleString(),
+    },
+    {
+      title: "Trạng Thái",
+      dataIndex: "status",
+      key: "status",
+      width: 120,
+      render: (status: 0 | 1 | 2 | null) => getStatusText(status),
     },
   ];
 
@@ -366,13 +484,13 @@ const LotTable: React.FC<LotTableProps> = ({
         >
           Lọc
         </Button>
-        <Button
+        {/* <Button
           type="primary"
           onClick={() => handleChangePage("Tạo lô hàng")}
           style={{ borderRadius: "6px" }}
         >
           + Tạo lô mới
-        </Button>
+        </Button> */}
         <Button
           type="primary"
           icon={<FileExcelOutlined />}
@@ -429,6 +547,17 @@ const LotTable: React.FC<LotTableProps> = ({
                     {lotCode}
                   </Option>
                 ))}
+              </Select>
+              <Select
+                placeholder="Trạng thái"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: "100%", borderRadius: "6px" }}
+              >
+                <Option value="">Chọn trạng thái</Option>
+                <Option value="0">Ngừng bán</Option>
+                <Option value="1">Còn hạn</Option>
+                <Option value="2">Ưu tiên xuất</Option>
               </Select>
               <div className="md:col-span-3">
                 <span style={{ display: "block", marginBottom: 8, color: "#595959" }}>
@@ -506,17 +635,25 @@ const LotTable: React.FC<LotTableProps> = ({
                 <span style={{ color: "#262626" }}>{selectedLot.lotCode}</span>
 
                 <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Tên Sản Phẩm:</span>
-                <span style={{ color: "#262626" }}>{selectedLot.productName}</span>
+                <span style={{ color: "262626" }}>{selectedLot.productName}</span>
 
                 <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Trạng Thái:</span>
                 <span
                   style={{
-                    color: selectedLot.status === 1 ? "#389e0d" : "#cf1322",
+                    color:
+                      selectedLot.status === 1
+                        ? "#389e0d"
+                        : selectedLot.status === 2
+                        ? "#fa8c16"
+                        : "#cf1322",
                     fontWeight: "500",
                   }}
                 >
-                  {selectedLot.status === 1 ? "Còn hàng" : "Hết hàng"}
+                  {getStatusText(selectedLot.status)}
                 </span>
+
+                <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Đơn Vị Tính:</span>
+                <span style={{ color: "#262626" }}>{selectedLot.unit}</span>
 
                 <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Số Lượng:</span>
                 <span style={{ color: "#262626" }}>
@@ -524,7 +661,7 @@ const LotTable: React.FC<LotTableProps> = ({
                 </span>
 
                 <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Giá Nhập:</span>
-                <span style={{ color: "#262626"}}>
+                <span style={{ color: "#262626" }}>
                   {(selectedLot.supplyPrice ?? 0).toLocaleString("vi-VN")} VND
                 </span>
 
@@ -561,6 +698,24 @@ const LotTable: React.FC<LotTableProps> = ({
             </div>
           )}
         </div>
+      </Modal>
+
+      <Modal
+        open={isStatusModalOpen}
+        onCancel={() => setIsStatusModalOpen(false)}
+        footer={null}
+        width={800}
+        title={statusModalTitle}
+        className="rounded-lg"
+      >
+        <Table
+          columns={statusModalColumns}
+          dataSource={statusModalLots}
+          rowKey="id"
+          bordered
+          size="middle"
+          pagination={false}
+        />
       </Modal>
     </div>
   );

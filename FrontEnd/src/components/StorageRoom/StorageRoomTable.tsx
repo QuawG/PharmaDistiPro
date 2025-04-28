@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Dropdown, Menu, Select, message, Form, Input, Typography } from 'antd';
+import { Table, Button, Modal, Dropdown, Select, message, Form, Input, Typography } from 'antd';
 import { MoreOutlined, EditOutlined, EyeOutlined, CloseOutlined, LineChartOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
@@ -44,6 +44,8 @@ interface SensorData {
   temperature: number;
   humidity: number;
   createdDate: string;
+  alertMessage?: string;
+  alertDetail?: string;
 }
 
 interface StorageRoomTableProps {
@@ -70,7 +72,9 @@ const StorageRoomDetail: React.FC<{
     if (isOpen && room?.storageRoomId) {
       setMounted(true);
       axios
-        .get(`http://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomById/${room.storageRoomId}`)
+        .get(`http://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomById/${room.storageRoomId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+        })
         .then((response) => {
           if (response.data.success) {
             setFetchedRoom(response.data.data);
@@ -78,7 +82,8 @@ const StorageRoomDetail: React.FC<{
             message.error(response.data.message || 'Không thể tải thông tin kho!');
           }
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Lỗi khi tải thông tin kho:', error);
           message.error('Lỗi khi tải thông tin kho!');
         });
     } else {
@@ -143,6 +148,7 @@ const UpdateStorageRoomDetail: React.FC<{
   room: StorageRoom;
   onSave: (updatedRoom: StorageRoom) => void;
 }> = ({ isOpen, onClose, room, onSave }) => {
+  const { user } = useAuth();
   const [form] = Form.useForm();
   const [mounted, setMounted] = useState(false);
   const [roomTypes, setRoomTypes] = useState<{ id: string; name: string }[]>([]);
@@ -150,7 +156,9 @@ const UpdateStorageRoomDetail: React.FC<{
   useEffect(() => {
     const fetchRoomTypes = async () => {
       try {
-        const response = await axios.get('http://pharmadistiprobe.fun/api/StorageRoom/RoomTypes');
+        const response = await axios.get('http://pharmadistiprobe.fun/api/StorageRoom/RoomTypes', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+        });
         const types = Object.entries(response.data).map(([id, name]) => ({
           id: id as string,
           name: name as string,
@@ -160,8 +168,8 @@ const UpdateStorageRoomDetail: React.FC<{
         console.error('Error fetching room types:', error);
         setRoomTypes([
           { id: '1', name: 'Phòng thường' },
-          { id: '2', name: 'Phòng mát' },
-          { id: '3', name: 'Phòng đông lạnh' },
+          { id: '2', name: 'Phòng lạnh' },
+          { id: '3', name: 'Phòng mát' },
         ]);
       }
     };
@@ -171,28 +179,45 @@ const UpdateStorageRoomDetail: React.FC<{
     if (isOpen) {
       setMounted(true);
       form.setFieldsValue({
-        storageRoomCode: room.storageRoomCode,
         storageRoomName: room.storageRoomName,
-        type: room.type,
+        type: roomTypes.find((t) => t.name === room.type)?.id || room.type,
         capacity: room.capacity,
         status: room.status ? '1' : '0',
       });
     } else {
       setMounted(false);
     }
-  }, [isOpen, room, form]);
+  }, [isOpen, room, form, roomTypes]);
 
   if (!mounted) return null;
 
   const handleSubmit = async (values: any) => {
+    if (!user?.customerId) {
+      message.error('Vui lòng đăng nhập để cập nhật kho!');
+      return;
+    }
+
+    const payload = {
+      storageRoomId: room.storageRoomId,
+      storageRoomName: values.storageRoomName,
+      type: Number(roomTypes.find((t) => t.name === values.type)?.id || values.type),
+      capacity: Number(values.capacity),
+      status: values.status === '1',
+      createdBy: room.createdBy || user.customerId,
+      createdDate: room.createdDate,
+    };
+
     try {
-      const response = await axios.put(`http://pharmadistiprobe.fun/api/StorageRoom/UpdateStorageRoom/${room.storageRoomId}`, {
-        storageRoomCode: values.storageRoomCode,
-        storageRoomName: values.storageRoomName,
-        type: roomTypes.find((t) => t.name === values.type)?.id || '1',
-        capacity: Number(values.capacity),
-        status: values.status === '1',
-      });
+      const response = await axios.put(
+        'http://pharmadistiprobe.fun/api/StorageRoom/UpdateStorageRoom',
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.data.success) {
         message.success('Cập nhật thông tin kho hàng thành công!');
@@ -203,7 +228,7 @@ const UpdateStorageRoomDetail: React.FC<{
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        message.error(error.response?.data.message || 'Có lỗi xảy ra!');
+        message.error(error.response?.data.message || 'Có lỗi xảy ra khi cập nhật kho!');
       } else {
         message.error('Lỗi không xác định!');
       }
@@ -225,14 +250,6 @@ const UpdateStorageRoomDetail: React.FC<{
         onFinish={handleSubmit}
         style={{ padding: 16 }}
       >
-        <Form.Item
-          label="Mã kho"
-          name="storageRoomCode"
-          rules={[{ required: true, message: 'Vui lòng nhập mã kho' }]}
-        >
-          <Input />
-        </Form.Item>
-
         <Form.Item
           label="Tên kho"
           name="storageRoomName"
@@ -306,55 +323,65 @@ const SensorChartModal: React.FC<{
   onClose: () => void;
   roomId: number;
   roomName: string;
-}> = ({ isOpen, onClose, roomId, roomName }) => {
+  roomType: string;
+}> = ({ isOpen, onClose, roomId, roomName, roomType }) => {
   const [hasSensor, setHasSensor] = useState<boolean | null>(null);
-  const [historyData, setHistoryData] = useState<SensorData[]>([]);
+  const [, setHistoryData] = useState<SensorData[]>([]);
   const [displayData, setDisplayData] = useState<SensorData[]>([]);
   const [latestSensorData, setLatestSensorData] = useState<SensorData | null>(null);
+  const [alertInfo, setAlertInfo] = useState<{ message: string; detail: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [, setNoDataCount] = useState(0);
+  const MAX_DATA_POINTS = 25;
+  const MAX_NO_DATA_ATTEMPTS = 10;
+
+  // Define thresholds based on room type
+  const getThresholds = (type: string) => {
+    switch (type) {
+      case 'Phòng thường':
+        return { tempMin: 15, tempMax: 30, humidityMax: 75 };
+      case 'Phòng lạnh':
+        return { tempMin: 2, tempMax: 8, humidityMax: 45 };
+      case 'Phòng mát':
+        return { tempMin: 8, tempMax: 15, humidityMax: 70 };
+      default:
+        return { tempMin: 15, tempMax: 30, humidityMax: 75 }; // Default to "Phòng thường"
+    }
+  };
+
+  const thresholds = getThresholds(roomType);
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
-
-      // Check for sensor and fetch historical data
       axios
-        .get(`http://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${roomId}`)
+        .get(`http://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${roomId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+        })
         .then((response) => {
           setHasSensor(response.data);
           if (response.data) {
-            // Fetch historical data
             axios
-              .get(`http://pharmadistiprobe.fun/api/StorageHistory/Top50Earliest/${roomId}`)
+              .get(`http://pharmadistiprobe.fun/api/StorageHistory/Top50Earliest/${roomId}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+              })
               .then((historyResponse) => {
                 const data = historyResponse.data.sort(
                   (a: SensorData, b: SensorData) =>
                     new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime()
                 );
                 setHistoryData(data);
-                if (data.length >= 20) {
-                  setDisplayData([data[19]]);
-                } else {
-                  setDisplayData([]);
-                }
+                setDisplayData(data.slice(-MAX_DATA_POINTS));
               })
-              .catch(() => {
+              .catch((error) => {
+                console.error('Lỗi khi lấy dữ liệu lịch sử cảm biến:', error);
                 message.error('Lỗi khi lấy dữ liệu lịch sử cảm biến!');
               });
-
-            // Fetch latest sensor data
-            axios
-              .get(`http://pharmadistiprobe.fun/api/StorageHistory/Newest/${roomId}`)
-              .then((latestResponse) => {
-                setLatestSensorData(latestResponse.data);
-              })
-              .catch(() => {
-                message.error('Lỗi khi lấy dữ liệu cảm biến mới nhất!');
-                setLatestSensorData(null);
-              });
+            fetchLatestSensorData();
           }
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Lỗi khi kiểm tra cảm biến:', error);
           message.error('Lỗi khi kiểm tra cảm biến!');
           setHasSensor(false);
         })
@@ -365,29 +392,126 @@ const SensorChartModal: React.FC<{
       setHistoryData([]);
       setDisplayData([]);
       setLatestSensorData(null);
+      setAlertInfo(null);
+      setHasSensor(null);
+      setNoDataCount(0);
     }
   }, [isOpen, roomId]);
 
+  const fetchLatestSensorData = async () => {
+    try {
+      const response = await axios.get(`http://pharmadistiprobe.fun/api/StorageHistory/Newest/${roomId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+        timeout: 5000,
+      });
+      const newData: SensorData & { alertMessage?: string; alertDetail?: string } = response.data;
+      console.log('API Response:', JSON.stringify(newData, null, 2));
+
+      setDisplayData((prev) => {
+        if (prev.length === 0) {
+          console.log('Initial displayData:', [newData]);
+          return [newData];
+        }
+        const lastData = prev[prev.length - 1];
+        const isDifferent =
+          newData.createdDate !== lastData.createdDate ||
+          newData.temperature !== lastData.temperature ||
+          newData.humidity !== lastData.humidity;
+
+        if (isDifferent) {
+          const updatedData = [...prev, newData].slice(-MAX_DATA_POINTS);
+          console.log('Updated displayData:', updatedData);
+          setNoDataCount(0);
+          return updatedData;
+        } else {
+          console.log('No update to displayData, data unchanged', {
+            newCreatedDate: newData.createdDate,
+            prevCreatedDate: lastData.createdDate,
+            newTemperature: newData.temperature,
+            prevTemperature: lastData.temperature,
+            newHumidity: newData.humidity,
+            prevHumidity: lastData.humidity,
+          });
+          setNoDataCount((prev) => {
+            const newCount = prev + 1;
+            if (newCount >= MAX_NO_DATA_ATTEMPTS) {
+              message.warning('Không nhận được dữ liệu cảm biến mới trong thời gian dài!');
+            }
+            return newCount;
+          });
+          return prev;
+        }
+      });
+      setLatestSensorData(newData);
+
+      let alertMessage = newData.alertMessage;
+      let alertDetail = newData.alertDetail;
+
+      // Check thresholds based on room type
+      if (!alertMessage) {
+        const { tempMin, tempMax, humidityMax } = thresholds;
+
+        if (newData.temperature > tempMax) {
+          alertMessage = 'Nhiệt độ vượt ngưỡng tối đa!';
+          alertDetail = `Nhiệt độ hiện tại: ${newData.temperature.toFixed(1)}°C, vượt ngưỡng tối đa ${tempMax}°C`;
+        } else if (newData.temperature < tempMin) {
+          alertMessage = 'Nhiệt độ thấp hơn ngưỡng tối thiểu!';
+          alertDetail = `Nhiệt độ hiện tại: ${newData.temperature.toFixed(1)}°C, dưới ngưỡng tối thiểu ${tempMin}°C`;
+        } else if (newData.humidity > humidityMax) {
+          alertMessage = 'Độ ẩm vượt ngưỡng tối đa!';
+          alertDetail = `Độ ẩm hiện tại: ${newData.humidity.toFixed(1)}%, vượt ngưỡng tối đa ${humidityMax}%`;
+        }
+      }
+
+      if (alertMessage) {
+        setAlertInfo({
+          message: alertMessage,
+          detail: alertDetail || 'Không có chi tiết bổ sung',
+        });
+        message.warning({
+          content: (
+            <div>
+              <strong>{alertMessage}</strong>
+              <div>{alertDetail || 'Không có chi tiết bổ sung'}</div>
+            </div>
+          ),
+          duration: 5,
+        });
+      } else {
+        console.log('No alert triggered', {
+          temperature: newData.temperature,
+          humidity: newData.humidity,
+          alertMessage: newData.alertMessage,
+          alertDetail: newData.alertDetail,
+          thresholds,
+        });
+        setAlertInfo(null);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy dữ liệu cảm biến mới nhất:', error);
+      message.error('Lỗi khi tải dữ liệu cảm biến!');
+      setNoDataCount((prev) => {
+        const newCount = prev + 1;
+        if (newCount >= MAX_NO_DATA_ATTEMPTS) {
+          message.warning('Không nhận được dữ liệu cảm biến mới trong thời gian dài!');
+        }
+        return newCount;
+      });
+    }
+  };
+
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isOpen && hasSensor && displayData.length < historyData.length) {
+    if (isOpen && hasSensor) {
       interval = setInterval(() => {
-        setDisplayData((prev) => {
-          const nextLength = prev.length + 1;
-          if (nextLength <= historyData.length) {
-            return historyData.slice(0, nextLength);
-          }
-          clearInterval(interval!);
-          return prev;
-        });
-      }, 1000);
+        fetchLatestSensorData();
+      }, 5000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isOpen, hasSensor, displayData.length, historyData]);
+  }, [isOpen, hasSensor]);
 
-  // Format date label
   const formatDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
@@ -445,7 +569,7 @@ const SensorChartModal: React.FC<{
             size: 14,
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
           },
-         Justin: '#333',
+          color: '#333',
         },
       },
       title: {
@@ -651,6 +775,13 @@ const SensorChartModal: React.FC<{
                 </div>
               </div>
             )}
+            {alertInfo && (
+              <div style={{ marginBottom: 16, padding: 16, background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 4 }}>
+                <Text strong style={{ color: '#fa8c16' }}>Cảnh báo:</Text>
+                <div>{alertInfo.message}</div>
+                {alertInfo.detail && <div>{alertInfo.detail}</div>}
+              </div>
+            )}
             <div style={{ marginBottom: 32, height: 300 }}>
               <AntTitle level={5} style={{ marginBottom: 16 }}>
                 Biểu đồ Nhiệt độ
@@ -686,10 +817,52 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSensorModalOpen, setIsSensorModalOpen] = useState(false);
   const [rooms, setRooms] = useState<StorageRoom[]>(storageRooms);
+  const [sensorStatus, setSensorStatus] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
-    setRooms(storageRooms);
+    const fetchSensorStatus = async () => {
+      const statusMap: { [key: number]: boolean } = {};
+      try {
+        const promises = storageRooms.map((room) =>
+          axios
+            .get(`http://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${room.storageRoomId}`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+            })
+            .then((response) => {
+              statusMap[room.storageRoomId] = response.data;
+            })
+            .catch((error) => {
+              console.error(`Lỗi khi kiểm tra cảm biến cho kho ${room.storageRoomId}:`, error);
+              statusMap[room.storageRoomId] = false; // Default to false on error
+            })
+        );
+        await Promise.all(promises);
+        setSensorStatus(statusMap);
+      } catch (error) {
+        console.error('Lỗi khi lấy trạng thái cảm biến:', error);
+        message.error('Lỗi khi kiểm tra cảm biến!');
+      }
+    };
+
+    fetchSensorStatus();
   }, [storageRooms]);
+
+  useEffect(() => {
+    // Sort rooms: prioritize rooms with sensors, then by createdDate (newest first)
+    const sortedRooms = [...storageRooms].sort((a, b) => {
+      const hasSensorA = sensorStatus[a.storageRoomId] || false;
+      const hasSensorB = sensorStatus[b.storageRoomId] || false;
+
+      if (hasSensorA !== hasSensorB) {
+        return hasSensorA ? -1 : 1; // Rooms with sensors come first
+      }
+
+      // Within same sensor status, sort by createdDate (newest first)
+      return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime();
+    });
+
+    setRooms(sortedRooms);
+  }, [storageRooms, sensorStatus]);
 
   const handleStatusChange = async (value: string, room: StorageRoom) => {
     const newStatus = value === 'Hoạt động';
@@ -701,12 +874,15 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await axios.put(`http://pharmadistiprobe.fun/api/StorageRoom/ActivateDeactivateStorageRoom/${room.storageRoomId}/${newStatus}`);
+          await axios.put(`http://pharmadistiprobe.fun/api/StorageRoom/ActivateDeactivateStorageRoom/${room.storageRoomId}/${newStatus}`, {}, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+          });
           message.success('Cập nhật trạng thái thành công!');
           setRooms((prev) =>
             prev.map((r) => (r.storageRoomId === room.storageRoomId ? { ...r, status: newStatus } : r))
           );
         } catch (error) {
+          console.error('Lỗi khi cập nhật trạng thái:', error);
           message.error('Lỗi khi cập nhật trạng thái!');
         }
       },
@@ -760,49 +936,50 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
     {
       title: 'Hành động',
       key: 'actions',
-      render: (_: any, room: StorageRoom) => (
-        <Dropdown
-          overlay={
-            <Menu>
-              <Menu.Item
-                key="view"
-                icon={<EyeOutlined />}
-                onClick={() => {
-                  setSelectedRoom(room);
-                  setIsViewModalOpen(true);
-                }}
-              >
-                Xem
-              </Menu.Item>
-              {user?.roleName === 'Director' && (
-                <Menu.Item
-                  key="edit"
-                  icon={<EditOutlined />}
-                  onClick={() => {
+      render: (_: any, room: StorageRoom) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Xem',
+            onClick: () => {
+              setSelectedRoom(room);
+              setIsViewModalOpen(true);
+            },
+          },
+          ...(user?.roleName === 'Director'
+            ? [
+                {
+                  key: 'edit',
+                  icon: <EditOutlined />,
+                  label: 'Chỉnh sửa',
+                  onClick: () => {
                     setSelectedRoom(room);
                     setIsEditModalOpen(true);
-                  }}
-                >
-                  Chỉnh sửa
-                </Menu.Item>
-              )}
-              <Menu.Item
-                key="sensor"
-                icon={<LineChartOutlined />}
-                onClick={() => {
-                  setSelectedRoom(room);
-                  setIsSensorModalOpen(true);
-                }}
-              >
-                Theo dõi cảm biến
-              </Menu.Item>
-            </Menu>
-          }
-          trigger={['click']}
-        >
-          <Button icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+                  },
+                },
+              ]
+            : []),
+          {
+            key: 'sensor',
+            icon: <LineChartOutlined />,
+            label: 'Theo dõi cảm biến',
+            onClick: () => {
+              setSelectedRoom(room);
+              setIsSensorModalOpen(true);
+            },
+          },
+        ];
+
+        return (
+          <Dropdown
+            menu={{ items: menuItems }}
+            trigger={['click']}
+          >
+            <Button icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
     },
   ];
 
@@ -842,6 +1019,7 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
             }}
             roomId={selectedRoom.storageRoomId}
             roomName={selectedRoom.storageRoomName}
+            roomType={selectedRoom.type}
           />
         </>
       )}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu, message } from "antd";
 import { MoreOutlined, EyeOutlined, FilterOutlined, ExclamationCircleOutlined, PayCircleOutlined } from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
+import { apiClient } from "../../pages/Home/AuthContext";
 import axios from "axios";
-// import { useLocation, useNavigate } from "react-router-dom";
 
 const { Panel } = Collapse;
 const { Option } = Select;
@@ -34,6 +35,11 @@ interface Order {
   };
 }
 
+interface Product {
+  productId: number;
+  unit: string;
+}
+
 interface OrderDetail {
   orderDetailId: number;
   orderId: number;
@@ -47,6 +53,7 @@ interface OrderDetail {
     sellingPrice: number;
     description: string;
     vat: number;
+    unit: string;
   };
 }
 
@@ -65,8 +72,9 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-  // const location = useLocation();
-  // const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const location = useLocation();
+  const navigate = useNavigate();
   const orderStatuses = [
     "Hủy",
     "Đang chờ thanh toán",
@@ -76,53 +84,199 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
     "Hoàn thành",
   ];
 
+  // Fetch product list to get units
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct", {
+        headers: { accept: "text/plain" },
+      });
+      const productList: Product[] = response.data.data.map((item: any) => ({
+        productId: item.productId,
+        unit: item.unit,
+      }));
+      setProducts(productList);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+      setProducts([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
   useEffect(() => {
     setFilteredOrders(orders);
   }, [orders]);
 
-  // // Xử lý callback từ VNPay
-  // useEffect(() => {
-  //   const params = new URLSearchParams(location.search);
-  //   const transactionStatus = params.get("vnp_TransactionStatus");
-  //   const orderId = params.get("vnp_TxnRef");
+  // Handle VNPay callback
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const transactionStatus = params.get("vnp_TransactionStatus");
+    const orderId = params.get("vnp_TxnRef");
 
-  //   if (transactionStatus && orderId) {
-  //     if (transactionStatus === "00") {
-  //       // Thanh toán thành công
-  //       navigate(`/payment/success?orderId=${orderId}`);
-  //     } else {
-  //       // Thanh toán thất bại
-  //       navigate(`/payment/failed?orderId=${orderId}`);
-  //     }
-  //     // Xóa query params sau khi xử lý
-  //     window.history.replaceState({}, document.title, location.pathname);
-  //   }
-  // }, [location, navigate]);
+    if (transactionStatus && orderId) {
+      const numericOrderId = parseInt(orderId);
+      if (transactionStatus === "00") {
+        // Payment successful, update status to 2 ("Đang chờ xác nhận")
+        updateOrderStatus(numericOrderId, 2, "Thanh toán thành công, trạng thái đơn hàng đã được cập nhật!");
+      } else {
+        // Payment failed, update status to 0 ("Hủy")
+        updateOrderStatus(numericOrderId, 0, "Thanh toán thất bại, đơn hàng đã bị hủy!");
+      }
+      // Clear payment-related localStorage items
+      localStorage.removeItem("isPaymentInProgress");
+      localStorage.removeItem("lastOrderId");
+      localStorage.removeItem("lastUsername");
+      // Clear query params after processing
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
-  const fetchOrderStatus = async (orderId: number) => {
+  const updateOrderStatus = async (orderId: number, status: number, successMessage: string) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(
-        `http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`,
+      const response = await apiClient.put(
+        `/Order/UpdateOrderStatus/${orderId}/${status}`,
+        null,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        message.success(successMessage);
+        setFilteredOrders((prev) =>
+          prev.map((order) =>
+            order.orderId === orderId ? { ...order, status } : order
+          )
+        );
+        onUpdate({ ...response.data.data, orderId });
+      } else {
+        message.error(response.data.message || "Không thể cập nhật trạng thái đơn hàng!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
+      message.error("Không thể cập nhật trạng thái đơn hàng!");
+    }
+  };
+
+  const fetchOrderDetails = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await apiClient.get(
+        `/Order/GetOrdersDetailByOrderId/${orderId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const updatedOrder = response.data.data;
-      if (updatedOrder) {
+      const details: OrderDetail[] = response.data.data || [];
+      // Map product units to order details
+      const updatedDetails = details.map((detail) => {
+        const product = products.find((p) => p.productId === detail.productId);
+        return {
+          ...detail,
+          product: {
+            ...detail.product,
+            unit: product?.unit || "N/A",
+          },
+        };
+      });
+      setOrderDetails(updatedDetails);
+      setIsDetailModalOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      message.error("Không thể lấy chi tiết đơn hàng!");
+    }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await apiClient.put(
+        `/Order/UpdateOrderStatus/${orderId}/0`,
+        null,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        message.success("Hủy đơn hàng thành công!");
+        onUpdate({ ...selectedOrder!, status: 0 });
         setFilteredOrders((prev) =>
-          prev.map((order) =>
-            order.orderId === orderId
-              ? { ...order, status: updatedOrder.status }
-              : order
-          )
+          prev.map((order) => (order.orderId === orderId ? { ...order, status: 0 } : order))
         );
-        onUpdate({ ...updatedOrder, orderId });
+      } else {
+        message.error(response.data.message || "Không thể hủy đơn hàng!");
       }
     } catch (error) {
-      console.error("Lỗi khi lấy trạng thái đơn hàng:", error);
-      message.error("Không thể cập nhật trạng thái đơn hàng!");
+      console.error("Lỗi khi hủy đơn hàng:", error);
+      message.error("Lỗi khi hủy đơn hàng!");
     }
+  };
+
+  const handlePayOrder = async (order: Order) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      // Save payment-related state before redirecting
+      localStorage.setItem("isPaymentInProgress", "true");
+      localStorage.setItem("lastOrderId", order.orderId.toString());
+      localStorage.setItem("lastUsername", order.customer.userName);
+      const description = `${order.customer.userName} chuyển tiền`;
+      const response = await apiClient.get(`/VNPay/CreatePaymentUrl`, {
+        params: {
+          moneyToPay: order.totalAmount,
+          description: description,
+          orderId: order.orderId,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 201 && response.data) {
+        window.location.href = response.data;
+      } else {
+        message.error("Không thể tạo URL thanh toán!");
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi tạo URL thanh toán:", error);
+      if (error.response?.data?.message?.includes("đơn hàng đã tồn tại hoặc đang được xử lý")) {
+        message.error("Đơn hàng này đã được thanh toán hoặc đang xử lý!");
+        updateOrderStatus(order.orderId, order.status, "Cập nhật trạng thái đơn hàng!");
+      } else {
+        message.error("Lỗi khi tạo URL thanh toán!");
+      }
+    }
+  };
+
+  const showCancelConfirm = (order: Order) => {
+    Modal.confirm({
+      title: "Xác nhận hủy đơn hàng",
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc chắn muốn hủy đơn hàng "${order.orderCode}" không?`,
+      okText: "Hủy đơn hàng",
+      okType: "danger",
+      cancelText: "Thoát",
+      onOk: () => handleCancelOrder(order.orderId),
+    });
+  };
+
+  const showPayConfirm = (order: Order) => {
+    Modal.confirm({
+      title: "Xác nhận thanh toán đơn hàng",
+      icon: <PayCircleOutlined />,
+      content: `Bạn có chắc chắn muốn thanh toán đơn hàng "${order.orderCode}" với số tiền ${order.totalAmount.toLocaleString()} VND không?`,
+      okText: "Thanh toán",
+      okType: "primary",
+      cancelText: "Thoát",
+      onOk: () => handlePayOrder(order),
+    });
   };
 
   const removeVietnameseTones = (str: string) => {
@@ -154,110 +308,6 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
     setFilteredOrders(filtered);
   }, [searchTerm, statusFilter, dateRange, orders]);
 
-  const fetchOrderDetails = async (orderId: number) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.get(
-        `http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setOrderDetails(response.data.data || []);
-      setIsDetailModalOpen(true);
-    } catch (error) {
-      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
-      message.error("Không thể lấy chi tiết đơn hàng!");
-    }
-  };
-
-  const handleCancelOrder = async (orderId: number) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.put(
-        `http://pharmadistiprobe.fun/api/Order/UpdateOrderStatus/${orderId}/0`,
-        null,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (response.data.success) {
-        message.success("Hủy đơn hàng thành công!");
-        onUpdate({ ...selectedOrder!, status: 0 });
-        setFilteredOrders((prev) =>
-          prev.map((order) => (order.orderId === orderId ? { ...order, status: 0 } : order))
-        );
-      } else {
-        message.error(response.data.message || "Không thể hủy đơn hàng!");
-      }
-    } catch (error) {
-      console.error("Lỗi khi hủy đơn hàng:", error);
-      message.error("Lỗi khi hủy đơn hàng!");
-    }
-  };
-
-  const handlePayOrder = async (order: Order) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const description = `${order.customer.userName} chuyển tiền`;
-      const response = await axios.get(
-        `http://pharmadistiprobe.fun/api/VNPay/CreatePaymentUrl`,
-        {
-          params: {
-            moneyToPay: order.totalAmount,
-            description: description,
-            orderId: order.orderId,
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 201 && response.data) {
-        // Chuyển hướng đến URL thanh toán
-        window.location.href = response.data;
-      } else {
-        message.error("Không thể tạo URL thanh toán!");
-      }
-    } catch (error: any) {
-      console.error("Lỗi khi tạo URL thanh toán:", error);
-      if (error.response?.data?.message?.includes("đơn hàng đã tồn tại hoặc đang được xử lý")) {
-        message.error("Đơn hàng này đã được thanh toán hoặc đang xử lý!");
-        fetchOrderStatus(order.orderId);
-      } else {
-        message.error("Lỗi khi tạo URL thanh toán!");
-      }
-    }
-  };
-
-  const showCancelConfirm = (order: Order) => {
-    Modal.confirm({
-      title: "Xác nhận hủy đơn hàng",
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc chắn muốn hủy đơn hàng "${order.orderCode}" không?`,
-      okText: "Hủy đơn hàng",
-      okType: "danger",
-      cancelText: "Thoát",
-      onOk: () => handleCancelOrder(order.orderId),
-    });
-  };
-
-  const showPayConfirm = (order: Order) => {
-    Modal.confirm({
-      title: "Xác nhận thanh toán đơn hàng",
-      icon: <PayCircleOutlined />,
-      content: `Bạn có chắc chắn muốn thanh toán đơn hàng "${order.orderCode}" với số tiền ${order.totalAmount.toLocaleString()} VND không?`,
-      okText: "Thanh toán",
-      okType: "primary",
-      cancelText: "Thoát",
-      onOk: () => handlePayOrder(order),
-    });
-  };
-
   const columns = [
     { title: "Mã đơn hàng", dataIndex: "orderCode", key: "orderCode" },
     {
@@ -279,10 +329,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
       render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
     },
     {
-      title: "Tổng tiền",
+      title: "Tổng tiền (VND)",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      render: (amount: number) => `${amount.toLocaleString()} VND`,
+      render: (amount: number) => amount.toLocaleString("vi-VN"),
     },
     {
       title: "",
@@ -321,6 +371,38 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
         </Dropdown>
       ),
     },
+  ];
+
+  const detailColumns = [
+    { title: "Tên sản phẩm", dataIndex: ["product", "productName"], key: "productName" },
+    { title: "Đơn vị tính", dataIndex: ["product", "unit"], key: "unit" },
+    { title: "Số lượng", dataIndex: "quantity", key: "quantity" },
+    {
+      title: "Thuế (GTGT)",
+      dataIndex: ["product", "vat"],
+      key: "vat",
+      render: (vat: number) => (vat != null ? `${vat}%` : "N/A"),
+    },
+    {
+      title: "Đơn giá (VND)",
+      dataIndex: ["product", "sellingPrice"],
+      key: "sellingPrice",
+      render: (price: number) => price.toLocaleString("vi-VN"),
+    },
+    {
+      title: "Thành tiền (chưa bao gồm thuế GTGT)",
+      key: "total",
+      render: (record: OrderDetail) =>
+        (record.quantity * record.product.sellingPrice).toLocaleString("vi-VN"),
+    },
+    
+        
+      { title: "Thành tiền (đã bao gồm thuế GTGT)",
+        key: "totalWithTax",
+        render: (record: OrderDetail) =>
+          ((record.quantity * record.product.sellingPrice) * (1 + (record.product.vat || 0) / 100)).toLocaleString("vi-VN"),
+    }
+
   ];
 
   return (
@@ -393,24 +475,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
           open={isDetailModalOpen}
           onCancel={() => setIsDetailModalOpen(false)}
           footer={null}
-          width={800}
+          width={1000}
         >
           <Table
-            columns={[
-              { title: "Tên sản phẩm", dataIndex: ["product", "productName"], key: "productName" },
-              { title: "Số lượng", dataIndex: "quantity", key: "quantity" },
-              {
-                title: "Giá bán",
-                dataIndex: ["product", "sellingPrice"],
-                key: "sellingPrice",
-                render: (price: number) => `${price.toLocaleString()} VND`,
-              },
-              {
-                title: "Tổng giá",
-                key: "total",
-                render: (record: OrderDetail) => `${(record.quantity * record.product.sellingPrice).toLocaleString()} VND`,
-              },
-            ]}
+            columns={detailColumns}
             dataSource={orderDetails}
             rowKey="orderDetailId"
             pagination={false}

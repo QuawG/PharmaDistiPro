@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, message } from "antd";
+import { Table, Button, Modal, message, Dropdown, Menu } from "antd";
 import axios from "axios";
 import { useAuth } from "../../pages/Home/AuthContext";
+import { EyeOutlined, MoreOutlined, FileAddOutlined } from "@ant-design/icons";
 
 interface Order {
   orderId: number;
@@ -35,6 +36,31 @@ interface Order {
   };
 }
 
+interface OrderDetail {
+  orderDetailId: number;
+  orderId: number;
+  productId: number;
+  quantity: number;
+  totalQuantity: number | null;
+  product: {
+    productId: number;
+    productCode: string;
+    manufactureName: string;
+    productName: string;
+    unit: string;
+    categoryId: number;
+    description: string;
+    sellingPrice: number;
+    createdBy: number;
+    createdDate: string;
+    status: boolean;
+    vat: number;
+    storageconditions: number;
+    weight: number;
+    volumePerUnit: number;
+  };
+}
+
 interface OrderTableProps {
   handleChangePage: (page: string, orderId?: number) => void;
 }
@@ -43,6 +69,9 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -57,8 +86,27 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
       setOrders(filteredOrders || []);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+      message.error("Không thể lấy danh sách đơn hàng!");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrderDetails = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(`http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accept: "*/*",
+        },
+      });
+      const details: OrderDetail[] = response.data.data || [];
+      setOrderDetails(details);
+      setIsDetailModalOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      message.error("Không thể lấy chi tiết đơn hàng!");
     }
   };
 
@@ -78,8 +126,8 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
         try {
           const token = localStorage.getItem("accessToken");
           const response = await axios.post(
-            `http://pharmadistiprobe.fun/api/IssueNote/CreateIssueNote/${orderId}`, // Truyền orderId qua URL
-            null, // Không cần body
+            `http://pharmadistiprobe.fun/api/IssueNote/CreateIssueNote/${orderId}`,
+            null,
             {
               headers: {
                 "Content-Type": "application/json",
@@ -96,6 +144,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
         } catch (error: any) {
           console.error("Lỗi khi tạo phiếu xuất kho:", error);
           if (error.response?.status === 404) {
+            message.error("Đơn hàng không tồn tại!");
           } else {
             message.error(error.response?.data?.message || "Lỗi khi tạo phiếu xuất kho!");
           }
@@ -128,26 +177,70 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      render: (amount: number) => `${amount.toLocaleString()} VND`,
+      render: (amount: number) => amount.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: number) => ["Hủy", "Đang chờ thanh toán ","Đang chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][status],
+      render: (status: number) => ["Hủy", "Đang chờ thanh toán", "Đang chờ xác nhận", "Xác nhận", "Vận chuyển", "Hoàn thành"][status],
     },
     {
       title: "",
       key: "actions",
       render: (_: any, record: Order) => (
-        <Button
-          type="primary"
-          onClick={() => handleCreateIssueNote(record.orderId)}
-          disabled={record.status !== 3}
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item
+                key="view"
+                icon={<EyeOutlined />}
+                onClick={() => {
+                  setSelectedOrder(record);
+                  fetchOrderDetails(record.orderId);
+                }}
+              >
+                Xem chi tiết
+              </Menu.Item>
+              <Menu.Item
+                key="createIssueNote"
+                icon={<FileAddOutlined />}
+                onClick={() => handleCreateIssueNote(record.orderId)}
+                disabled={record.status !== 3}
+              >
+                Tạo phiếu xuất kho
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={["click"]}
         >
-          Tạo phiếu xuất kho
-        </Button>
+          <Button shape="circle" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
+    },
+  ];
+
+  const detailColumns = [
+    { title: "Tên sản phẩm", dataIndex: ["product", "productName"], key: "productName" },
+    { title: "Đơn vị tính", dataIndex: ["product", "unit"], key: "unit", render: (unit: string) => unit || "N/A" },
+    { title: "Số lượng", dataIndex: "quantity", key: "quantity" },
+    {
+      title: "Thuế (%VAT)",
+      dataIndex: ["product", "vat"],
+      key: "vat",
+      render: (vat: number) => (vat != null ? `${vat}%` : "N/A"),
+    },
+    {
+      title: "Đơn giá",
+      dataIndex: ["product", "sellingPrice"],
+      key: "sellingPrice",
+      render: (price: number) => price.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+    },
+    {
+      title: "Thành tiền",
+      key: "total",
+      render: (record: OrderDetail) =>
+        (record.quantity * record.product.sellingPrice).toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
     },
   ];
 
@@ -161,6 +254,26 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
         loading={loading}
         pagination={{ pageSize: 10 }}
       />
+      {selectedOrder && (
+        <Modal
+          title={`Chi tiết đơn hàng: ${selectedOrder.orderCode}`}
+          open={isDetailModalOpen}
+          onCancel={() => {
+            setIsDetailModalOpen(false);
+            setSelectedOrder(null);
+            setOrderDetails([]);
+          }}
+          footer={null}
+          width={1000}
+        >
+          <Table
+            columns={detailColumns}
+            dataSource={orderDetails}
+            rowKey="orderDetailId"
+            pagination={false}
+          />
+        </Modal>
+      )}
     </div>
   );
 };

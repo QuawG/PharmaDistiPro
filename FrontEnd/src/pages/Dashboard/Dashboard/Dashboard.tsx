@@ -51,8 +51,20 @@ const Dashboard: React.FC = () => {
   const [orderData, setOrderData] = useState<Order[]>([]);
   const [customerData, setCustomerData] = useState<Customer[]>([]);
   const [productData, setProductData] = useState<OrderDetail[]>([]);
+  const [startMonth, setStartMonth] = useState<string>("");
+  const [endMonth, setEndMonth] = useState<string>("");
+  const [monthOptions, setMonthOptions] = useState<string[]>([]);
+  const [rangeError, setRangeError] = useState<string | null>(null);
 
-  // Lấy dữ liệu từ API
+  // Hàm so sánh hai tháng
+  const compareMonths = (monthA: string, monthB: string): number => {
+    const [monthANum, yearANum] = monthA.split("-").map(Number);
+    const [monthBNum, yearBNum] = monthB.split("-").map(Number);
+    if (yearANum !== yearBNum) return yearANum - yearBNum;
+    return monthANum - monthBNum;
+  };
+
+  // Fetch data from API and generate month options
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -71,7 +83,6 @@ const Dashboard: React.FC = () => {
           axios.get("http://pharmadistiprobe.fun/api/Order/GetOrdersRevenueList"),
         ]);
 
-        // Xử lý dữ liệu
         const suppliers: Supplier[] = suppliersRes.data.data;
         const purchases: PurchaseOrder[] = purchasesRes.data.data.map((p: any) => ({
           purchaseOrderId: p.purchaseOrderId,
@@ -82,15 +93,23 @@ const Dashboard: React.FC = () => {
         const products: OrderDetail[] = productsRes.data.data;
         const orders: Order[] = ordersRes.data.data;
 
-        // Debug: Log chi tiết purchaseData và suppliers
-        console.log("Purchase Data:", purchases);
-        purchases.forEach(p => {
-          console.log(`Purchase ID: ${p.purchaseOrderId}, Total Amount: ${p.totalAmount}, Created Date: ${p.createdDate}`);
-        });
-        console.log("Suppliers Data:", suppliers);
-        suppliers.forEach(s => {
-          console.log(`Supplier ID: ${s.supplierId}, Amount Paid: ${s.amountPaid}, Supplier Name: ${s.supplier?.supplierName || "Không xác định"}`);
-        });
+        // Generate month options for the last 5 years
+        const currentDate = new Date();
+        const startDate = new Date(currentDate.getFullYear() - 5, 0, 1); // 5 years ago
+        const months: string[] = [];
+        let current = new Date(startDate);
+        while (current <= currentDate) {
+          months.push(`${current.getMonth() + 1}-${current.getFullYear()}`);
+          current.setMonth(current.getMonth() + 1);
+        }
+
+        setMonthOptions(months);
+        if (months.length > 0) {
+          const defaultEndIndex = months.length - 1;
+          const defaultStartIndex = Math.max(0, defaultEndIndex - 11); // Last 12 months
+          setStartMonth(months[defaultStartIndex]);
+          setEndMonth(months[defaultEndIndex]);
+        }
 
         setSuppliers(suppliers);
         setTotalPurchase(purchases.reduce((sum: number, p: PurchaseOrder) => sum + (p.totalAmount || 0), 0));
@@ -110,23 +129,58 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  // Xử lý dữ liệu biểu đồ
+  // Validate month range (max 16 months) and ensure startMonth <= endMonth
+  useEffect(() => {
+    if (startMonth && endMonth) {
+      const [startMonthNum, startYear] = startMonth.split("-").map(Number);
+      const [endMonthNum, endYear] = endMonth.split("-").map(Number);
+      // const startDate = new Date(startYear, startMonthNum - 1);
+      // const endDate = new Date(endYear, endMonthNum - 1);
+      const monthDiff = (endYear - startYear) * 12 + endMonthNum - startMonthNum + 1;
+
+      if (monthDiff > 16) {
+        setRangeError("Phạm vi tối đa là 16 tháng. Vui lòng chọn lại.");
+      } else if (compareMonths(startMonth, endMonth) > 0) {
+        setRangeError("Tháng bắt đầu phải sớm hơn hoặc bằng tháng kết thúc.");
+      } else {
+        setRangeError(null);
+      }
+    }
+  }, [startMonth, endMonth]);
+
+  // Handle startMonth change
+  const handleStartMonthChange = (newStartMonth: string) => {
+    setStartMonth(newStartMonth);
+    if (endMonth && compareMonths(newStartMonth, endMonth) > 0) {
+      setEndMonth(newStartMonth);
+    }
+  };
+
+  // Handle endMonth change
+  const handleEndMonthChange = (newEndMonth: string) => {
+    setEndMonth(newEndMonth);
+    if (startMonth && compareMonths(startMonth, newEndMonth) > 0) {
+      setStartMonth(newEndMonth);
+    }
+  };
+
+  // Process chart data with month range filter
   const getMonthlyData = (data: (PurchaseOrder | Order)[]) => {
-    // Lấy danh sách tháng từ dữ liệu
-    const months = Array.from(
-      new Set(
-        data
-          .filter(d => d.createdDate && !isNaN(new Date(d.createdDate).getTime()))
-          .map(d => {
-            const date = new Date(d.createdDate);
-            return `${date.getMonth() + 1}-${date.getFullYear()}`;
-          })
-      )
-    ).sort((a, b) => {
-      const [monthA, yearA] = a.split("-").map(Number);
-      const [monthB, yearB] = b.split("-").map(Number);
-      return yearA - yearB || monthA - monthB;
-    });
+    if (!startMonth || !endMonth) {
+      return { months: ["Không có dữ liệu"], monthlyData: [0] };
+    }
+
+    const [startMonthNum, startYear] = startMonth.split("-").map(Number);
+    const [endMonthNum, endYear] = endMonth.split("-").map(Number);
+    const startDate = new Date(startYear, startMonthNum - 1);
+    const endDate = new Date(endYear, endMonthNum - 1);
+
+    const months: string[] = [];
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      months.push(`${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`);
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
 
     const monthlyData = months.map(month => {
       const [monthNum, year] = month.split("-").map(Number);
@@ -134,47 +188,43 @@ const Dashboard: React.FC = () => {
         if (!d.createdDate) return false;
         const date = new Date(d.createdDate);
         const isValid = !isNaN(date.getTime());
-        const isSameMonth = date.getMonth() + 1 === monthNum && date.getFullYear() === year;
-        // Debug: Log chi tiết
-        const id = "purchaseOrderId" in d ? d.purchaseOrderId : ("orderId" in d ? d.orderId : "unknown");
-        console.log(
-          `ID: ${id}, Date: ${d.createdDate}, Parsed Month: ${date.getMonth() + 1}, Parsed Year: ${date.getFullYear()}, Valid: ${isValid}, Same Month: ${isSameMonth}`
+        return (
+          isValid &&
+          date.getMonth() + 1 === monthNum &&
+          date.getFullYear() === year
         );
-        return isValid && isSameMonth;
       });
-      const total = filteredData.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
-      console.log(`Month: ${month}, Filtered Data:`, filteredData, `Total: ${total}`);
-      return total;
+      return filteredData.reduce((sum, d) => sum + (d.totalAmount || 0), 0);
     });
 
-    // Chuyển MM-YYYY thành dạng hiển thị
     const displayMonths = months.map(m => {
       const [month, year] = m.split("-").map(Number);
       return `Tháng ${month} ${year}`;
     });
 
-    console.log("Monthly Purchase Data:", { months: displayMonths, monthlyData });
-    if (!months.length) {
-      return { months: ["Không có dữ liệu"], monthlyData: [0] };
-    }
     return { months: displayMonths, monthlyData };
   };
 
-  // Biểu đồ Chi Phí Mua Hàng
+  // Purchase Cost Chart (Bar)
   const purchaseChartOptions: ApexOptions = {
-    chart: { type: "line", height: 280, toolbar: { show: false } },
-    stroke: { curve: "smooth" },
+    chart: { type: "bar", height: 280, toolbar: { show: false } },
+    plotOptions: { bar: { columnWidth: "45%" } },
     title: { text: "Chi phí mua hàng", align: "left", style: { fontSize: "16px", color: "#111827" } },
-    xaxis: { categories: getMonthlyData(purchaseData).months },
+    xaxis: { categories: getMonthlyData(purchaseData).months, labels: { rotate: -45 } },
     yaxis: {
       title: { text: "Số tiền (VND)" },
-      labels: { formatter: val => `${(val / 1000000).toFixed(1)}M` },
+      labels: {
+        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
+      },
       min: 0,
       forceNiceScale: true,
     },
-    fill: { opacity: 0.3 },
     colors: ["#EF4444"],
-    tooltip: { y: { formatter: val => `${val.toLocaleString()} VND` } },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
+      },
+    },
     noData: { text: "Không có dữ liệu chi phí mua hàng", align: "center", verticalAlign: "middle" },
   };
 
@@ -182,21 +232,26 @@ const Dashboard: React.FC = () => {
     { name: "Mua hàng", data: getMonthlyData(purchaseData).monthlyData },
   ];
 
-  // Biểu đồ Doanh Thu Bán Hàng
+  // Sales Revenue Chart (Bar)
   const salesChartOptions: ApexOptions = {
-    chart: { type: "line", height: 280, toolbar: { show: false } },
-    stroke: { curve: "smooth" },
+    chart: { type: "bar", height: 280, toolbar: { show: false } },
+    plotOptions: { bar: { columnWidth: "45%" } },
     title: { text: "Doanh thu bán hàng", align: "left", style: { fontSize: "16px", color: "#111827" } },
-    xaxis: { categories: getMonthlyData(orderData).months },
+    xaxis: { categories: getMonthlyData(orderData).months, labels: { rotate: -45 } },
     yaxis: {
       title: { text: "Số tiền (VND)" },
-      labels: { formatter: val => `${(val / 1000000).toFixed(1)}M` },
+      labels: {
+        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
+      },
       min: 0,
       forceNiceScale: true,
     },
-    fill: { opacity: 0.3 },
     colors: ["#3B82F6"],
-    tooltip: { y: { formatter: val => `${val.toLocaleString()} VND` } },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
+      },
+    },
     noData: { text: "Không có dữ liệu doanh thu bán hàng", align: "center", verticalAlign: "middle" },
   };
 
@@ -204,11 +259,11 @@ const Dashboard: React.FC = () => {
     { name: "Bán hàng", data: getMonthlyData(orderData).monthlyData },
   ];
 
-  // Biểu đồ Sản Phẩm Bán Chạy (Số Lượng)
+  // Product Quantity Chart (Bar) - Không thay đổi vì không liên quan đến tiền
   const productQuantityChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "55%" } },
-    title: { text: "Sản phẩm bán chạy (số lượng)", align: "left", style: { fontSize: "16px", color: "#111827" } },
+    title: { text: "Sản phẩm bán chạy (Theo số lượng)", align: "left", style: { fontSize: "16px", color: "#111827" } },
     xaxis: { categories: productData.map(p => p.product.productName), labels: { rotate: -45 } },
     yaxis: { title: { text: "Số lượng" }, min: 0 },
     colors: ["#10B981"],
@@ -220,19 +275,26 @@ const Dashboard: React.FC = () => {
     { name: "Số Lượng", data: productData.map(p => p.totalQuantity) },
   ];
 
-  // Biểu đồ Sản Phẩm Bán Chạy (Doanh Thu)
+  // Product Revenue Chart (Bar)
   const productRevenueChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "55%" } },
-    title: { text: "Sản phẩm bán chạy (doanh thu)", align: "left", style: { fontSize: "16px", color: "#111827" } },
+    title: { text: "Sản phẩm bán chạy (Theo doanh thu)", align: "left", style: { fontSize: "16px", color: "#111827" } },
     xaxis: { categories: productData.map(p => p.product.productName), labels: { rotate: -45 } },
     yaxis: {
       title: { text: "Doanh thu (VND)" },
-      labels: { formatter: val => `${(val / 1000000).toFixed(1)}M` },
+      labels: {
+        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
+      },
       min: 0,
+      forceNiceScale: true,
     },
     colors: ["#3B82F6"],
-    tooltip: { y: { formatter: val => `${val.toLocaleString()} VND` } },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
+      },
+    },
     noData: { text: "Không có dữ liệu sản phẩm", align: "center", verticalAlign: "middle" },
   };
 
@@ -240,7 +302,7 @@ const Dashboard: React.FC = () => {
     { name: "Doanh thu", data: productData.map(p => p.totalQuantity * p.product.sellingPrice) },
   ];
 
-  // Biểu đồ Số Tiền Thanh Toán Theo Nhà Cung Cấp
+  // Supplier Payment Chart (Bar)
   const supplierChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "55%" } },
@@ -250,20 +312,27 @@ const Dashboard: React.FC = () => {
       labels: { rotate: -45 },
     },
     yaxis: {
-      title: { text: "Số Tiền (VND)" },
-      labels: { formatter: val => `${(val / 1000000).toFixed(1)}M` },
+      title: { text: "Số tiền (VND)" },
+      labels: {
+        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
+      },
       min: 0,
+      forceNiceScale: true,
     },
     colors: ["#F59E0B"],
-    tooltip: { y: { formatter: val => `${val.toLocaleString()} VND` } },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
+      },
+    },
     noData: { text: "Không có dữ liệu nhà cung cấp", align: "center", verticalAlign: "middle" },
   };
 
   const supplierChartSeries = [
-    { name: "Số Tiền Thanh Toán", data: suppliers.map(s => s.amountPaid || 0) },
+    { name: "Số tiền thanh toán", data: suppliers.map(s => s.amountPaid || 0) },
   ];
 
-  // Biểu đồ Doanh Thu & Đơn Hàng Theo Khách Hàng
+  // Customer Revenue and Order Chart (Bar)
   const customerChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "45%", distributed: false } },
@@ -273,15 +342,29 @@ const Dashboard: React.FC = () => {
       labels: { rotate: -45 },
     },
     yaxis: [
-      { title: { text: "Doanh thu (VND)" }, labels: { formatter: val => `${(val / 1000000).toFixed(1)}M` } },
-      { opposite: true, title: { text: "Số đơn" } },
+      {
+        title: { text: "Doanh thu (VND)" },
+        labels: {
+          formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
+        },
+        min: 0,
+        forceNiceScale: true,
+      },
+      {
+        opposite: true,
+        title: { text: "Số đơn" },
+        labels: {
+          formatter: (val: number) => val.toFixed(0), // Số đơn là số nguyên
+        },
+        min: 0,
+      },
     ],
     colors: ["#3B82F6", "#10B981"],
     legend: { position: "top" },
     tooltip: {
       y: [
-        { formatter: val => `${val.toLocaleString()} VND` },
-        { formatter: val => `${val} đơn` },
+        { formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND` }, // Định dạng VND cho doanh thu
+        { formatter: (val: number) => `${val} đơn` }, // Giữ nguyên cho số đơn
       ],
     },
     noData: { text: "Không có dữ liệu khách hàng", align: "center", verticalAlign: "middle" },
@@ -305,7 +388,47 @@ const Dashboard: React.FC = () => {
           <p className="text-sm text-gray-600">Cập nhật: {new Date().toLocaleDateString("vi-VN")}</p>
         </div>
 
-        {/* Thống kê tổng quan */}
+        {/* Month Range Selector */}
+        <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+          <h2 className="text-lg font-semibold mb-2">Chọn khoảng thời gian</h2>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Từ tháng</label>
+              <select
+                value={startMonth}
+                onChange={e => handleStartMonthChange(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                {monthOptions
+                  .filter(month => !endMonth || compareMonths(month, endMonth) <= 0)
+                  .map(month => (
+                    <option key={month} value={month}>
+                      Tháng {month.split("-")[0]} {month.split("-")[1]}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Đến tháng</label>
+              <select
+                value={endMonth}
+                onChange={e => handleEndMonthChange(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                {monthOptions
+                  .filter(month => !startMonth || compareMonths(month, startMonth) >= 0)
+                  .map(month => (
+                    <option key={month} value={month}>
+                      Tháng {month.split("-")[0]} {month.split("-")[1]}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+          {rangeError && <p className="mt-2 text-sm text-red-600">{rangeError}</p>}
+        </div>
+
+        {/* Overview Statistics */}
         {loading ? (
           <div className="text-center">Đang tải dữ liệu...</div>
         ) : error ? (
@@ -330,20 +453,20 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Biểu đồ */}
+        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            {purchaseData.length === 0 || getMonthlyData(purchaseData).monthlyData.every(val => val === 0) ? (
-              <div className="text-center text-gray-500">Không có dữ liệu chi phí mua hàng</div>
+            {rangeError ? (
+              <div className="text-center text-gray-500">{rangeError}</div>
             ) : (
-              <Chart options={purchaseChartOptions} series={purchaseChartSeries} type="line" height={280} />
+              <Chart options={purchaseChartOptions} series={purchaseChartSeries} type="bar" height={280} />
             )}
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            {orderData.length === 0 || getMonthlyData(orderData).monthlyData.every(val => val === 0) ? (
-              <div className="text-center text-gray-500">Không có dữ liệu doanh thu bán hàng</div>
+            {rangeError ? (
+              <div className="text-center text-gray-500">{rangeError}</div>
             ) : (
-              <Chart options={salesChartOptions} series={salesChartSeries} type="line" height={280} />
+              <Chart options={salesChartOptions} series={salesChartSeries} type="bar" height={280} />
             )}
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -369,7 +492,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Biểu đồ khách hàng */}
+        {/* Customer Chart */}
         <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
           {customerData.length === 0 ? (
             <div className="text-center text-gray-500">Không có dữ liệu khách hàng</div>

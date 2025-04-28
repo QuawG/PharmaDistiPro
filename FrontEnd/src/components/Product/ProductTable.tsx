@@ -429,27 +429,42 @@ const ProductTable: React.FC<ProductTableProps> = ({
     setSelectedRowKeys(selectedRowKeys as number[]);
   };
 
-  // Handle edit product page
-  const handleEditProduct = (productId: number) => {
-    setSelectedProductId(productId);
-    setCurrentPage('edit');
-    const product = originalProducts.find((p) => p.productId === productId);
-    if (product) {
-      form.setFieldsValue({
-        ...product,
-        status: product.status.toString(),
-        storageconditions: typeof product.storageconditions === 'string' && ['Bảo quản thường', 'Bảo quản lạnh', 'Bảo quản mát'].includes(product.storageconditions)
-          ? { 'Bảo quản thường': '1', 'Bảo quản lạnh': '2', 'Bảo quản mát': '3' }[product.storageconditions]
-          : product.storageconditions?.toString() || '1',
-      });
-      setImages(product.images || []);
-      setNewImages([]);
-    } else {
-      console.error(`Product with ID ${productId} not found in originalProducts`);
-      setCurrentPage('list');
-      message.error('Không tìm thấy sản phẩm để chỉnh sửa');
+  // Trong hàm handleEditProduct
+const handleEditProduct = (productId: number) => {
+  setSelectedProductId(productId);
+  setCurrentPage('edit');
+  const product = originalProducts.find((p) => p.productId === productId);
+  if (product) {
+    // Chuẩn hóa storageconditions
+    let storageConditionValue = '1'; // Giá trị mặc định
+    if (product.storageconditions != null) {
+      if (typeof product.storageconditions === 'string') {
+        storageConditionValue = {
+          'Bảo quản thường': '1',
+          'Bảo quản lạnh': '2',
+          'Bảo quản mát': '3',
+          '1': '1',
+          '2': '2',
+          '3': '3',
+        }[product.storageconditions] || '1';
+      } else {
+        storageConditionValue = product.storageconditions.toString();
+      }
     }
-  };
+
+    form.setFieldsValue({
+      ...product,
+      status: product.status.toString(),
+      storageconditions: storageConditionValue,
+    });
+    setImages(product.images || []);
+    setNewImages([]);
+  } else {
+    console.error(`Product with ID ${productId} not found in originalProducts`);
+    setCurrentPage('list');
+    message.error('Không tìm thấy sản phẩm để chỉnh sửa');
+  }
+};
 
   // Handle remove existing image
   const handleRemoveImage = (imageUrl: string) => {
@@ -473,166 +488,173 @@ const ProductTable: React.FC<ProductTableProps> = ({
 
   // Handle save edited product
   const handleSave = async (values: any) => {
-  if (selectedProductId === null) {
-    console.error('Cannot save: selectedProductId is null');
-    message.error('Lỗi khi lưu sản phẩm: Không tìm thấy ID sản phẩm!');
-    setCurrentPage('list');
-    return;
-  }
-
-  if (!token) {
-    console.error('No access token found');
-    message.error('Vui lòng đăng nhập lại!');
-    setCurrentPage('list');
-    return;
-  }
-
-  try {
-    // Validate storageconditions
-    const storageConditionValue = Number(values.storageconditions);
-    if (![1, 2, 3].includes(storageConditionValue)) {
-      console.error('Invalid storageconditions:', values.storageconditions);
-      message.error('Điều kiện bảo quản không hợp lệ!');
-      return;
-    }
-
-    // Validate category (assume backend expects categoryId, not categoryName)
-    const selectedProduct = originalProducts.find((p) => p.productId === selectedProductId);
-    const categoryName = selectedProduct?.categoryName || values.categoryId || null;
-    if (!categoryName) {
-      console.error('Invalid categoryId:', values.categoryName);
-      message.error('Danh mục không hợp lệ!');
-      return;
-    }
-
-    // Prepare updated product data
-    const updatedProduct = {
-      productCode: values.productCode?.trim() || '',
-      productName: values.productName?.trim() || '',
-      manufactureName: values.manufactureName?.trim() || '',
-      unit: values.unit?.trim() || '',
-      categoryName: categoryName,
-      description: values.description?.trim() || '',
-      sellingPrice: Number(values.sellingPrice) || 0,
-      vat: Number(values.vat) || 0,
-      storageconditions: storageConditionValue,
-      weight: Number(values.weight) || 0,
-      volumePerUnit: Number(values.volumePerUnit) || 0,
-      status: values.status === 'true',
-      images: images, // Existing images
-    };
-
-    // Validate required fields
-    if (!updatedProduct.productName) {
-      message.error('Tên sản phẩm là bắt buộc!');
-      return;
-    }
-    if (updatedProduct.sellingPrice <= 0) {
-      message.error('Giá bán phải lớn hơn 0!');
-      return;
-    }
-    if (updatedProduct.vat < 0 || updatedProduct.vat > 100) {
-      message.error('VAT phải từ 0 đến 100%!');
-      return;
-    }
-    if (updatedProduct.weight <= 0) {
-      message.error('Trọng lượng phải lớn hơn 0!');
-      return;
-    }
-    if (updatedProduct.volumePerUnit <= 0) {
-      message.error('Dung tích phải lớn hơn 0!');
-      return;
-    }
-
-    // Prepare FormData
-    const formDataToSend = new FormData();
-    formDataToSend.append('productCode', updatedProduct.productCode);
-    formDataToSend.append('productName', updatedProduct.productName);
-    formDataToSend.append('manufactureName', updatedProduct.manufactureName);
-    formDataToSend.append('unit', updatedProduct.unit);
-    formDataToSend.append('categoryName', updatedProduct.categoryName.toString());
-    formDataToSend.append('description', updatedProduct.description);
-    formDataToSend.append('sellingPrice', updatedProduct.sellingPrice.toString());
-    formDataToSend.append('vat', updatedProduct.vat.toString());
-    formDataToSend.append('storageconditions', updatedProduct.storageconditions.toString());
-    formDataToSend.append('weight', updatedProduct.weight.toString());
-    formDataToSend.append('volumePerUnit', updatedProduct.volumePerUnit.toString());
-    formDataToSend.append('status', updatedProduct.status.toString());
-
-    // Append existing images
-    updatedProduct.images.forEach((img: string) => {
-      formDataToSend.append('existingImages', img);
-    });
-
-    // Append new images
-    newImages.forEach((file: File) => {
-      formDataToSend.append('images', file);
-    });
-
-    // Log FormData for debugging
-    const formDataEntries: { [key: string]: any } = {};
-    formDataToSend.forEach((value, key) => {
-      if (key === 'images') {
-        formDataEntries[key] = formDataEntries[key] || [];
-        formDataEntries[key].push(value);
-      } else {
-        formDataEntries[key] = value;
-      }
-    });
-    console.log('Sending FormData:', formDataEntries);
-
-    // Send PUT request
-    const response = await axios.put(
-      `http://pharmadistiprobe.fun/api/Product/${selectedProductId}`,
-      formDataToSend,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-
-    console.log('Update API response:', response.data);
-
-    if (response.data.success) {
-      // Update local state
-      const updatedProducts = originalProducts.map((product) =>
-        product.productId === selectedProductId
-          ? {
-              ...product,
-              ...updatedProduct,
-              productId: selectedProductId,
-              categoryName: values.categoryName, // Keep categoryName for display
-              images: response.data.data.images || images,
-            }
-          : product
-      );
-      setOriginalProducts(sortProducts(updatedProducts, sortConfig.key, sortConfig.direction));
-      setFilteredProducts(sortProducts(updatedProducts, sortConfig.key, sortConfig.direction));
-      message.success('Cập nhật sản phẩm thành công!');
+    if (selectedProductId === null) {
+      console.error('Cannot save: selectedProductId is null');
+      message.error('Lỗi khi lưu sản phẩm: Không tìm thấy ID sản phẩm!');
       setCurrentPage('list');
-      setSelectedProductId(null);
-      setImages([]);
-      setNewImages([]);
-      form.resetFields();
-      setCurrentPageNumber(1);
-    } else {
-      console.error('Update failed:', response.data.message);
-      message.error(response.data.message || 'Cập nhật sản phẩm thất bại!');
+      return;
     }
-  } catch (error: any) {
-    console.error('Error updating product:', error);
-    const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      'Cập nhật sản phẩm thất bại. Vui lòng kiểm tra dữ liệu và thử lại!';
-    message.error(`Lỗi (400): ${errorMessage}`);
-    if (error.response?.data?.errors) {
-      console.log('Validation errors:', error.response.data.errors);
+  
+    if (!token) {
+      console.error('No access token found');
+      message.error('Vui lòng đăng nhập lại!');
+      setCurrentPage('list');
+      return;
     }
-  }
-};
+  
+    try {
+      // Chuẩn hóa storageconditions
+      const storageConditionValue = values.storageconditions || '1';
+      if (!['1', '2', '3'].includes(storageConditionValue)) {
+        console.error('Invalid storageconditions:', storageConditionValue);
+        message.error('Điều kiện bảo quản không hợp lệ!');
+        return;
+      }
+  
+      // Validate category
+      const selectedProduct = originalProducts.find((p) => p.productId === selectedProductId);
+      const categoryName = values.categoryName || selectedProduct?.categoryName || null;
+      if (!categoryName) {
+        console.error('Invalid categoryName:', values.categoryName);
+        message.error('Danh mục không hợp lệ!');
+        return;
+      }
+  
+      // Prepare updated product data
+      const updatedProduct = {
+        productCode: values.productCode?.trim() || '',
+        productName: values.productName?.trim() || '',
+        manufactureName: values.manufactureName?.trim() || '',
+        unit: values.unit?.trim() || '',
+        categoryName: categoryName,
+        description: values.description?.trim() || '',
+        sellingPrice: Number(values.sellingPrice) || 0,
+        vat: Number(values.vat) || 0,
+        storageconditions: Number(storageConditionValue),
+        weight: Number(values.weight) || 0,
+        volumePerUnit: Number(values.volumePerUnit) || 0,
+        status: values.status === 'true',
+        images: images, // Danh sách ảnh hiện tại
+      };
+  
+      // Validate required fields
+      if (!updatedProduct.productName) {
+        message.error('Tên sản phẩm là bắt buộc!');
+        return;
+      }
+      if (updatedProduct.sellingPrice <= 0) {
+        message.error('Giá bán phải lớn hơn 0!');
+        return;
+      }
+      if (updatedProduct.vat < 0 || updatedProduct.vat > 100) {
+        message.error('VAT phải từ 0 đến 100%!');
+        return;
+      }
+      if (updatedProduct.weight <= 0) {
+        message.error('Trọng lượng phải lớn hơn 0!');
+        return;
+      }
+      if (updatedProduct.volumePerUnit <= 0) {
+        message.error('Dung tích phải lớn hơn 0!');
+        return;
+      }
+  
+      // Prepare FormData
+      const formDataToSend = new FormData();
+      formDataToSend.append('productCode', updatedProduct.productCode);
+      formDataToSend.append('productName', updatedProduct.productName);
+      formDataToSend.append('manufactureName', updatedProduct.manufactureName);
+      formDataToSend.append('unit', updatedProduct.unit);
+      formDataToSend.append('categoryName', updatedProduct.categoryName.toString());
+      formDataToSend.append('description', updatedProduct.description);
+      formDataToSend.append('sellingPrice', updatedProduct.sellingPrice.toString());
+      formDataToSend.append('vat', updatedProduct.vat.toString());
+      formDataToSend.append('storageconditions', updatedProduct.storageconditions.toString());
+      formDataToSend.append('weight', updatedProduct.weight.toString());
+      formDataToSend.append('volumePerUnit', updatedProduct.volumePerUnit.toString());
+      formDataToSend.append('status', updatedProduct.status.toString());
+  
+      // Gửi danh sách ảnh hiện tại (existingImages)
+      if (images.length > 0) {
+        images.forEach((img: string) => {
+          formDataToSend.append('existingImages', img);
+        });
+      } else {
+        // Gửi một giá trị rỗng để báo cho backend giữ nguyên ảnh cũ
+        formDataToSend.append('existingImages', '');
+      }
+  
+      // Gửi ảnh mới (nếu có)
+      newImages.forEach((file: File) => {
+        formDataToSend.append('images', file);
+      });
+  
+      // Log FormData để kiểm tra
+      const formDataEntries: { [key: string]: any } = {};
+      formDataToSend.forEach((value, key) => {
+        if (key === 'images' || key === 'existingImages') {
+          formDataEntries[key] = formDataEntries[key] || [];
+          formDataEntries[key].push(value);
+        } else {
+          formDataEntries[key] = value;
+        }
+      });
+      console.log('Sending FormData:', formDataEntries);
+  
+      // Gửi yêu cầu PUT
+      const response = await axios.put(
+        `http://pharmadistiprobe.fun/api/Product/${selectedProductId}`,
+        formDataToSend,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+  
+      console.log('Update API response:', response.data);
+  
+      if (response.data.success) {
+        // Cập nhật state với danh sách ảnh từ backend, nhưng giữ nguyên nếu backend không trả về ảnh mới
+        const updatedImages = response.data.data.images && response.data.data.images.length > 0 ? response.data.data.images : images;
+  
+        const updatedProducts = originalProducts.map((product) =>
+          product.productId === selectedProductId
+            ? {
+                ...product,
+                ...updatedProduct,
+                productId: selectedProductId,
+                categoryName: values.categoryName,
+                images: updatedImages, // Sử dụng danh sách ảnh cập nhật
+              }
+            : product
+        );
+        setOriginalProducts(sortProducts(updatedProducts, sortConfig.key, sortConfig.direction));
+        setFilteredProducts(sortProducts(updatedProducts, sortConfig.key, sortConfig.direction));
+        message.success('Cập nhật sản phẩm thành công!');
+        setCurrentPage('list');
+        setSelectedProductId(null);
+        setImages([]);
+        setNewImages([]);
+        form.resetFields();
+        setCurrentPageNumber(1);
+      } else {
+        console.error('Update failed:', response.data.message);
+        message.error(response.data.message || 'Cập nhật sản phẩm thất bại!');
+      }
+    } catch (error: any) {
+      console.error('Error updating product:', error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Cập nhật sản phẩm thất bại. Vui lòng kiểm tra dữ liệu và thử lại!';
+      message.error(`Lỗi (400): ${errorMessage}`);
+      if (error.response?.data?.errors) {
+        console.log('Validation errors:', error.response.data.errors);
+      }
+    }
+  };
 
   // Custom arrow buttons for Carousel
   const NextArrow = (props: any) => {

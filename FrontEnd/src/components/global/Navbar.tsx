@@ -1,9 +1,8 @@
-// Navbar.tsx
 import * as React from "react";
 import { Transition } from "@headlessui/react";
-import { Settings, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../pages/Home/AuthContext"; // Import useAuth từ AuthContext
+import { useAuth } from "../../pages/Home/AuthContext";
 
 export interface User {
   name: string;
@@ -13,11 +12,10 @@ export interface User {
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Lấy user và logout từ AuthContext
+  const { user, logout } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
 
-  // Thông tin người dùng từ AuthContext, nếu không có thì hiển thị mặc định
   const currentUser: User = user
     ? {
         name: user.username,
@@ -43,15 +41,19 @@ export default function Navbar() {
 
   const handleLogout = () => {
     console.log("Đăng xuất...");
-    logout(); // Gọi hàm logout từ AuthContext
+    logout();
     navigate("/");
+  };
+
+  const handleProfileClick = () => {
+    setIsProfileOpen(false);
+    navigate("/profile"); // Điều hướng đến trang hồ sơ
   };
 
   return (
     <nav className="fixed h-[60px] top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-end items-center h-[60px] gap-4">
-          {/* User Profile */}
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -79,14 +81,14 @@ export default function Navbar() {
                   <div className="text-sm text-gray-500">{currentUser.role}</div>
                 </div>
                 <div className="py-2">
-                  <button className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-50 text-left transition-colors">
+                  <button
+                    onClick={handleProfileClick}
+                    className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-50 text-left transition-colors"
+                  >
                     <User className="w-5 h-5 text-gray-500" />
                     Hồ sơ
                   </button>
-                  <button className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-50 text-left transition-colors">
-                    <Settings className="w-5 h-5 text-gray-500" />
-                    Cài đặt
-                  </button>
+
                   <button
                     className="flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-50 text-left text-red-600 transition-colors"
                     onClick={handleLogout}
