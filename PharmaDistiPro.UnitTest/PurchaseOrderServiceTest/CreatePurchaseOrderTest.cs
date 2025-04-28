@@ -39,10 +39,10 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
+                TotalAmount = 0,
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
                 {
-                    new PurchaseOrdersDetailsRequestDto { ProductId = 10, Quantity = 5 },
-                    new PurchaseOrdersDetailsRequestDto { ProductId = 20, Quantity = 2 }
+                    new PurchaseOrdersDetailsRequestDto { ProductId = 10, Quantity = 5, SupplyPrice = 0 }
                 }
             };
 
@@ -156,9 +156,10 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
+                TotalAmount = 0,
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
         {
-            new PurchaseOrdersDetailsRequestDto { ProductId = 10, Quantity = 5 }
+           new PurchaseOrdersDetailsRequestDto { ProductId = 1, Quantity = 10, SupplyPrice = 0 }
         }
             };
 
@@ -186,9 +187,10 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
+                TotalAmount = 0,
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
         {
-            new PurchaseOrdersDetailsRequestDto { ProductId = null }
+            new PurchaseOrdersDetailsRequestDto { ProductId = 1, Quantity = 0, SupplyPrice = 0 }
         }
             };
 
@@ -216,10 +218,11 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
+                TotalAmount = 0,
                 PurchaseOrderCode = null,
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
         {
-            new PurchaseOrdersDetailsRequestDto { ProductId = null }
+            new PurchaseOrdersDetailsRequestDto { ProductId = 1, Quantity = 0, SupplyPrice = 0 }
         }
             };
 
@@ -247,11 +250,11 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
-                TotalAmount = null,
+                TotalAmount = 0,
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
 
         {
-            new PurchaseOrdersDetailsRequestDto { ProductId = null }
+            new PurchaseOrdersDetailsRequestDto { ProductId = 1, Quantity = 0, SupplyPrice = 0 }
         }
             };
 
@@ -279,11 +282,12 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
-                TotalAmount = null,
+                TotalAmount = 0,
+                
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
 
 {
-    new PurchaseOrdersDetailsRequestDto { ProductId = null }
+    new PurchaseOrdersDetailsRequestDto { ProductId = 1, Quantity = 0, SupplyPrice = 0 }
 }
             };
 
@@ -336,9 +340,10 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
+                TotalAmount = 0,
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
                 {           
-                    new PurchaseOrdersDetailsRequestDto { ProductId = 10, Quantity = 0 }        
+                    new PurchaseOrdersDetailsRequestDto { ProductId = 10, Quantity = 0, SupplyPrice = 0 }        
                 }
             };
 
@@ -368,9 +373,10 @@ namespace PharmaDistiPro.UnitTest.PurchaseOrderServiceTest
             var purchaseOrderRequestDto = new PurchaseOrdersRequestDto
             {
                 SupplierId = 1,
+                TotalAmount = 0,
                 PurchaseOrdersDetails = new List<PurchaseOrdersDetailsRequestDto>
                 {
-                    new PurchaseOrdersDetailsRequestDto { ProductId = 10, Quantity = null }
+                   new PurchaseOrdersDetailsRequestDto { ProductId = 1, Quantity = 0, SupplyPrice = 0 }
                 }
             };
 

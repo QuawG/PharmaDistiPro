@@ -25,37 +25,29 @@ namespace PharmaDistiPro.Services.Impl
             _lotRepository = lotRepository;
         }
 
-        public async Task<Response<ProductLotResponse>> CheckQuantityProduct(int productId)
+        public async Task<Response<int>> CheckQuantityProduct(int productId)
         {
+            var response = new Response<int>();
             try
             {
-                var productLot = await _productLotRepository.CheckQuantityProduct(productId);
+                var checkQuantity = await _productLotRepository.CheckQuantityProduct(productId);
 
-                if (productLot == null)
+                if (checkQuantity == 0)
                 {
-                    return new Response<ProductLotResponse>
+                    return new Response<int>
                     {
                         StatusCode = 200,
                         Message = "Không tìm thấy sản phẩm trong kho"
                     };
                 }
-
-                var data = new ProductLotResponse
-                {
-                    ProductId = productLot.ProductId,
-                    Quantity = productLot.Quantity
-                };
-
-                return new Response<ProductLotResponse>
-                {
-                    StatusCode = 200,
-                    Message = "Thành công",
-                    Data = data
-                };
+                response.Success = true;
+                response.Data = checkQuantity;
+                response.Message = "Lấy tổng số lượng sản phẩm thành công.";
+                return response;
             }
             catch (Exception ex)
             {
-                return new Response<ProductLotResponse>
+                return new Response<int>
                 {
                     StatusCode = 400,
                     Message = ex.Message

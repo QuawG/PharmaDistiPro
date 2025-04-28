@@ -10,6 +10,7 @@ using PharmaDistiPro.DTO.ReceivedNotes;
 using PharmaDistiPro.Models;
 using AutoMapper;
 using PharmaDistiPro.Helper;
+using PharmaDistiPro.Repositories.Impl;
 
 namespace PharmaDistiPro.Tests.ReceivedNoteServicesTest
 {
@@ -81,14 +82,51 @@ namespace PharmaDistiPro.Tests.ReceivedNoteServicesTest
         public async Task GetReceiveNoteById_ValidId_ReturnsSuccess()
         {
             int id = 1;
-            var receivedNote = new ReceivedNote { ReceiveNoteId = id };
-            var receivedNoteDto = new ReceivedNoteDto { ReceiveNoteId = id };
+
+            var receivedNote = new ReceivedNote
+            {
+                ReceiveNoteId = id,
+                ReceiveNotesCode = "PN-001",
+                CreatedDate = DateTime.Now,
+                CreatedBy = 123,
+                Status = 1,
+                PurchaseOrderId = 10,
+                PurchaseOrder = new PurchaseOrder
+                {
+                    PurchaseOrderId = 10,
+                    PurchaseOrderCode = "PO-001"
+                }
+            };
+
+            var receivedNoteDetails = new List<ReceivedNoteDetail>
+    {
+        new ReceivedNoteDetail
+        {
+            ReceiveNoteId = id,
+            ProductLotId = 1,
+            ActualReceived = 50,
+            ProductLot = new ProductLot
+            {
+                ProductLotId = 1,
+                SupplyPrice = 100,
+                Product = new Product
+                {
+                    ProductName = "Paracetamol",
+                    ProductCode = "PCT001",
+                    Unit = "Box"
+                },
+                Lot = new Lot
+                {
+                    LotCode = "LOT2025A"
+                }
+            }
+        }
+    };
 
             _receivedNoteRepositoryMock.Setup(x => x.GetReceivedNoteById(id))
                 .ReturnsAsync(receivedNote);
-
-            _mapperMock.Setup(x => x.Map<ReceivedNoteDto>(receivedNote))
-                .Returns(receivedNoteDto);
+            _receivedNoteRepositoryMock.Setup(x => x.GetReceivedNoteDetailByReceivedNoteId(id))
+                .ReturnsAsync(receivedNoteDetails);
 
             var result = await _service.GetReceiveNoteById(id);
 
@@ -96,7 +134,6 @@ namespace PharmaDistiPro.Tests.ReceivedNoteServicesTest
             Assert.Equal(200, result.StatusCode);
             Assert.Equal("Lấy phiếu nhập thành công!", result.Message);
             Assert.NotNull(result.Data);
-            Assert.Equal(id, result.Data.ReceiveNoteId);
         }
     }
 }

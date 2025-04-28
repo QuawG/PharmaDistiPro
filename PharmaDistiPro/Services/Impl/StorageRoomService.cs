@@ -119,7 +119,7 @@ namespace PharmaDistiPro.Services.Impl
                 }
 
                 // Tạo StorageRoomCode tự động (SRC001, SRC002, ...)
-                var storageRoomCount = await _storageRoomRepository.CountAsync(x=>true);
+                var storageRoomCount = await _storageRoomRepository.CountAsync(x => true);
                 var newCode = $"SRC{storageRoomCount + 1:D3}"; // Định dạng số thứ tự thành 3 chữ số (001, 002, ...)
 
                 // Kiểm tra mã code có trùng không (đề phòng trường hợp bất thường)
@@ -154,7 +154,7 @@ namespace PharmaDistiPro.Services.Impl
                 response.Message = $"Lỗi: {ex.Message}";
                 return response;
             }
-          
+
         }
 
         // Activate/Deactivate

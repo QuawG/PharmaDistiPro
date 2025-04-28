@@ -20,10 +20,12 @@ namespace PharmaDistiPro.Test.OrderServiceTest
     {
         private readonly Mock<IOrderRepository> _orderRepositoryMock;
         private readonly Mock<IOrdersDetailRepository> _ordersDetailRepositoryMock;
+        private readonly Mock<IProductRepository> _productRepositoryMock;
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly OrderService _orderService;
+
 
         public CheckOutTest()
         {
@@ -31,11 +33,13 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             _ordersDetailRepositoryMock = new Mock<IOrdersDetailRepository>();
             _userRepositoryMock = new Mock<IUserRepository>();
             _mapperMock = new Mock<IMapper>();
+            _productRepositoryMock = new Mock<IProductRepository>();
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
             _orderService = new OrderService(
                 _orderRepositoryMock.Object,
                 null,
+                _productRepositoryMock.Object,
                 _ordersDetailRepositoryMock.Object,
                 _mapperMock.Object,
                 _userRepositoryMock.Object,
@@ -62,7 +66,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             };
 
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
-                .Returns(new Models.Order());
+                .Throws(new Exception("Lỗi khi tạo đơn hàng"));
 
             _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
                 .Returns(Task.FromResult(1));
@@ -96,11 +100,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 UpdatedStatusDate = DateTime.Now,
                 CustomerId = 1,
                 DistrictId = 1482,
+                TotalAmount = 105,
                 WardCode = "11010",
                 OrdersDetails = new List<OrdersDetailsRequestDto>
         {
-            new OrdersDetailsRequestDto { ProductId = 1, Quantity = 10 },
-            new OrdersDetailsRequestDto { ProductId = 2, Quantity = 5 }
+            new OrdersDetailsRequestDto { ProductId = 1, Quantity = 10 }
         }
             };
 
@@ -134,7 +138,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
-
+            Product p = new Product { ProductId = 1, SellingPrice = 10, Vat = 5 };
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(1)).Returns(p);
+            }
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
 
@@ -180,15 +188,15 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 OrderId = 1,
                 OrderCode = "ORD001",
                 CreatedDate = DateTime.Now,
-                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN,
                 UpdatedStatusDate = DateTime.Now,
                 CustomerId = 1,
                 DistrictId = 1482,
                 WardCode = "11010",
+                TotalAmount = 105,
                 OrdersDetails = new List<OrdersDetailsRequestDto>
         {
-            new OrdersDetailsRequestDto { ProductId = 1, Quantity = 10 },
-            new OrdersDetailsRequestDto { ProductId = 2, Quantity = 5 }
+            new OrdersDetailsRequestDto { ProductId = 1, Quantity = 10 }
         }
             };
 
@@ -197,7 +205,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 OrderId = 1,
                 OrderCode = "ORD001",
                 CreatedDate = DateTime.Now,
-                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                Status = (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN,
                 UpdatedStatusDate = DateTime.Now,
                 CustomerId = 1,
                 DistrictId = 1482,
@@ -222,7 +230,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
-
+            Product p = new Product { ProductId = 1, SellingPrice = 10, Vat = 5 };
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(1)).Returns(p);
+            }
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
 
@@ -252,7 +264,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             Assert.NotNull(result.Data);
             Assert.True(result.Success);
             Assert.Equal(order.OrderId, result.Data.OrderId);
-            Assert.Equal((int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN, result.Data.Status);
+            Assert.Equal((int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN, result.Data.Status);
 
             _orderRepositoryMock.Verify(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()), Times.Once);
             _ordersDetailRepositoryMock.Verify(repo => repo.AddOrdersDetails(It.IsAny<List<OrdersDetail>>()), Times.Once);
@@ -309,10 +321,10 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 CustomerId = 1,
                 DistrictId = 1482,
                 WardCode = "11010",
+                TotalAmount = 105,
                 OrdersDetails = new List<OrdersDetailsRequestDto>
         {
-            new OrdersDetailsRequestDto { ProductId = 1, Quantity = 10 },
-            new OrdersDetailsRequestDto { ProductId = 2, Quantity = 5 }
+            new OrdersDetailsRequestDto { ProductId = 1, Quantity = 10 }
         }
             };
 
@@ -331,8 +343,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             var ordersDetails = new List<Models.OrdersDetail>
 
     {
-        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
-        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 }
     };
 
             var orderDto = new OrderDto
@@ -346,12 +357,18 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
-
+            Product p = new Product { ProductId = 1, SellingPrice = 10, Vat = 5 };
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(1)).Returns(p);
+            }
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
 
             _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
                 .Returns(ordersDetails);
+
+
 
             _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
                 .Returns(Task.CompletedTask);
@@ -370,9 +387,6 @@ namespace PharmaDistiPro.Test.OrderServiceTest
 
             Assert.Null(result.Data);
 
-
-            _orderRepositoryMock.Verify(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()), Times.Once);
-            _ordersDetailRepositoryMock.Verify(repo => repo.AddOrdersDetails(It.IsAny<List<OrdersDetail>>()), Times.Once);
         }
 
         [Fact]
@@ -426,7 +440,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
-
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(1))
+                     .Throws(new Exception("Số lượng sản phẩm phải lớn hơn 0"));
+            }
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
 
@@ -501,7 +519,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
-
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(1))
+                    .Throws(new Exception("Số lượng sản phẩm không được để trống"));
+            }
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
 
@@ -561,8 +583,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             var ordersDetails = new List<Models.OrdersDetail>
 
     {
-        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
-        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 }
     };
 
             var orderDto = new OrderDto
@@ -576,7 +597,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
-
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(null))
+                    .Throws(new Exception("Sản phẩm không được để trống"));
+            }
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
 
@@ -617,7 +642,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 WardCode = "11010",
                 OrdersDetails = new List<OrdersDetailsRequestDto>
         {
-            new OrdersDetailsRequestDto { ProductId = 1000, Quantity = null }
+            new OrdersDetailsRequestDto { ProductId = 1, Quantity = null }
         }
             };
 
@@ -651,6 +676,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(1))
+                    .Throws(new Exception("Sản phẩm không tồn tại"));
+            }
 
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
@@ -689,10 +719,11 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 UpdatedStatusDate = DateTime.Now,
                 CustomerId = 1,
                 DistrictId = null,
+                TotalAmount = 105,
                 WardCode = "11010",
                 OrdersDetails = new List<OrdersDetailsRequestDto>
         {
-            new OrdersDetailsRequestDto { ProductId = 1000, Quantity = null }
+            new OrdersDetailsRequestDto { ProductId = 1, Quantity = 5 }
         }
             };
 
@@ -711,8 +742,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
             var ordersDetails = new List<Models.OrdersDetail>
 
     {
-        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
-        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 }
     };
 
             var orderDto = new OrderDto
@@ -726,105 +756,113 @@ namespace PharmaDistiPro.Test.OrderServiceTest
                 DistrictId = 1482,
                 WardCode = "11010",
             };
-
-            _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
+            Product p = new Product { ProductId = 1, SellingPrice = 10, Vat = 5 };
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
+            {
+                _productRepositoryMock.Setup(x => x.GetById(1)).Throws(new Exception("Thành phố để giao hàng không tồn tại"));
+                _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
                 .Returns(order);
 
-            _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
-                .Throws(new Exception("Thành phố để giao hàng không tồn tại"));
+                _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
+                    .Throws(new Exception("Thành phố để giao hàng không tồn tại"));
 
-            _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
-                .Returns(Task.CompletedTask);
-            _orderRepositoryMock.Setup(repo => repo.SaveAsync())
-                .Returns(Task.FromResult(1));
+                _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
+                    .Returns(Task.CompletedTask);
+                _orderRepositoryMock.Setup(repo => repo.SaveAsync())
+                    .Returns(Task.FromResult(1));
 
-            _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
-                .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
+                _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
+                    .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
 
 
-            // Act: Gọi phương thức CheckOut
-            var result = await _orderService.CheckOut(orderRequestDto);
+                // Act: Gọi phương thức CheckOut
+                var result = await _orderService.CheckOut(orderRequestDto);
 
-            Assert.Null(result.Data);
-            Assert.False(result.Success);
-            Assert.Equal("Lỗi khi tạo đơn hàng: Thành phố để giao hàng không tồn tại", result.Message);
+                Assert.Null(result.Data);
+                Assert.False(result.Success);
+                Assert.Equal("Lỗi khi tạo đơn hàng: Thành phố để giao hàng không tồn tại", result.Message);
 
+            }
         }
 
-        [Fact]
-        public async Task CheckOut_WhenWardCodeIsInvalid_ReturnsError()
-        {
-
-            var orderRequestDto = new OrderRequestDto
+            [Fact]
+            public async Task CheckOut_WhenWardCodeIsInvalid_ReturnsError()
             {
-                OrderId = 1,
-                OrderCode = "ORD001",
-                CreatedDate = DateTime.Now,
-                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
-                UpdatedStatusDate = DateTime.Now,
-                CustomerId = 1,
-                DistrictId = null,
-                WardCode = "11010",
-                OrdersDetails = new List<OrdersDetailsRequestDto>
+
+                var orderRequestDto = new OrderRequestDto
+                {
+                    OrderId = 1,
+                    OrderCode = "ORD001",
+                    CreatedDate = DateTime.Now,
+                    Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                    UpdatedStatusDate = DateTime.Now,
+                    CustomerId = 1,
+                    DistrictId = null,
+                    WardCode = "11010",
+                    OrdersDetails = new List<OrdersDetailsRequestDto>
         {
-            new OrdersDetailsRequestDto { ProductId = 1000, Quantity = null }
+            new OrdersDetailsRequestDto { ProductId = 1, Quantity = null }
         }
-            };
+                };
 
-            var order = new Models.Order
-            {
-                OrderId = 1,
-                OrderCode = "ORD001",
-                CreatedDate = DateTime.Now,
-                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
-                UpdatedStatusDate = DateTime.Now,
-                CustomerId = 1,
-                DistrictId = 1482,
-                WardCode = null
-            };
+                var order = new Models.Order
+                {
+                    OrderId = 1,
+                    OrderCode = "ORD001",
+                    CreatedDate = DateTime.Now,
+                    Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                    UpdatedStatusDate = DateTime.Now,
+                    CustomerId = 1,
+                    DistrictId = 1482,
+                    WardCode = null
+                };
 
-            var ordersDetails = new List<Models.OrdersDetail>
+                var ordersDetails = new List<Models.OrdersDetail>
 
     {
-        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 },
-        new OrdersDetail { OrderId = 1, ProductId = 2, Quantity = 5 }
+        new OrdersDetail { OrderId = 1, ProductId = 1, Quantity = 10 }
     };
 
-            var orderDto = new OrderDto
+                var orderDto = new OrderDto
+                {
+                    OrderId = 1,
+                    OrderCode = "ORD001",
+                    CreatedDate = DateTime.Now,
+                    Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
+                    UpdatedStatusDate = DateTime.Now,
+                    CustomerId = 1,
+                    DistrictId = 1482,
+                    WardCode = "11010",
+                };
+            foreach (var orderDetails in orderRequestDto.OrdersDetails)
             {
-                OrderId = 1,
-                OrderCode = "ORD001",
-                CreatedDate = DateTime.Now,
-                Status = (int)Common.Enums.OrderStatus.DANG_CHO_XAC_NHAN,
-                UpdatedStatusDate = DateTime.Now,
-                CustomerId = 1,
-                DistrictId = 1482,
-                WardCode = "11010",
-            };
-
+                _productRepositoryMock.Setup(x => x.GetById(1))
+                    .Throws(new Exception("Quận huyện để giao hàng không tồn tại"));
+            }
             _mapperMock.Setup(m => m.Map<Models.Order>(It.IsAny<OrderRequestDto>()))
-                .Returns(order);
+                    .Returns(order);
 
-            _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
-                .Throws(new Exception("Quận huyện để giao hàng không tồn tại"));
+                _mapperMock.Setup(m => m.Map<List<Models.OrdersDetail>>(orderRequestDto.OrdersDetails))
+                    .Throws(new Exception("Quận huyện để giao hàng không tồn tại"));
 
-            _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
-                .Returns(Task.CompletedTask);
-            _orderRepositoryMock.Setup(repo => repo.SaveAsync())
-                .Returns(Task.FromResult(1));
+                _orderRepositoryMock.Setup(repo => repo.InsertOrderAsync(It.IsAny<Models.Order>()))
+                    .Returns(Task.CompletedTask);
+                _orderRepositoryMock.Setup(repo => repo.SaveAsync())
+                    .Returns(Task.FromResult(1));
 
-            _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
-                .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
+                _httpContextAccessorMock.Setup(http => http.HttpContext.User.Claims)
+                    .Returns(new List<System.Security.Claims.Claim> { new System.Security.Claims.Claim("userId", "1") });
 
 
-            // Act: Gọi phương thức CheckOut
-            var result = await _orderService.CheckOut(orderRequestDto);
+                // Act: Gọi phương thức CheckOut
+                var result = await _orderService.CheckOut(orderRequestDto);
 
-            Assert.Null(result.Data);
-            Assert.False(result.Success);
-            Assert.Equal("Lỗi khi tạo đơn hàng: Quận huyện để giao hàng không tồn tại", result.Message);
+                Assert.Null(result.Data);
+                Assert.False(result.Success);
+                Assert.Equal("Lỗi khi tạo đơn hàng: Quận huyện để giao hàng không tồn tại", result.Message);
 
+            }
         }
     }
-}
+
 

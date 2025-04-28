@@ -356,62 +356,74 @@ Trân trọng,
         public async Task<Response<LoginResponse>> Login(LoginRequest loginModel)
         {
             var response = new Response<LoginResponse>();
-            
 
-            var user = await _userRepository.GetUser(loginModel.Username);
-
-        
-
-            if (user != null)
+            try
             {
+                var user = await _userRepository.GetUser(loginModel.Username);
 
-                if (user.Status == false)
+                if (user != null)
                 {
-                    return new Response<LoginResponse>
+
+                    if (user.Status == false)
                     {
-                        StatusCode = 404,
-                        Message = "Tài khoản không được phép đăng nhập"
-                    };
-                }
-                if (!VerifyPasswordHash(loginModel.Password, user.Password, user.PasswordSalt))
-                {
-                    return new Response<LoginResponse>
+                        return new Response<LoginResponse>
+                        {
+                            StatusCode = 404,
+                            Message = "Tài khoản không được phép đăng nhập"
+                        };
+                    }
+                    if (!VerifyPasswordHash(loginModel.Password, user.Password, user.PasswordSalt))
                     {
-                        StatusCode = 404,
-                        Message = "Sai mật khẩu"
+                        return new Response<LoginResponse>
+                        {
+                            StatusCode = 404,
+                            Message = "Sai mật khẩu"
+                        };
+                    }
+                    var accessToken = GenerateAccessToken(user);
+                    var refreshToken = GenerateRefreshToken();
+
+                    //Lưu refresh token vào database
+                    user.RefreshToken = refreshToken;
+                    user.RefreshTokenExpriedTime = DateTime.UtcNow.AddDays(7); // Refresh token sống 7 ngày
+                    await _userRepository.UpdateUser(user);
+
+                    var loginResponse = new LoginResponse
+                    {
+                        AccessToken = accessToken,
+                        RefreshToken = refreshToken,
+                        UserId = user.UserId,
+                        UserName = user.UserName,
+                        RoleName = user.Role.RoleName,
+                        UserAvatar = user.Avatar
                     };
+
+                    response = new Response<LoginResponse>
+                    {
+                        StatusCode = 200,
+                        Data = loginResponse
+                    };
+                    return response;
                 }
-                var accessToken = GenerateAccessToken(user);
-                var refreshToken = GenerateRefreshToken();
 
-                //Lưu refresh token vào database
-                user.RefreshToken = refreshToken;
-                user.RefreshTokenExpriedTime = DateTime.UtcNow.AddDays(7); // Refresh token sống 7 ngày
-                await _userRepository.UpdateUser(user);
-
-                var loginResponse = new LoginResponse
+                return new Response<LoginResponse>
                 {
-                    AccessToken = accessToken,
-                    RefreshToken = refreshToken,
-                    UserId = user.UserId,
-                    UserName = user.UserName,
-                    RoleName = user.Role.RoleName,
-                    UserAvatar = user.Avatar
+                    StatusCode = 404,
+                    Message = "Tài khoản không tồn tại"
+                };
+            }
+            catch(Exception ex)
+            {
+                return new Response<LoginResponse>
+                {
+                    StatusCode = 500,
+                    Success = false,
+                    Message = ex.Message
                 };
 
-                response = new Response<LoginResponse>
-                {
-                    StatusCode = 200,
-                    Data = loginResponse
-                };
-                return response;
             }
 
-            return new Response<LoginResponse>
-            {
-                StatusCode = 404,
-                Message = "Tài khoản không tồn tại"
-            };
+            
         }
         #endregion
         private string GenerateAccessToken(User user)
@@ -430,7 +442,7 @@ Trân trọng,
                 issuer: _configuration["JWT:Issuer"],
                 audience: _configuration["JWT:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15), // Access token chỉ sống 15 phút
+                expires: DateTime.UtcNow.AddHours(3), // Access token chỉ sống 15 phút
                 signingCredentials: new SigningCredentials(
                     new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:key"])),
                     SecurityAlgorithms.HmacSha256

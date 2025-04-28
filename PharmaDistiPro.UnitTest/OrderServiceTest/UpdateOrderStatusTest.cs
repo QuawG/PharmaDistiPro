@@ -32,7 +32,7 @@ namespace PharmaDistiPro.Test.OrderServiceTest
 
             _orderService = new OrderService(
                 _orderRepositoryMock.Object,
-                null, // IIssueNoteRepository is not used in this test
+                null,null, // IIssueNoteRepository is not used in this test
                 _ordersDetailRepositoryMock.Object,
                 _mapperMock.Object,
                 _userRepositoryMock.Object,

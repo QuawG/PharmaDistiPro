@@ -13,8 +13,8 @@ namespace PharmaDistiPro.Services.Interface
 
         Task<Services.Response<ProductLotResponse>> GetProductLotById(int id);
 
-        Task<Services.Response<ProductLotResponse>> CheckQuantityProduct(int productId);
-      
+        Task<Services.Response<int>> CheckQuantityProduct(int productId);
+
         Task<Response<int>> GetQuantityByProductIdAsync(int productId);
         Task<Response<IEnumerable<StorageRoomDTO>>> ListCompatibleStorageRoomsAsync(int productLotId);
         Task<Response<List<ProductLotResponse>>> GetProductLotsByStatusAsync(int status);

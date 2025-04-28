@@ -10,6 +10,7 @@ using PharmaDistiPro.DTO.Products;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Helper;
 using PharmaDistiPro.Models;
+using PharmaDistiPro.Repositories.Impl;
 using PharmaDistiPro.Repositories.Interface;
 using PharmaDistiPro.Services.Interface;
 using System.Collections;
@@ -25,13 +26,15 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
+        private readonly IProductRepository _productRepository;
         public OrderService(IOrderRepository orderRepository,
            IIssueNoteRepository issuteNoteRepository,
+           IProductRepository productRepository,
            IOrdersDetailRepository ordersDetailRepository,
            IMapper mapper, IUserRepository userRepository, IHttpContextAccessor httpContextAccessor)
         {
             _orderRepository = orderRepository;
+            _productRepository = productRepository;
             _ordersDetailRepository = ordersDetailRepository;
             _mapper = mapper;
             _userRepository = userRepository;
@@ -111,15 +114,39 @@ namespace PharmaDistiPro.Services.Impl
             var response = new Response<OrderDto>();
             try
             {
+             
+
                 #region Create Order
                 var order = _mapper.Map<Models.Order>(orderRequestDto);
+                double? totalAmount = 0;
+
+                //var productList = productList
+
+                if (orderRequestDto.OrdersDetails != null)
+                {
+                    foreach (var orderDetails in orderRequestDto.OrdersDetails)
+                    {
+                        var product = _productRepository.GetById(orderDetails.ProductId);
+                        totalAmount += (product.SellingPrice * orderDetails.Quantity + product.SellingPrice * orderDetails.Quantity * product.Vat / 100);
+                    }
+                }
+
+
+                // totalAmount += totalAmount * 0.05 + totalAmount;
+
+                if (totalAmount != orderRequestDto.TotalAmount)
+                {
+                    response.Success = false;
+                    response.Message = "Tính sai giá trị đơn hàng";
+                    return response;
+                }
                 order.CreatedDate = DateTime.Now;
                 order.StockReleaseDate = null;
                 order.ConfirmedBy = null;
                 order.Status = (int)Common.Enums.OrderStatus.DANG_CHO_THANH_TOAN;
                 order.UpdatedStatusDate = DateTime.Now;
                 order.CustomerId = UserHelper.GetUserIdLogin(_httpContextAccessor.HttpContext);
-          
+
 
 
                 await _orderRepository.InsertOrderAsync(order);

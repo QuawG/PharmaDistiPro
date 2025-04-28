@@ -58,7 +58,7 @@ namespace PharmaDistiPro.Controllers
             }
             var result = await _ghnService.CreateOrder(orderId);
 
-            return StatusCode(result.StatusCode, result);
+                return StatusCode(result.StatusCode, result);
         }
 
         [HttpPost("calculate-fee")]
