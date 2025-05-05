@@ -14,11 +14,11 @@ import {
 import {
   EyeOutlined,
   FilterOutlined,
-  FileExcelOutlined,
+  // FileExcelOutlined,
   PrinterOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
 import axios from "axios";
 
 const { RangePicker } = DatePicker;
@@ -87,7 +87,6 @@ interface StockStatus {
 interface PurchaseOrderTableProps {
   handleChangePage: (page: string, purchaseOrderId?: number) => void;
   onDelete: (id: number) => void;
-  // onUpdate: (updatedOrder: PurchaseOrder) => void;
   rowSelection?: {
     selectedRowKeys: React.Key[];
     onChange: (selectedRowKeys: React.Key[], selectedRows: PurchaseOrder[]) => void;
@@ -95,7 +94,8 @@ interface PurchaseOrderTableProps {
 }
 
 const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
-  handleChangePage,
+  // handleChangePage,
+  // onDelete,
   rowSelection,
 }) => {
   const [filteredOrders, setFilteredOrders] = useState<PurchaseOrder[]>([]);
@@ -109,16 +109,19 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Lấy danh sách đơn đặt hàng
+  // Fetch purchase orders
   useEffect(() => {
     const fetchPurchaseOrders = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await axios.get("http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setAllOrders(response.data.data || []);
         setFilteredOrders(response.data.data || []);
       } catch (error) {
@@ -130,47 +133,70 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
     fetchPurchaseOrders();
   }, []);
 
-  // Lọc và sắp xếp dữ liệu theo ngày tạo mới nhất
+  // Filter and sort orders by creation date
   useEffect(() => {
     let filteredData = [...allOrders];
 
     if (searchTerm.trim()) {
-      filteredData = filteredData.filter((order) =>
-        order.purchaseOrderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.supplier?.supplierName || "").toLowerCase().includes(searchTerm.toLowerCase())
+      filteredData = filteredData.filter(
+        (order) =>
+          order.purchaseOrderCode
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (order.supplier?.supplierName || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
     }
 
     if (statusFilter) {
-      filteredData = filteredData.filter((order) => String(order.status) === statusFilter);
+      filteredData = filteredData.filter(
+        (order) => String(order.status) === statusFilter
+      );
     }
 
     if (dateRange) {
       filteredData = filteredData.filter((order) => {
         const orderDate = new Date(order.createDate);
-        return orderDate >= new Date(dateRange[0]) && orderDate <= new Date(dateRange[1]);
+        return (
+          orderDate >= new Date(dateRange[0]) &&
+          orderDate <= new Date(dateRange[1])
+        );
       });
     }
 
-    // Sắp xếp theo ngày tạo mới nhất
-    filteredData.sort((a, b) => new Date(b.createDate).getTime() - new Date(a.createDate).getTime());
+    filteredData.sort(
+      (a, b) =>
+        new Date(b.createDate).getTime() - new Date(a.createDate).getTime()
+    );
 
     setFilteredOrders(filteredData);
   }, [searchTerm, statusFilter, dateRange, allOrders]);
 
-  // Lấy chi tiết đơn hàng
-  const fetchOrderDetail = async (id: number) => {
+  // Fetch order details
+  const fetchOrderDetail = async (id: number, callback?: (order: PurchaseOrder) => void) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const orderDetails = allOrders.find((order) => order.purchaseOrderId === id);
       if (orderDetails) {
-        setSelectedOrder({ ...orderDetails, products: response.data.data || [] });
-        setIsDetailModalOpen(true);
+        const detailedOrder = {
+          ...orderDetails,
+          products: response.data.data || [],
+        };
+        if (callback) {
+          callback(detailedOrder);
+        } else {
+          setSelectedOrder(detailedOrder);
+          setIsDetailModalOpen(true);
+        }
       }
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
@@ -178,17 +204,18 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
     }
   };
 
-  // Lấy tình trạng nhập hàng
+  // Fetch stock status
   const fetchStockStatus = async (id: number) => {
     try {
       const token = localStorage.getItem("accessToken");
-
-      // Lấy chi tiết đơn hàng để có danh sách sản phẩm đầy đủ
-      const orderResponse = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const orderResponse = await axios.get(
+        `http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const orderDetails = orderResponse.data.data || [];
       const order = allOrders.find((o) => o.purchaseOrderId === id);
@@ -199,34 +226,37 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
 
       let fullStockStatus: StockStatus[];
 
-      // Nếu đơn hàng đã hoàn thành (status = 3), tất cả sản phẩm phải có shortageQuantity = 0
       if (order.status === 3) {
         fullStockStatus = orderDetails.map((detail: PurchaseOrderDetail) => ({
           productId: detail.productId,
           productName: detail.product.productName,
           orderedQuantity: detail.quantity,
-          receivedQuantity: detail.quantity, // Đã hoàn thành nên nhận đủ
+          receivedQuantity: detail.quantity,
           shortageQuantity: 0,
         }));
       } else {
-        // Lấy tình trạng nhập hàng cho các trạng thái khác
-        const stockResponse = await axios.get(`http://pharmadistiprobe.fun/api/PurchaseOrders/CheckReceivedStockStatus/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const stockResponse = await axios.get(
+          `http://pharmadistiprobe.fun/api/PurchaseOrders/CheckReceivedStockStatus/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const stockData = stockResponse.data.data || [];
 
-        // Tạo danh sách đầy đủ các sản phẩm từ chi tiết đơn hàng
         fullStockStatus = orderDetails.map((detail: PurchaseOrderDetail) => {
-          const stockItem = stockData.find((item: StockStatus) => item.productId === detail.productId) || {
-            productId: detail.productId,
-            productName: detail.product.productName,
-            orderedQuantity: detail.quantity,
-            receivedQuantity: 0,
-            shortageQuantity: detail.quantity,
-          };
+          const stockItem =
+            stockData.find(
+              (item: StockStatus) => item.productId === detail.productId
+            ) || {
+              productId: detail.productId,
+              productName: detail.product.productName,
+              orderedQuantity: detail.quantity,
+              receivedQuantity: 0,
+              shortageQuantity: detail.quantity,
+            };
 
           return {
             productId: detail.productId,
@@ -246,78 +276,206 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
     }
   };
 
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      filteredOrders.map((order) => ({
-        "Mã Đơn": order.purchaseOrderCode,
-        "Nhà Cung Cấp": order.supplier?.supplierName || "N/A",
-        "Ngày Đặt": new Date(order.createDate).toLocaleDateString("vi-VN"),
-        "Tổng Tiền": order.totalAmount,
-        "Trạng Thái": ["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][order.status] || "Không xác định",
-      }))
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachDonDatHang");
-    XLSX.writeFile(workbook, "DanhSachDonDatHang.xlsx");
-  };
+  // Export to Excel
+  // const exportToExcel = () => {
+  //   const worksheet = XLSX.utils.json_to_sheet(
+  //     filteredOrders.map((order) => ({
+  //       "Mã Đơn": order.purchaseOrderCode,
+  //       "Nhà Cung Cấp": order.supplier?.supplierName || "N/A",
+  //       "Ngày Đặt": new Date(order.createDate).toLocaleDateString("vi-VN"),
+  //       "Tổng Tiền": order.totalAmount,
+  //       "Trạng Thái":
+  //         ["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][order.status] ||
+  //         "Không xác định",
+  //     }))
+  //   );
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachDonDatHang");
+  //   XLSX.writeFile(workbook, "DanhSachDonDatHang.xlsx");
+  // };
 
-  const printTable = () => {
-    const selectedOrders = rowSelection?.selectedRowKeys.length
-      ? filteredOrders.filter((order) => rowSelection.selectedRowKeys.includes(order.purchaseOrderId))
-      : filteredOrders;
-
-    if (selectedOrders.length === 0) {
-      message.error("Không có đơn hàng nào được chọn để in.");
+  // Print function for a single order
+  const printTable = (order: PurchaseOrder) => {
+    if (!order) {
+      message.error("Không có đơn hàng để in.");
       return;
     }
 
     const printContents = `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2>Danh sách đơn đặt hàng</h2>
-      </div>
-      <table border="1" style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th>Mã Đơn</th>
-            <th>Nhà Cung Cấp</th>
-            <th>Ngày Đặt</th>
-            <th>Tổng Tiền</th>
-            <th>Trạng Thái</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${selectedOrders
-            .map(
-              (order) => `
-            <tr>
-              <td>${order.purchaseOrderCode}</td>
-              <td>${order.supplier?.supplierName || "N/A"}</td>
-              <td>${new Date(order.createDate).toLocaleDateString("vi-VN")}</td>
-              <td>${order.totalAmount.toLocaleString("vi-VN")} VND</td>
-              <td>${["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][order.status] || "Không xác định"}</td>
-            </tr>
-          `
-            )
-            .join("")}
-        </tbody>
-      </table>
+      <html>
+        <head>
+          <title>In Đơn Đặt Hàng</title>
+          <style>
+            body { font-family: 'Arial', sans-serif; margin: 20px; font-size: 12pt; }
+            .container { max-width: 800px; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .header h1 { font-size: 14pt; margin: 5px 0; text-transform: uppercase; }
+            .header h2 { font-size: 12pt; margin: 5px 0; font-weight: normal; }
+            .order-info { margin-bottom: 20px; }
+            .order-info p { margin: 5px 0; }
+            .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .table th, .table td { border: 1px solid #000; padding: 8px; text-align: left; }
+            .table th { background-color: #f2f2f2; font-weight: bold; }
+            .total { font-weight: bold; text-align: right; margin-top: 10px; }
+            .section { margin-top: 20px; }
+            .section p { margin: 5px 0; }
+            .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
+            .signature { text-align: center; }
+            .signature p { margin: 5px 0; }
+            @media print {
+              .container { margin: 0; width: 100%; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <!-- Header -->
+            <div class="header">
+              <h1>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h1>
+              <h2>Độc lập - Tự do - Hạnh phúc</h2>
+              <h2>SOCIALIST REPUBLIC OF VIETNAM</h2>
+              <h2>Independence - Freedom - Happiness</h2>
+            </div>
+
+            <!-- Order Title and Number -->
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h1 style="font-size: 16pt; text-transform: uppercase;">ĐƠN ĐẶT HÀNG / ORDER</h1>
+              <p>Số: ${order.purchaseOrderCode}</p>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="order-info">
+              <p><strong>Kính gửi / Kindly attention:</strong> Công ty cổ phần dược phẩm Vinh Nguyên</p>
+              <h3>THÔNG TIN KHÁCH HÀNG / Customer Information</h3>
+              <p><strong>Tên khách hàng / Customer name:</strong> Công ty cổ phần dược phẩm Vinh Nguyên</p>
+              <p><strong>Địa chỉ / Address:</strong> Số 15 lô 8 Khu Đô thị Mỗ lao, Phường Mộ Lao, Quận Hà Đông, Thành phố Hà Nội, Việt Nam</p>
+              <p><strong>MST / Tax code:</strong> 0106195140</p>
+            </div>
+
+            <!-- Order Items Table -->
+            <h3>ĐẶT HÀNG / Order</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>STT / No</th>
+                  <th>Mã hàng / Item code</th>
+                  <th>Tên hàng / Product Name</th>
+                  <th>Đơn vị / Unit</th>
+                  <th>SL / Quantity</th>
+                  <th>Đơn giá / Price</th>
+                  <th>Thành tiền (+VAT) / Amount (+VAT)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  order.products?.length
+                    ? order.products
+                        .map(
+                          (detail, idx) => `
+                          <tr>
+                            <td>${idx + 1}</td>
+                            <td>${detail.product.productCode || "N/A"}</td>
+                            <td>${detail.product.productName}</td>
+                            <td>${detail.product.unit || "N/A"}</td>
+                            <td>${detail.quantity.toLocaleString("vi-VN")}</td>
+                            <td>${detail.supplyPrice.toLocaleString("vi-VN")}</td>
+                            <td>${(detail.quantity * detail.supplyPrice).toLocaleString(
+                              "vi-VN"
+                            )}</td>
+                          </tr>
+                        `
+                        )
+                        .join("")
+                    : '<tr><td colspan="7">Không có sản phẩm</td></tr>'
+                }
+              </tbody>
+            </table>
+            <p class="total">Tổng cộng (Giá trị đơn hàng) / Total (Order value): ${order.totalAmount.toLocaleString(
+              "vi-VN"
+            )} VND</p>
+
+            <!-- Shipping Information -->
+            <div class="section">
+              <h3>NƠI NHẬN HÀNG / Ship to</h3>
+              <p><strong>Địa chỉ / Address:</strong> </p>
+              <p><strong>Thời gian nhận hàng / Time:</strong>  </p>
+              <p><strong>Phương tiện vận chuyển / Delivery means:</strong> </p>
+              <p><strong>Chi phí vận chuyển / Delivery fee:</strong> </p>
+            </div>
+
+
+
+            <!-- Signatures -->
+            <div class="signatures">
+              <div class="signature">
+                <p><strong>ĐƠN VỊ ĐẶT HÀNG / ORDERED BY</strong></p>
+                <p>CÔNG TY / COMPANY: Công ty cổ phần dược phẩm Vinh Nguyên</p>
+                <p>Ngày tháng / Date: ${new Date().toLocaleDateString("vi-VN", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })}</p>
+              </div>
+              <div class="signature">
+                <p><strong>XÁC NHẬN ĐƠN HÀNG / CONFIRMED BY</strong></p>
+                <p>CÔNG TY / COMPANY: ${
+                  order.supplier?.supplierName || "____________________"
+                }</p>
+                <p>Ngày tháng / Date: ${new Date().toLocaleDateString("vi-VN", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })}</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
     `;
 
     const printWindow = window.open("", "", "height=800,width=1000");
     if (printWindow) {
-      printWindow.document.write("<html><head><title>Print</title></head><body>");
       printWindow.document.write(printContents);
-      printWindow.document.write("</body></html>");
       printWindow.document.close();
       printWindow.print();
     }
   };
 
+  // Print selected orders (existing functionality)
+  // const printSelectedOrders = () => {
+  //   const selectedOrders = rowSelection?.selectedRowKeys.length
+  //     ? filteredOrders.filter((order) =>
+  //         rowSelection.selectedRowKeys.includes(order.purchaseOrderId)
+  //       )
+  //     : filteredOrders;
+
+  //   if (selectedOrders.length === 0) {
+  //     message.error("Không có đơn hàng nào được chọn để in.");
+  //     return;
+  //   }
+
+  //   Promise.all(
+  //     selectedOrders.map((order) =>
+  //       new Promise<PurchaseOrder>((resolve) => {
+  //         fetchOrderDetail(order.purchaseOrderId, (detailedOrder) => {
+  //           resolve(detailedOrder);
+  //         });
+  //       })
+  //     )
+  //   ).then((ordersWithDetails) => {
+  //     ordersWithDetails.forEach((order) => printTable(order));
+  //   });
+  // };
+
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("vi-VN");
 
   const columns = [
-    { title: "Mã Đơn", dataIndex: "purchaseOrderCode", key: "purchaseOrderCode" },
+    {
+      title: "Mã Đơn",
+      dataIndex: "purchaseOrderCode",
+      key: "purchaseOrderCode",
+    },
     {
       title: "Nhà Cung Cấp",
       dataIndex: "supplier",
@@ -340,7 +498,9 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
       title: "Trạng Thái",
       dataIndex: "status",
       key: "status",
-      render: (status: number) => ["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][status] || "Không xác định",
+      render: (status: number) =>
+        ["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][status] ||
+        "Không xác định",
     },
     {
       title: "",
@@ -355,6 +515,17 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                 onClick={() => fetchOrderDetail(record.purchaseOrderId)}
               >
                 Xem chi tiết
+              </Menu.Item>
+              <Menu.Item
+                key="print"
+                icon={<PrinterOutlined />}
+                onClick={() =>
+                  fetchOrderDetail(record.purchaseOrderId, (order) =>
+                    printTable(order)
+                  )
+                }
+              >
+                In đơn hàng
               </Menu.Item>
             </Menu>
           }
@@ -375,13 +546,20 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ width: 250 }}
         />
-        <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
+        <Button
+          icon={<FilterOutlined />}
+          onClick={() => setShowFilters(!showFilters)}
+        >
           Lọc
         </Button>
-        <Button type="primary" onClick={() => handleChangePage("Tạo đơn đặt hàng(PO)")} className="bg-blue-500">
+        {/* <Button
+          type="primary"
+          onClick={() => handleChangePage("Tạo đơn đặt hàng(PO)")}
+          className="bg-blue-500"
+        >
           + Tạo đơn mới
-        </Button>
-        <Button
+        </Button> */}
+        {/* <Button
           type="primary"
           icon={<FileExcelOutlined />}
           onClick={exportToExcel}
@@ -392,11 +570,11 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         <Button
           type="primary"
           icon={<PrinterOutlined />}
-          onClick={printTable}
+          onClick={printSelectedOrders}
           style={{ marginLeft: 8 }}
         >
           In danh sách
-        </Button>
+        </Button> */}
       </div>
 
       {showFilters && (
@@ -419,7 +597,13 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
               <div className="col-span-2">
                 <span style={{ marginRight: 8 }}>Lọc theo ngày đặt hàng</span>
                 <RangePicker
-                  onChange={(_, dateStrings) => setDateRange(dateStrings.length === 2 ? (dateStrings as [string, string]) : null)}
+                  onChange={(_, dateStrings) =>
+                    setDateRange(
+                      dateStrings.length === 2
+                        ? (dateStrings as [string, string])
+                        : null
+                    )
+                  }
                   style={{ width: "100%" }}
                 />
               </div>
@@ -448,7 +632,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         rowSelection={rowSelection}
       />
 
-      {/* Modal Chi tiết đơn hàng */}
+      {/* Order Detail Modal */}
       <Modal
         title={
           <div className="text-xl font-semibold text-gray-800">
@@ -464,7 +648,9 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
           <Button
             key="checkStock"
             type="primary"
-            onClick={() => selectedOrder && fetchStockStatus(selectedOrder.purchaseOrderId)}
+            onClick={() =>
+              selectedOrder && fetchStockStatus(selectedOrder.purchaseOrderId)
+            }
             className="bg-blue-500"
           >
             Kiểm tra tình trạng nhập hàng
@@ -476,25 +662,36 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
       >
         {selectedOrder && (
           <div className="space-y-6">
-            {/* Thông tin đơn hàng */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Thông tin chung</h3>
+              <h3 className="text-lg font-medium text-gray-700 mb-4">
+                Thông tin chung
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Mã Đơn</p>
-                  <p className="text-base font-medium">{selectedOrder.purchaseOrderCode}</p>
+                  <p className="text-base font-medium">
+                    {selectedOrder.purchaseOrderCode}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Nhà Cung Cấp</p>
-                  <p className="text-base font-medium">{selectedOrder.supplier?.supplierName || "N/A"}</p>
+                  <p className="text-base font-medium">
+                    {selectedOrder.supplier?.supplierName || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Ngày Đặt</p>
-                  <p className="text-base font-medium">{formatDate(selectedOrder.createDate)}</p>
+                  <p className="text-base font-medium">
+                    {formatDate(selectedOrder.createDate)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Ngày Cập Nhật Trạng Thái</p>
-                  <p className="text-base font-medium">{formatDate(selectedOrder.updatedStatusDate)}</p>
+                  <p className="text-sm text-gray-500">
+                    Ngày Cập Nhật Trạng Thái
+                  </p>
+                  <p className="text-base font-medium">
+                    {formatDate(selectedOrder.updatedStatusDate)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Tổng Tiền</p>
@@ -516,20 +713,25 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                           : "bg-green-100 text-green-600"
                       }`}
                     >
-                      {["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][selectedOrder.status] || "Không xác định"}
+                      {["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][
+                        selectedOrder.status
+                      ] || "Không xác định"}
                     </span>
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Tạo Bởi</p>
-                  <p className="text-base font-medium">{selectedOrder.createdBy || "N/A"}</p>
+                  <p className="text-base font-medium">
+                    {selectedOrder.createdBy || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Danh sách sản phẩm */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Chi tiết đơn đặt hàng</h3>
+              <h3 className="text-lg font-medium text-gray-700 mb-4">
+                Chi tiết đơn đặt hàng
+              </h3>
               <Table
                 columns={[
                   {
@@ -553,7 +755,9 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                     title: "Thành Tiền (VND)",
                     key: "total",
                     render: (_: any, record: PurchaseOrderDetail) =>
-                      (record.quantity * record.supplyPrice).toLocaleString("vi-VN"),
+                      (record.quantity * record.supplyPrice).toLocaleString(
+                        "vi-VN"
+                      ),
                   },
                 ]}
                 dataSource={selectedOrder.products || []}
@@ -567,7 +771,7 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         )}
       </Modal>
 
-      {/* Modal Tình trạng nhập hàng */}
+      {/* Stock Status Modal */}
       <Modal
         title={
           <div className="text-xl font-semibold text-gray-800">
@@ -577,7 +781,10 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         open={isStockStatusModalOpen}
         onCancel={() => setIsStockStatusModalOpen(false)}
         footer={[
-          <Button key="close" onClick={() => setIsStockStatusModalOpen(false)}>
+          <Button
+            key="close"
+            onClick={() => setIsStockStatusModalOpen(false)}
+          >
             Đóng
           </Button>,
         ]}
@@ -586,7 +793,9 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         bodyStyle={{ padding: "24px", background: "#f9fafb" }}
       >
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-700 mb-4">Chi tiết tình trạng nhập hàng</h3>
+          <h3 className="text-lg font-medium text-gray-700 mb-4">
+            Chi tiết tình trạng nhập hàng
+          </h3>
           <Table
             columns={[
               {
@@ -611,7 +820,11 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                 dataIndex: "shortageQuantity",
                 key: "shortageQuantity",
                 render: (quantity: number) => (
-                  <span className={quantity > 0 ? "text-red-600" : "text-green-600"}>
+                  <span
+                    className={
+                      quantity > 0 ? "text-red-600" : "text-green-600"
+                    }
+                  >
                     {quantity.toLocaleString("vi-VN")}
                   </span>
                 ),

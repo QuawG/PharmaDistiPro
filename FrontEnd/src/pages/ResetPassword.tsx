@@ -207,13 +207,7 @@ const ResetPassword: React.FC = () => {
       </div>
 
       {/* Phần bên phải - Hình minh họa */}
-      <div className="lg:w-1/2 w-full h-64 lg:h-screen bg-[#FFCA99] flex items-center justify-center">
-        <img
-          src="/img/illustration.png"
-          alt="Reset Password Illustration"
-          className="max-w-full max-h-full object-contain"
-        />
-      </div>
+
     </div>
   );
 };

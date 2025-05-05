@@ -174,7 +174,7 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({ isOpen, onClose, catego
 };
 
 // CategoryTable Component
-const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChangePage }) => {
+const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA,  }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categories, setCategories] = useState<Category[]>(CATEGORY_DATA);
@@ -298,11 +298,11 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
         </div>
       ),
     },
-    {
-      title: 'Người tạo',
-      dataIndex: 'createdBy',
-      key: 'createdBy',
-    },
+    // {
+    //   title: 'Người tạo',
+    //   dataIndex: 'createdBy',
+    //   key: 'createdBy',
+    // },
     {
       title: <UnorderedListOutlined />,
       key: 'actions',
@@ -341,9 +341,9 @@ const CategoryTable: React.FC<CategoryTableProps> = ({ CATEGORY_DATA, handleChan
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ width: 200 }}
         />
-        <Button type="primary" onClick={() => handleChangePage('Tạo chủng loại')}>
+        {/* <Button type="primary" onClick={() => handleChangePage('Tạo chủng loại')}>
           + Tạo chủng loại mới
-        </Button>
+        </Button> */}
         {/* <Button
           type="primary"
           icon={<FileExcelOutlined />}

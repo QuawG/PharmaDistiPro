@@ -1,66 +1,71 @@
 import { useState } from "react";
 import { Button, Input, Select, Form, Space, message } from "antd";
 import axios from "axios";
+import { useAuth } from "../../pages/Home/AuthContext"; // Import useAuth to access user info
 
 interface StorageRoom {
-  storageRoomId: number;
-  storageRoomCode: string;
   storageRoomName: string;
-  status: number; // Change status to boolean
-  temperature: number;
-  humidity: number;
+  status: boolean;
   capacity: number;
+  type: number;
 }
 
 export default function AddStorageRoom() {
+  const { user } = useAuth(); // Get authenticated user
   const [, setStorageRooms] = useState<StorageRoom[]>([]);
   const [newStorageRoom, setNewStorageRoom] = useState<Partial<StorageRoom>>({
-    storageRoomCode: "",
     storageRoomName: "",
-    status: 0, // Default to false
-    temperature: 0,
-    humidity: 0,
+    status: true, // Default to true as per API
     capacity: 0,
+    type: 1, // Default to 1 as per API
   });
 
   const handleChange = (name: string, value: any) => {
     setNewStorageRoom((prev) => ({
       ...prev,
-      [name]: typeof value === "string" ? (name === "status" ? value === "1" : value) : parseFloat(value),
+      [name]: name === "status" ? value === "1" : name === "type" || name === "capacity" ? parseInt(value) : value,
     }));
   };
 
   const handleAddStorageRoom = async () => {
-    if (!newStorageRoom.storageRoomCode || !newStorageRoom.storageRoomName) {
+    if (!newStorageRoom.storageRoomName || !newStorageRoom.capacity || !newStorageRoom.type) {
       message.warning("Vui lòng điền đầy đủ thông tin.");
       return;
     }
 
+    if (!user?.customerId) {
+      message.error("Vui lòng đăng nhập để tạo kho!");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('StorageRoomCode', newStorageRoom.storageRoomCode);
-    formData.append('StorageRoomName', newStorageRoom.storageRoomName);
-    formData.append('Status', newStorageRoom.status ? 'true' : 'false');
-    formData.append('Temperature', (newStorageRoom.temperature || 0).toString());
-    formData.append('Humidity', (newStorageRoom.humidity || 0).toString());
-    formData.append('Quantity', (newStorageRoom.capacity || 0).toString());
+    formData.append("StorageRoomName", newStorageRoom.storageRoomName);
+    formData.append("Status", newStorageRoom.status ? "true" : "false");
+    formData.append("Capacity", newStorageRoom.capacity.toString());
+    formData.append("Type", newStorageRoom.type.toString());
+    formData.append("CreatedBy", user.customerId.toString());
 
     try {
-      const response = await axios.post('http://pharmadistiprobe.fun/api/StorageRoom/CreateStorageRoom', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        "http://pharmadistiprobe.fun/api/StorageRoom/CreateStorageRoom",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.data.success) {
         message.success("Tạo kho thành công!");
         setStorageRooms((prev) => [
           ...prev,
           {
-            storageRoomId: prev.length + 1,
+            storageRoomId: response.data.data.storageRoomId, // Use ID from response
             ...newStorageRoom,
           } as StorageRoom,
         ]);
-        setNewStorageRoom({ storageRoomCode: "", storageRoomName: "", status: 0, temperature: 0, humidity: 0, capacity: 0 });
+        setNewStorageRoom({ storageRoomName: "", status: true, capacity: 0, type: 1 });
       } else {
         message.error(response.data.message || "Có lỗi xảy ra!");
       }
@@ -78,14 +83,6 @@ export default function AddStorageRoom() {
       <p>Tạo kho hàng mới</p>
       <Form layout="vertical" onFinish={handleAddStorageRoom}>
         <Space direction="vertical" style={{ display: "flex" }}>
-          <Form.Item label="Mã kho" required>
-            <Input
-              placeholder="Nhập mã kho"
-              value={newStorageRoom.storageRoomCode}
-              onChange={(e) => handleChange("storageRoomCode", e.target.value)}
-            />
-          </Form.Item>
-
           <Form.Item label="Tên kho" required>
             <Input
               placeholder="Nhập tên kho"
@@ -94,42 +91,22 @@ export default function AddStorageRoom() {
             />
           </Form.Item>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Form.Item
-              label="Trạng thái"
-              name="status"
-              rules={[{ required: true, message: "Vui lòng chọn trạng thái!" }]}
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái!" }]}
+          >
+            <Select
+              placeholder="Tùy chỉnh trạng thái"
+              value={newStorageRoom.status ? "1" : "0"}
+              onChange={(value) => handleChange("status", value)}
             >
-              <Select
-                placeholder="Tùy chỉnh trạng thái"
-                value={newStorageRoom.status ? "1" : "0"}
-                onChange={(value) => handleChange("status", value === "1")}
-              >
-                <Select.Option value={1}>Hoạt động</Select.Option>
-                <Select.Option value={0}>Không hoạt động</Select.Option>
-              </Select>
-            </Form.Item>
-          </div>
-
-          <Form.Item label="Nhiệt độ (°C)">
-            <Input
-              type="number"
-              placeholder="Nhập nhiệt độ"
-              value={newStorageRoom.temperature}
-              onChange={(e) => handleChange("temperature", e.target.value)}
-            />
+              <Select.Option value="1">Hoạt động</Select.Option>
+              <Select.Option value="0">Không hoạt động</Select.Option>
+            </Select>
           </Form.Item>
 
-          <Form.Item label="Độ ẩm (%)">
-            <Input
-              type="number"
-              placeholder="Nhập độ ẩm"
-              value={newStorageRoom.humidity}
-              onChange={(e) => handleChange("humidity", e.target.value)}
-            />
-          </Form.Item>
-
-          <Form.Item label="Sức chứa">
+          <Form.Item label="Sức chứa" required>
             <Input
               type="number"
               placeholder="Nhập sức chứa"
@@ -138,11 +115,29 @@ export default function AddStorageRoom() {
             />
           </Form.Item>
 
+          <Form.Item
+            label="Loại kho"
+            name="type"
+            rules={[{ required: true, message: "Vui lòng chọn loại kho!" }]}
+          >
+            <Select
+              placeholder="Chọn loại kho"
+              value={newStorageRoom.type}
+              onChange={(value) => handleChange("type", value)}
+            >
+              <Select.Option value={1}>Phòng thường (Nhiệt độ: 15-30°C, &lt;75%)</Select.Option>
+              <Select.Option value={2}>Phòng lạnh (Nhiệt độ: 2-8°C, &lt;45%)</Select.Option>
+              <Select.Option value={3}>Phòng mát (Nhiệt độ: 8-15°C, &lt;70%)</Select.Option>
+            </Select>
+          </Form.Item>
+
           <Space>
             <Button type="primary" onClick={handleAddStorageRoom}>
               Tạo kho
             </Button>
-            <Button onClick={() => setNewStorageRoom({ storageRoomCode: "", storageRoomName: "", status: 0, temperature: 0, humidity: 0, capacity: 0 })}>
+            <Button
+              onClick={() => setNewStorageRoom({ storageRoomName: "", status: true, capacity: 0, type: 1 })}
+            >
               Hủy
             </Button>
           </Space>

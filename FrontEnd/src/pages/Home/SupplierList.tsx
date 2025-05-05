@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Select, Button, Space } from 'antd';
-import { SearchOutlined, FileExcelOutlined, FileTextOutlined, PrinterOutlined } from '@ant-design/icons';
-import ExcelJS from 'exceljs';
+import { Input, Select, Space } from 'antd';
+import { SearchOutlined, } from '@ant-design/icons';
+// import ExcelJS from 'exceljs';
 import SupplierTable from '../../components/Supplier/SupplierTable';
 import axios from 'axios';
 
@@ -20,7 +20,7 @@ interface SupplierListPageProps {
   handleChangePage: (page: string) => void;
 }
 
-const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage }) => {
+const SupplierListPage: React.FC<SupplierListPageProps> = ({  }) => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
@@ -55,54 +55,54 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
     return matchesSearch && matchesStatus;
   });
 
-  const exportToExcel = async () => {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Suppliers');
+  // const exportToExcel = async () => {
+  //   const workbook = new ExcelJS.Workbook();
+  //   const worksheet = workbook.addWorksheet('Suppliers');
 
-    worksheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Mã nhà cung cấp', key: 'supplierCode', width: 20 },
-      { header: 'Tên nhà cung cấp', key: 'supplierName', width: 30 },
-      { header: 'Địa chỉ', key: 'supplierAddress', width: 30 },
-      { header: 'Số điện thoại', key: 'supplierPhone', width: 15 },
-      { header: 'Trạng thái', key: 'status', width: 15 },
-    ];
+  //   worksheet.columns = [
+  //     { header: 'ID', key: 'id', width: 10 },
+  //     { header: 'Mã nhà cung cấp', key: 'supplierCode', width: 20 },
+  //     { header: 'Tên nhà cung cấp', key: 'supplierName', width: 30 },
+  //     { header: 'Địa chỉ', key: 'supplierAddress', width: 30 },
+  //     { header: 'Số điện thoại', key: 'supplierPhone', width: 15 },
+  //     { header: 'Trạng thái', key: 'status', width: 15 },
+  //   ];
 
-    filteredSuppliers.forEach((supplier) => {
-      worksheet.addRow({
-        id: supplier.id,
-        supplierCode: supplier.supplierCode,
-        supplierName: supplier.supplierName,
-        supplierAddress: supplier.supplierAddress,
-        supplierPhone: supplier.supplierPhone,
-        status: supplier.status ? 'Hoạt động' : 'Không hoạt động',
-      });
-    });
+  //   filteredSuppliers.forEach((supplier) => {
+  //     worksheet.addRow({
+  //       id: supplier.id,
+  //       supplierCode: supplier.supplierCode,
+  //       supplierName: supplier.supplierName,
+  //       supplierAddress: supplier.supplierAddress,
+  //       supplierPhone: supplier.supplierPhone,
+  //       status: supplier.status ? 'Hoạt động' : 'Không hoạt động',
+  //     });
+  //   });
 
-    worksheet.getRow(1).font = { bold: true, size: 12 };
-    worksheet.getRow(1).alignment = { horizontal: 'center' };
+  //   worksheet.getRow(1).font = { bold: true, size: 12 };
+  //   worksheet.getRow(1).alignment = { horizontal: 'center' };
 
-    worksheet.eachRow({ includeEmpty: true }, (row) => {
-      row.eachCell({ includeEmpty: true }, (cell) => {
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' },
-        };
-        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-      });
-    });
+  //   worksheet.eachRow({ includeEmpty: true }, (row) => {
+  //     row.eachCell({ includeEmpty: true }, (cell) => {
+  //       cell.border = {
+  //         top: { style: 'thin' },
+  //         left: { style: 'thin' },
+  //         bottom: { style: 'thin' },
+  //         right: { style: 'thin' },
+  //       };
+  //       cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  //     });
+  //   });
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Danh_Sach_Nha_Cung_Cap.xlsx';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
+  //   const buffer = await workbook.xlsx.writeBuffer();
+  //   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  //   const url = window.URL.createObjectURL(blob);
+  //   const a = document.createElement('a');
+  //   a.href = url;
+  //   a.download = 'Danh_Sach_Nha_Cung_Cap.xlsx';
+  //   a.click();
+  //   window.URL.revokeObjectURL(url);
+  // };
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
@@ -111,9 +111,9 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
           <h1 className="text-xl font-semibold">Danh sách nhà cung cấp</h1>
           <p className="text-sm text-gray-500">Quản lý nhà cung cấp</p>
         </div>
-        <Button type="primary" onClick={() => handleChangePage('Tạo nhà cung cấp')}>
+        {/* <Button type="primary" onClick={() => handleChangePage('Tạo nhà cung cấp')}>
           Tạo mới nhà cung cấp
-        </Button>
+        </Button> */}
       </div>
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex justify-between items-center mb-4">
@@ -137,11 +137,11 @@ const SupplierListPage: React.FC<SupplierListPageProps> = ({ handleChangePage })
               <Select.Option value="Inactive">Không hoạt động</Select.Option>
             </Select>
           </Space>
-          <Space>
+          {/* <Space>
             <Button icon={<FileTextOutlined />} />
             <Button icon={<FileExcelOutlined />} onClick={exportToExcel} />
             <Button icon={<PrinterOutlined />} />
-          </Space>
+          </Space> */}
         </div>
         <SupplierTable suppliers={filteredSuppliers} />
       </div>

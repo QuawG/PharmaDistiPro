@@ -6,14 +6,14 @@ interface User {
   customerId: number;
   username: string;
   address: string;
-  avatar?: string;
-  roleName?: string;
+  avatar?: string | undefined;
+  roleName?: string | undefined;
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean; // Thêm trạng thái loading
-  login: (username: string, password: string) => Promise<void>;
+  loading: boolean;
+  login: (username?: string, password?: string, token?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -25,14 +25,14 @@ const apiClient = axios.create({
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // Khởi tạo loading là true
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = Cookies.get("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    setLoading(false); // Sau khi kiểm tra, đặt loading là false
+    setLoading(false);
   }, []);
 
   const refreshAccessToken = async () => {
@@ -88,8 +88,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (username?: string, password?: string, token?: string) => {
     try {
+      if (token) {
+        // Auto-login with stored token
+        const userId = localStorage.getItem("userId");
+        const userName = localStorage.getItem("userName");
+        const roleName = localStorage.getItem("roleName") ?? undefined;
+        const userAvatar = localStorage.getItem("userAvatar") ?? undefined;
+
+        if (!userId || !userName) {
+          throw new Error("Thông tin người dùng không đầy đủ trong localStorage");
+        }
+
+        const profileResponse = await apiClient.get(`/User/GetUserById/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const userData: User = {
+          customerId: parseInt(userId),
+          username: userName,
+          address: profileResponse.data.data.address || "Chưa có địa chỉ",
+          avatar: userAvatar,
+          roleName: roleName,
+        };
+
+        setUser(userData);
+        Cookies.set("user", JSON.stringify(userData), { expires: 7 });
+        Cookies.set("token", token, { expires: 7 });
+        localStorage.setItem("accessToken", token);
+        return;
+      }
+
+      if (!username || !password) {
+        throw new Error("Vui lòng cung cấp tên đăng nhập và mật khẩu");
+      }
+
       const loginResponse = await apiClient.post("/User/Login", {
         userName: username,
         password,
@@ -101,9 +135,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("userId", userId.toString());
-        localStorage.setItem("roleName", roleName);
+        localStorage.setItem("roleName", roleName ?? "");
         localStorage.setItem("userName", userName);
-        localStorage.setItem("userAvatar", userAvatar);
+        localStorage.setItem("userAvatar", userAvatar ?? "");
 
         const profileResponse = await apiClient.get(`/User/GetUserById/${userId}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -126,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error("Login failed:", error);
       if (error.response?.status === 404) {
-        throw new Error("Không tìm thấy endpoint đăng nhập. Vui lòng kiểm tra API!");
+        throw new Error("Đăng nhập thất bại. Tên đăng nhập hoặc mật khẩu không đúng!");
       } else if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       } else {

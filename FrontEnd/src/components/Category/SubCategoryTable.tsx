@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import {
   MoreOutlined,
   EditOutlined,
-  DeleteOutlined,
-  ExclamationCircleOutlined,
+  // DeleteOutlined,
+  // ExclamationCircleOutlined,
   UnorderedListOutlined,
   // FileExcelOutlined,
   // PrinterOutlined,
@@ -203,17 +203,17 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
             ))}
           </Select>
         </Form.Item>
-
+{/* 
         <Form.Item name="description" label="Mô tả">
           <Input.TextArea />
-        </Form.Item>
+        </Form.Item> */}
       </Form>
     </Modal>
   );
 };
 
 // Thành phần SubCategoryTable
-const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA, handleChangePage }) => {
+const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA,  }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedSubCategory, setSelectedSubCategory] = useState<SubCategory | null>(null);
   const [subCategories, setSubCategories] = useState<SubCategory[]>(SUBCATEGORY_DATA);
@@ -252,20 +252,20 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA, h
       .toLowerCase();
   };
 
-  const showDeleteConfirm = (subCategory: SubCategory) => {
-    Modal.confirm({
-      title: "Xác nhận xóa",
-      icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc chắn muốn xóa danh mục thuốc "${subCategory.name}" không?`,
-      okText: "Xóa",
-      okType: "danger",
-      cancelText: "Hủy",
-      onOk() {
-        setSubCategories(subCategories.filter((sub) => sub.id !== subCategory.id));
-        message.success("Xóa danh mục thuốc thành công!");
-      },
-    });
-  };
+  // const showDeleteConfirm = (subCategory: SubCategory) => {
+  //   Modal.confirm({
+  //     title: "Xác nhận xóa",
+  //     icon: <ExclamationCircleOutlined />,
+  //     content: `Bạn có chắc chắn muốn xóa danh mục thuốc "${subCategory.name}" không?`,
+  //     okText: "Xóa",
+  //     okType: "danger",
+  //     cancelText: "Hủy",
+  //     onOk() {
+  //       setSubCategories(subCategories.filter((sub) => sub.id !== subCategory.id));
+  //       message.success("Xóa danh mục thuốc thành công!");
+  //     },
+  //   });
+  // };
 
   const handleRowSelectionChange = (selectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(selectedRowKeys as number[]);
@@ -373,11 +373,11 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA, h
       dataIndex: "parentCategory",
       key: "parentCategory",
     },
-    {
-      title: "Người tạo",
-      dataIndex: "createdBy",
-      key: "createdBy",
-    },
+    // {
+    //   title: "Người tạo",
+    //   dataIndex: "createdBy",
+    //   key: "createdBy",
+    // },
     {
       title: <UnorderedListOutlined />,
       key: "actions",
@@ -394,9 +394,9 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA, h
               >
                 <EditOutlined /> Chỉnh sửa
               </Menu.Item>
-              <Menu.Item key="delete" onClick={() => showDeleteConfirm(record)} danger>
+              {/* <Menu.Item key="delete" onClick={() => showDeleteConfirm(record)} danger>
                 <DeleteOutlined /> Xóa
-              </Menu.Item>
+              </Menu.Item> */}
             </Menu>
           }
           trigger={["click"]}
@@ -434,12 +434,12 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA, h
         <Button type="primary" icon={<PrinterOutlined />} onClick={printTable}>
           In danh sách
         </Button> */}
-        <Button
+        {/* <Button
           type="primary"
           onClick={() => handleChangePage("Tạo danh mục thuốc")}
         >
           + Tạo danh mục thuốc mới
-        </Button>
+        </Button> */}
       </div>
 
       <Table

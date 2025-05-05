@@ -87,10 +87,11 @@ const NewOrder: React.FC = () => {
   const [selectedWard, setSelectedWard] = useState<string | null>(null);
   const [shippingFee, setShippingFee] = useState<number | null>(null);
   const [estimatedDeliveryTime, setEstimatedDeliveryTime] = useState<string>("");
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(9);
+  const [sortOrder, setSortOrder] = useState<string | null>(null);
 
   useEffect(() => {
     axios
@@ -119,7 +120,10 @@ const NewOrder: React.FC = () => {
           validProducts.map(async (product: Product) => {
             try {
               const quantityResponse = await axios.get(
-                `http://pharmadistiprobe.fun/api/ProductLot/TotalQuantity/${product.productId}`
+                `http://pharmadistiprobe.fun/api/ProductLot/CheckProductQuantity/${product.productId}`,
+                {
+                  headers: { accept: "*/*" },
+                }
               );
               return {
                 ...product,
@@ -191,27 +195,55 @@ const NewOrder: React.FC = () => {
   }, [selectedDistrict]);
 
   const calculateShippingFee = () => {
-    if (selectedProvince && selectedDistrict && selectedWard) {
-      axios
-        .get("http://pharmadistiprobe.fun/api/GHN/calculate-fee/1", {
-          params: {
-            provinceId: selectedProvince,
-            districtId: selectedDistrict,
-            wardId: selectedWard,
-            weight: 1000,
-          },
-        })
-        .then((response) => {
-          setShippingFee(response.data.fee || 0);
-          message.success("Tính phí vận chuyển thành công!");
-        })
-        .catch((error) => {
-          console.error("Lỗi khi tính phí vận chuyển:", error);
-          message.error("Không thể tính phí vận chuyển.");
-        });
-    } else {
+    if (!selectedProvince || !selectedDistrict || !selectedWard) {
       message.warning("Vui lòng chọn đầy đủ địa chỉ giao hàng!");
+      return;
     }
+
+    if (orderItems.length === 0) {
+      message.warning("Giỏ hàng trống, không thể tính phí vận chuyển!");
+      return;
+    }
+
+    // Tính tổng khối lượng (weight) từ giỏ hàng
+    const totalWeight = orderItems.reduce((acc, item) => {
+      const product = products.find((p) => p.productId === item.productId);
+      return acc + (product ? product.weight * item.quantity : 0);
+    }, 0);
+
+    if (totalWeight <= 0) {
+      message.error("Không thể tính phí vận chuyển do khối lượng không hợp lệ!");
+      return;
+    }
+
+    const payload = {
+      from_district_id: 1542,
+      from_ward_code: "1B1507",
+      service_type_id: 2,
+      to_district_id: selectedDistrict,
+      to_ward_code: selectedWard.toString(),
+      weight: Math.round(totalWeight), // Sử dụng tổng khối lượng tính được
+    };
+
+    axios
+      .post("http://pharmadistiprobe.fun/api/GHN/calculate-fee", payload, {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      })
+      .then((response) => {
+        if (response.data.success) {
+          setShippingFee(response.data.data.total || 0);
+          message.success("Tính phí vận chuyển thành công!");
+        } else {
+          message.error(response.data.message || "Không thể tính phí vận chuyển.");
+        }
+      })
+      .catch((error) => {
+        console.error("Lỗi khi tính phí vận chuyển:", error);
+        message.error("Không thể tính phí vận chuyển.");
+      });
   };
 
   const formatDate = (dateString: string) => {
@@ -262,7 +294,7 @@ const NewOrder: React.FC = () => {
       ? categories.find((cat) => cat.id === selectedCategory)?.categoryName
       : null;
 
-    const filtered = products.filter((product) => {
+    let filtered = products.filter((product) => {
       const productName = product.productName || "";
       const normalizedProductName = removeVietnameseTones(
         productName.toLowerCase()
@@ -281,13 +313,24 @@ const NewOrder: React.FC = () => {
 
       return matchesKeyword && matchesCategory && matchesPrice;
     });
+
+    if (sortOrder) {
+      filtered = filtered.sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        if (sortOrder === "dateAsc") return dateA - dateB;
+        if (sortOrder === "dateDesc") return dateB - dateA;
+        return 0;
+      });
+    }
+
     setFilteredProducts(filtered);
     setCurrentPage(1);
   };
 
   useEffect(() => {
     handleFilter();
-  }, [searchKeyword, selectedCategory, minPrice, maxPrice, products]);
+  }, [searchKeyword, selectedCategory, minPrice, maxPrice, products, sortOrder]);
 
   useEffect(() => {
     const cartFromCookie = Cookies.get("cart");
@@ -423,7 +466,7 @@ const NewOrder: React.FC = () => {
     const product = products.find((p) => p.productId === item.productId);
     return acc + item.price * item.quantity * (product ? product.vat / 100 : 0);
   }, 0);
-  const total = subtotal + tax;
+  const total = subtotal + tax + (shippingFee || 0);
 
   const handleCheckout = () => {
     if (!user) {
@@ -445,6 +488,11 @@ const NewOrder: React.FC = () => {
 
     if (orderItems.length === 0) {
       message.warning("Giỏ hàng trống, không thể đặt hàng!");
+      return;
+    }
+
+    if (shippingFee === null) {
+      message.warning("Vui lòng tính phí vận chuyển trước khi đặt hàng!");
       return;
     }
 
@@ -485,7 +533,7 @@ const NewOrder: React.FC = () => {
       })
       .then((response) => {
         if (response.data.success) {
-          message.success("đặt hàng thành công!");
+          message.success("Đặt hàng thành công!");
           setOrderItems([]);
           Cookies.remove("cart");
           setSelectedProvince(null);
@@ -644,10 +692,21 @@ const NewOrder: React.FC = () => {
                           }}
                           allowClear
                         >
+                          <Option value="0-50000">Dưới 50k</Option>
                           <Option value="0-100000">Dưới 100k</Option>
                           <Option value="100000-500000">100k - 500k</Option>
                           <Option value="500000-1000000">500k - 1 triệu</Option>
                           <Option value="1000000-999999999">Trên 1 triệu</Option>
+                        </Select>
+                        <Select
+                          placeholder="Sắp xếp theo ngày tạo"
+                          value={sortOrder}
+                          onChange={(value) => setSortOrder(value)}
+                          style={{ width: 200, borderRadius: "4px" }}
+                          allowClear
+                        >
+                          <Option value="dateAsc">Ngày tạo: Cũ nhất</Option>
+                          <Option value="dateDesc">Ngày tạo: Mới nhất</Option>
                         </Select>
                         <Button
                           type="default"
@@ -657,6 +716,7 @@ const NewOrder: React.FC = () => {
                             setSelectedCategory(null);
                             setMinPrice(null);
                             setMaxPrice(null);
+                            setSortOrder(null);
                             setFilteredProducts(products);
                             setCurrentPage(1);
                             message.success("Đã xóa tất cả bộ lọc!");
@@ -861,13 +921,21 @@ const NewOrder: React.FC = () => {
               </Text>
             )}
             <Row gutter={[16, 16]}>
-              <Col xs={24} sm={8}>
+              <Col xs={24}>
                 <Select
                   placeholder="Chọn tỉnh"
                   value={selectedProvince || undefined}
                   onChange={(value) => setSelectedProvince(value)}
-                  style={{ width: "100%", borderRadius: "4px" }}
+                  style={{ width: "100%", minWidth: "200px", borderRadius: "4px" }}
+                  dropdownStyle={{ minWidth: "300px" }}
                   allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      ?.toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                 >
                   {provinces.map((province) => (
                     <Option key={province.provinceID} value={province.provinceID}>
@@ -876,13 +944,21 @@ const NewOrder: React.FC = () => {
                   ))}
                 </Select>
               </Col>
-              <Col xs={24} sm={8}>
+              <Col xs={24}>
                 <Select
                   placeholder="Chọn quận/huyện"
                   value={selectedDistrict || undefined}
                   onChange={(value) => setSelectedDistrict(value)}
-                  style={{ width: "100%", borderRadius: "4px" }}
+                  style={{ width: "100%", minWidth: "200px", borderRadius: "4px" }}
+                  dropdownStyle={{ minWidth: "300px" }}
                   allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      ?.toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                   disabled={!selectedProvince}
                 >
                   {districts.map((district) => (
@@ -892,13 +968,21 @@ const NewOrder: React.FC = () => {
                   ))}
                 </Select>
               </Col>
-              <Col xs={24} sm={8}>
+              <Col xs={24}>
                 <Select
                   placeholder="Chọn phường/xã"
                   value={selectedWard || undefined}
                   onChange={(value) => setSelectedWard(value)}
-                  style={{ width: "100%", borderRadius: "4px" }}
+                  style={{ width: "100%", minWidth: "200px", borderRadius: "4px" }}
+                  dropdownStyle={{ minWidth: "300px" }}
                   allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      ?.toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                   disabled={!selectedDistrict}
                 >
                   {wards.map((ward) => (
@@ -943,15 +1027,21 @@ const NewOrder: React.FC = () => {
             )}
             <div style={{ marginTop: "24px", padding: "16px", background: "#fafafa", borderRadius: "4px" }}>
               <Row justify="space-between">
-                <Col><Text strong style={{ fontSize: "16px" }}>Tạm tính:</Text></Col>
+                <Col><Text strong style={{ fontSize: "16px" }}>Tiền hàng:</Text></Col>
                 <Col><Text strong style={{ fontSize: "16px" }}>{formatCurrency(subtotal)} VND</Text></Col>
               </Row>
               <Row justify="space-between" style={{ marginTop: "8px" }}>
-                <Col><Text strong style={{ fontSize: "16px" }}>Thuế:</Text></Col>
+                <Col><Text strong style={{ fontSize: "16px" }}>Thuế (GTGT):</Text></Col>
                 <Col><Text strong style={{ fontSize: "16px" }}>{formatCurrency(tax)} VND</Text></Col>
               </Row>
+              {shippingFee !== null && (
+                <Row justify="space-between" style={{ marginTop: "8px" }}>
+                  <Col><Text strong style={{ fontSize: "16px" }}>Phí vận chuyển:</Text></Col>
+                  <Col><Text strong style={{ fontSize: "16px" }}>{formatCurrency(shippingFee)} VND</Text></Col>
+                </Row>
+              )}
               <Row justify="space-between" style={{ marginTop: "8px" }}>
-                <Col><Text strong style={{ fontSize: "18px", color: "#1890ff" }}>Tổng cộng:</Text></Col>
+                <Col><Text strong style={{ fontSize: "18px", color: "#1890ff" }}>Tổng tiền hàng:</Text></Col>
                 <Col><Text strong style={{ fontSize: "18px", color: "#1890ff" }}>{formatCurrency(total)} VND</Text></Col>
               </Row>
               <Button
@@ -962,14 +1052,13 @@ const NewOrder: React.FC = () => {
                   width: "100%",
                   height: "48px",
                   borderRadius: "4px",
-                  // background: "#1890ff",
                   border: "none",
                   fontSize: "16px",
                   transition: "all 0.3s",
                 }}
                 disabled={orderItems.length === 0}
               >
-                Đặt hàng ngay
+                Đặt hàng
               </Button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // Add useLocation
 import Sidebar from "../components/global/Sidebar";
 import ProductListPage from "./Home/ProductList";
 import ProductAdd from "../components/Product/AddProduct";
@@ -28,31 +29,44 @@ import IssueNoteListPage from "./Home/IssueNoteList";
 import UpdateProduct from "../components/Product/UpdateProduct";
 import OrderListForSalesManager from "./Home/OrderListForSalesManager";
 import OrderListForWarehouseManager from "./Home/OrderListForWarehouseManager";
-import IssueNoteListPageForWarehouseManager from "./Home/IssueNoteListPageForWarehouseManager"; // Import mới
+import IssueNoteListPageForWarehouseManager from "./Home/IssueNoteListPageForWarehouseManager";
+import NoteCheckListPage from "./Home/NoteCheckListPage";
+import AddNoteCheck from "../components/NoteCheck/AddNoteCheck";
 import { useAuth } from "./Home/AuthContext";
 
 const HomePage = () => {
   const { user } = useAuth();
+  const location = useLocation(); // Add useLocation to access state
+  const navigate = useNavigate();
   const [activePage, setActivePage] = useState<string>("");
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
-      if (user.roleName === "Customer") {
-        setActivePage("Danh sách đơn hàng");
-      } else if (user.roleName === "WarehouseManager") {
-        setActivePage("Danh sách đơn hàng (Warehouse Manager)"); // Mặc định cho Warehouse Manager
+      // Check if activePage is passed in location.state
+      const pageFromState = location.state?.activePage;
+      if (pageFromState) {
+        setActivePage(pageFromState);
       } else {
-        setActivePage("Dashboard");
+        // Default page based on role
+        if (user.roleName === "Customer") {
+          setActivePage("Danh sách đơn hàng");
+        } else if (user.roleName === "WarehouseManager") {
+          setActivePage("Danh sách đơn hàng (Warehouse Manager)");
+        } else {
+          setActivePage("Dashboard");
+        }
       }
     }
-  }, [user]);
+  }, [user, location.state]);
 
   const handleChangePage = (page: string, productId?: number) => {
     setActivePage(page);
     if (productId) {
       setSelectedProductId(productId);
     }
+    // Clear location state to avoid stale state on subsequent navigations
+    navigate('/home', { state: { activePage: page }, replace: true });
   };
 
   const handleAddNote = () => {
@@ -102,6 +116,8 @@ const HomePage = () => {
         {activePage === "Danh sách phiếu xuất kho (Warehouse Manager)" && (
           <IssueNoteListPageForWarehouseManager handleChangePage={handleChangePage} />
         )}
+        {activePage === "Danh sách phiếu kiểm kê" && <NoteCheckListPage handleChangePage={handleChangePage} />}
+        {activePage === "Tạo phiếu kiểm kê" && <AddNoteCheck handleChangePage={handleChangePage} />}
       </div>
     </div>
   );

@@ -7,7 +7,8 @@ import ResetPassword from "./pages/ResetPassword";
 import { AuthProvider } from "./pages/Home/AuthContext";
 import PaymentSuccess from './pages/Payment/PaymentSuccess';
 import PaymentFailed from './pages/Payment/PaymentFailed';
-import ProtectedRoute from './components/ProtectedRoute'; // Import ProtectedRoute
+import Profile from './pages/Home/Profile'; // Import Profile component
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const handleChangePage = (page: string, orderId?: number) => {
@@ -50,6 +51,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

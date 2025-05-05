@@ -1,8 +1,8 @@
 // src/components/Order/OrderTableForSalesManager.tsx
 import React, { useState, useEffect } from "react";
 import { Table, Select, Button, Modal, Collapse, Dropdown, Menu, message, Input, DatePicker } from "antd";
-import { MoreOutlined, EyeOutlined, CheckOutlined, FilterOutlined, PrinterOutlined, FileExcelOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
-import * as XLSX from "xlsx";
+import { MoreOutlined, EyeOutlined, CheckOutlined, FilterOutlined,  SearchOutlined, CloseOutlined } from "@ant-design/icons";
+// import * as XLSX from "xlsx";
 import axios from "axios";
 // import { useAuth } from "../../pages/Home/AuthContext"; // Đảm bảo đường dẫn đúng với cấu trúc thư mục của bạn
 import Cookies from "js-cookie";
@@ -59,7 +59,7 @@ interface OrderTableProps {
   handleChangePage: (page: string, orderId?: number) => void;
 }
 
-const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleChangePage }) => {
+const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders,  }) => {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
@@ -275,60 +275,60 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
     }
   };
 
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredOrders.map((order) => ({
-      "Mã đơn hàng": order.orderCode,
-      "Trạng thái": orderStatuses[order.status],
-      "Khách hàng": ` ${order.customer.lastName}`,
-      "Ngày tạo": new Date(order.createdDate).toLocaleDateString("vi-VN"),
-      "Tổng tiền": order.totalAmount,
-    })));
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
-    XLSX.writeFile(workbook, "DanhSachDonHang_SalesManager.xlsx");
-  };
+  // const exportToExcel = () => {
+  //   const worksheet = XLSX.utils.json_to_sheet(filteredOrders.map((order) => ({
+  //     "Mã đơn hàng": order.orderCode,
+  //     "Trạng thái": orderStatuses[order.status],
+  //     "Khách hàng": ` ${order.customer.lastName}`,
+  //     "Ngày tạo": new Date(order.createdDate).toLocaleDateString("vi-VN"),
+  //     "Tổng tiền": order.totalAmount,
+  //   })));
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+  //   XLSX.writeFile(workbook, "DanhSachDonHang_SalesManager.xlsx");
+  // };
 
-  const printTable = () => {
-    const printContents = `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h2>Danh sách đơn hàng</h2>
-      </div>
-      <table border="1" style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th>Mã đơn hàng</th>
-            <th>Trạng thái</th>
-            <th>Khách hàng</th>
-            <th>Ngày tạo</th>
-            <th>Tổng tiền</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${filteredOrders
-            .map((order) => `
-              <tr>
-                <td>${order.orderCode}</td>
-                <td>${orderStatuses[order.status]}</td>
-                <td>${order.customer.firstName} ${order.customer.lastName}</td>
-                <td>${new Date(order.createdDate).toLocaleDateString("vi-VN")}</td>
-                <td>${order.totalAmount.toLocaleString()} VND</td>
-              </tr>
-            `)
-            .join("")}
-        </tbody>
-      </table>
-    `;
+  // const printTable = () => {
+  //   const printContents = `
+  //     <div style="text-align: center; margin-bottom: 20px;">
+  //       <h2>Danh sách đơn hàng</h2>
+  //     </div>
+  //     <table border="1" style="width: 100%; border-collapse: collapse;">
+  //       <thead>
+  //         <tr>
+  //           <th>Mã đơn hàng</th>
+  //           <th>Trạng thái</th>
+  //           <th>Khách hàng</th>
+  //           <th>Ngày tạo</th>
+  //           <th>Tổng tiền</th>
+  //         </tr>
+  //       </thead>
+  //       <tbody>
+  //         ${filteredOrders
+  //           .map((order) => `
+  //             <tr>
+  //               <td>${order.orderCode}</td>
+  //               <td>${orderStatuses[order.status]}</td>
+  //               <td>${order.customer.firstName} ${order.customer.lastName}</td>
+  //               <td>${new Date(order.createdDate).toLocaleDateString("vi-VN")}</td>
+  //               <td>${order.totalAmount.toLocaleString()} VND</td>
+  //             </tr>
+  //           `)
+  //           .join("")}
+  //       </tbody>
+  //     </table>
+  //   `;
 
-    const printWindow = window.open("", "", "height=800,width=1000");
-    if (printWindow) {
-      printWindow.document.write("<html><head>");
-      printWindow.document.write("</head><body>");
-      printWindow.document.write(printContents);
-      printWindow.document.write("</body></html>");
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
+  //   const printWindow = window.open("", "", "height=800,width=1000");
+  //   if (printWindow) {
+  //     printWindow.document.write("<html><head>");
+  //     printWindow.document.write("</head><body>");
+  //     printWindow.document.write(printContents);
+  //     printWindow.document.write("</body></html>");
+  //     printWindow.document.close();
+  //     printWindow.print();
+  //   }
+  // };
 
   const resetFilters = () => {
     setSearchTerm(""); // Reset ô tìm kiếm
@@ -418,7 +418,7 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
           allowClear
         />
         <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>Lọc</Button>
-        <Button type="primary" onClick={() => handleChangePage("Tạo đơn hàng")}>
+        {/* <Button type="primary" onClick={() => handleChangePage("Tạo đơn hàng")}>
           + Tạo đơn hàng mới
         </Button>
         <Button type="primary" icon={<FileExcelOutlined />} onClick={exportToExcel} style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}>
@@ -426,7 +426,7 @@ const OrderTableForSalesManager: React.FC<OrderTableProps> = ({ orders, handleCh
         </Button>
         <Button type="primary" icon={<PrinterOutlined />} onClick={printTable} style={{ marginLeft: 8 }}>
           In danh sách
-        </Button>
+        </Button> */}
       </div>
 
       {showFilters && (

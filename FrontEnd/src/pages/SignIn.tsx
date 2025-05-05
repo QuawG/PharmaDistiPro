@@ -1,14 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./Home/AuthContext";
+import { useAuth, apiClient } from "./Home/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(localStorage.getItem("lastUsername") || "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const checkPaymentReturn = async () => {
+    const isPaymentInProgress = localStorage.getItem("isPaymentInProgress");
+    const accessToken = localStorage.getItem("accessToken");
+    const userId = localStorage.getItem("userId");
+
+    if (isPaymentInProgress === "true" && accessToken && userId) {
+      setLoading(true);
+      try {
+        // Validate token by calling /User/GetUserById
+        const response = await apiClient.get(`/User/GetUserById/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (response.data.success) {
+          // Token is valid, auto-login
+          await login("", "", accessToken);
+          toast.success("Tự động đăng nhập thành công!", {
+            position: "top-right",
+            duration: 3000,
+          });
+          navigate("/home");
+          // Clear payment-related localStorage items
+          localStorage.removeItem("isPaymentInProgress");
+          localStorage.removeItem("lastOrderId");
+          localStorage.removeItem("lastUsername");
+        } else {
+          toast.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!", {
+            position: "top-right",
+            duration: 3000,
+          });
+        }
+      } catch (error: any) {
+        console.error("Lỗi khi kiểm tra token:", error.response?.status, error.response?.data);
+        toast.error("Không thể tự động đăng nhập, vui lòng đăng nhập lại!", {
+          position: "top-right",
+          duration: 3000,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    checkPaymentReturn(); // Run on component mount
+  }, []);
 
   const handleSignIn = async () => {
     if (!username || !password) {
@@ -41,17 +90,10 @@ const SignIn: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-white">
       <Toaster />
-
-      {/* Phần bên trái - Form đăng nhập */}
       <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-8">
-        {/* Logo */}
         <img src="/img/logoPharma.png" alt="Vinh Nguyen Pharmadistipro Logo" className="w-32 mb-8" />
-
-        {/* Tiêu đề */}
         <h2 className="text-3xl font-bold text-[#00A8E8] mb-2">Đăng Nhập</h2>
         <p className="text-gray-600 mb-8">Vui lòng đăng nhập để tiếp tục</p>
-
-        {/* Form */}
         <div className="w-full max-w-sm">
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-2">Tên đăng nhập</label>
@@ -63,7 +105,6 @@ const SignIn: React.FC = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A8E8] focus:border-[#00A8E8] outline-none transition-all duration-200"
             />
           </div>
-
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-2">Mật khẩu</label>
             <input
@@ -74,14 +115,12 @@ const SignIn: React.FC = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00A8E8] focus:border-[#00A8E8] outline-none transition-all duration-200"
             />
           </div>
-
           <button
             onClick={() => navigate("/send-otp")}
             className="text-[#00A8E8] font-medium hover:underline mb-6"
           >
             Quên mật khẩu?
           </button>
-
           <button
             onClick={handleSignIn}
             className={`w-full py-3 rounded-lg font-medium text-white transition-all duration-300 ${
@@ -121,15 +160,7 @@ const SignIn: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Phần bên phải - Hình minh họa */}
-      <div className="lg:w-1/2 w-full h-64 lg:h-screen bg-[#FFCA99] flex items-center justify-center">
-        <img
-          src="/img/illustration.png"
-          alt="Sign In Illustration"
-          className="max-w-full max-h-full object-contain"
-        />
-      </div>
+      
     </div>
   );
 };

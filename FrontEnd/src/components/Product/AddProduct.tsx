@@ -280,9 +280,9 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
                 rules={[{ required: true, message: 'Vui lòng chọn điều kiện bảo quản!' }]}
               >
                 <Select placeholder="Chọn điều kiện bảo quản">
-                   <Option value="1">Bảo quản thường (Nhiệt độ: 15-30°C; Độ ẩm &lt; 75%)</Option>
-                    <Option value="2">Bảo quản lạnh (Nhiệt độ: 2-8°C; Độ ẩm &lt; 45%)</Option>
-                     <Option value="3">Bảo quản mát (Nhiệt độ: 8-15°C; Độ ẩm &lt; 70%)</Option> </Select>
+                  <Option value="1">Bảo quản thường (Nhiệt độ: 15-30°C; Độ ẩm &lt; 75%)</Option>
+                  <Option value="2">Bảo quản lạnh (Nhiệt độ: 2-8°C; Độ ẩm &lt; 45%)</Option>
+                  <Option value="3">Bảo quản mát (Nhiệt độ: 8-15°C; Độ ẩm &lt; 70%)</Option> </Select>
               </Form.Item>
             </Col>
             <Col xs={24} md={12} lg={8}>

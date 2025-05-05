@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Input, Button, Select, Typography, Space } from "antd";
-import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { Input, Select, Typography, Space } from "antd";
+import {  SearchOutlined } from "@ant-design/icons";
 import CustomerTable from "../../components/Customer/CustomerTable";
 import axios from "axios";
 
@@ -22,7 +22,7 @@ interface Customer {
 }
 
 const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
-  handleChangePage,
+  // handleChangePage,
 }) => {
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,13 +59,13 @@ const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void }> =
             <Title level={3}>Danh sách khách hàng</Title>
             <Text type="secondary">Quản lí thông tin khách hàng</Text>
           </div>
-          <Button
+          {/* <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => handleChangePage("Tạo nhà thuốc")}
           >
             Tạo khách hàng mới
-          </Button>
+          </Button> */}
         </div>
         <Space>
           <Input
