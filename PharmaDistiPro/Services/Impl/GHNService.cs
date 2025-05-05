@@ -178,7 +178,7 @@ namespace PharmaDistiPro.Services.Impl
             orderRequest.RequiredNote = "KHONGCHOXEMHANG";
             orderRequest.CODAmount = 0;
             orderRequest.InsuranceValue = 0;
-            orderRequest.ServiceTypeId = 5;
+            orderRequest.ServiceTypeId = 2;
             orderRequest.Content = "Content TEST API GHN";
             // From info
             orderRequest.FromName = _fromName;

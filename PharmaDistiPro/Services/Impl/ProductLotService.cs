@@ -395,7 +395,7 @@ namespace PharmaDistiPro.Services.Impl
 
                     if (lot.ExpiredDate <= now) 
                     {
-                        lot.Status = 4; // Hết hạn
+                        lot.Status = 3; // Hết hạn
                     }
                     else if (lot.ExpiredDate <= now.AddMonths(3))
                     {

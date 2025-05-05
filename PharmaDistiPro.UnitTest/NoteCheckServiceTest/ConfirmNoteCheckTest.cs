@@ -12,7 +12,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace PharmaDistiPro.UnitTest.NoteCheckServiceTest
+namespace PharmaDistiPro.UnitTest.  NoteCheckServiceTest
 {
     public class ConfirmNoteCheckTest
     {
