@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.NoteChecks;
 using PharmaDistiPro.Services.Interface;
@@ -17,6 +18,7 @@ namespace PharmaDistiPro.Controllers
         }
 
         [HttpPost("create")]
+   
         public async Task<IActionResult> CreateNoteCheck([FromBody] NoteCheckRequestDTO request)
         {
             if (request == null)

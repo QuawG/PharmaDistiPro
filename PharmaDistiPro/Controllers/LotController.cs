@@ -38,6 +38,7 @@ namespace PharmaDistiPro.Controllers
 
         // GET: api/Lot/{lotCode}
         [HttpGet("{lotCode}")]
+
         public async Task<IActionResult> GetLotByLotCode(string lotCode)
         {
 

@@ -206,14 +206,14 @@ namespace PharmaDistiPro.Services.Impl
                         // Trả lại thể tích kho
                         if (productDict.TryGetValue(productId, out var product) && product.VolumePerUnit.HasValue)
                         {
-                            double volume = takeQty * product.VolumePerUnit.Value;
+                            double volume = Math.Round(takeQty * ((double)product.VolumePerUnit.Value / 1000000), 2);
 
                             if (lot.StorageRoomId.HasValue)
                             {
                                 var storageRoom = await _storageRoomRepository.GetByIdAsync(lot.StorageRoomId.Value);
                                 if (storageRoom != null)
                                 {
-                                    storageRoom.RemainingRoomVolume = (storageRoom.RemainingRoomVolume ?? 0) + volume;
+                                    storageRoom.RemainingRoomVolume = Math.Round((storageRoom.RemainingRoomVolume ?? 0) + volume, 2);
                                     await _storageRoomRepository.UpdateAsync(storageRoom);
                                 }
                             }

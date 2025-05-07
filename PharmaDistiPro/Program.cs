@@ -123,7 +123,19 @@ namespace PharmaDistiPro
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
                 };
             });
-
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Director", policy =>
+                    policy.RequireRole("Director"));
+                options.AddPolicy("WarehouseManager", policy =>
+                   policy.RequireRole("WarehouseManager"));
+                options.AddPolicy("SalesManager", policy =>
+                   policy.RequireRole("SalesManager"));
+                options.AddPolicy("SalesMan", policy =>
+                   policy.RequireRole("SalesMan"));
+                options.AddPolicy("Customer", policy =>
+                   policy.RequireRole("Customer"));// Customize as needed
+            });
             // GHN Service
             builder.Services.AddHttpClient<IGHNService, GHNService>();
 

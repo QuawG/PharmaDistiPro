@@ -91,7 +91,7 @@ namespace PharmaDistiPro.Services.Impl
     
                 detail.DifferenceQuatity = detail.StorageQuantity.Value - detail.ActualQuantity.Value;
 
-                int actualShortage = detail.DifferenceQuatity.Value - detail.ErrorQuantity.Value;
+                int actualShortage = detail.DifferenceQuatity.Value ;
 
                
                 string shortageText = actualShortage > 0
@@ -103,7 +103,7 @@ namespace PharmaDistiPro.Services.Impl
                 string productName = product?.ProductName ?? "Không rõ sản phẩm";
                 string lotId = productLot?.LotId?.ToString() ?? "Không rõ lô";
 
-                resultDetails.Add($"Sản phẩm {productName} của lô {lotId} này {shortageText} (hỏng {detail.ErrorQuantity})");
+                resultDetails.Add($"Sản phẩm {productName} của lô {lotId} này {shortageText} ");
 
                 // 9. Gán status
                 detail.Status = (detail.ErrorQuantity > 0) ? 0 : null;

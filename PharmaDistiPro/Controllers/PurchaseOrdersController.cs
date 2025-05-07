@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.PurchaseOrders;
 using PharmaDistiPro.Services.Interface;
@@ -17,6 +18,7 @@ namespace PharmaDistiPro.Controllers
 
         #region purchase order
         [HttpPost("CreatePurchaseOrders")]
+  
         public async Task<IActionResult> CreatePurchaseOrder([FromBody]PurchaseOrdersRequestDto purchaseOrdersRequestDto)
         {
             var response = await _purchaseOrderService.CreatePurchaseOrder(purchaseOrdersRequestDto);
@@ -39,6 +41,7 @@ namespace PharmaDistiPro.Controllers
         }
 
         [HttpGet("GetPurchaseOrdersList")]
+  
         public async Task<IActionResult> GetPurchaseOrdersList([FromQuery]int[] status, DateTime? dateFrom, DateTime? dateTo)
         {
             var response = await _purchaseOrderService.GetPurchaseOrdersList(status, dateFrom, dateTo);
