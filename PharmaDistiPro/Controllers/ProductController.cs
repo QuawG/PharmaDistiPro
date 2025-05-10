@@ -33,7 +33,7 @@ namespace PharmaDistiPro.Controllers
 
 
         [HttpGet("ListProduct")]
-       
+
         public async Task<ActionResult<Response<IEnumerable<ProductDTO>>>> GetProductList()
         {
             try
@@ -109,7 +109,7 @@ namespace PharmaDistiPro.Controllers
         // POST: api/product
         // Tạo sản phẩm mới
         [HttpPost]
-  
+    
         public async Task<IActionResult> CreateProduct([FromForm] ProductInputRequest productInputRequest)
         {
             var response = await _productService.CreateNewProduct(productInputRequest);

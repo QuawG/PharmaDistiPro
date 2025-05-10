@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.Users;
 using PharmaDistiPro.Models;
@@ -23,6 +24,7 @@ namespace PharmaDistiPro.Controllers
 
         //get user list
         [HttpGet("GetUserList")]
+
         public async Task<IActionResult> GetUserList()
         {
             var response = await _userService.GetUserList();
@@ -61,6 +63,9 @@ namespace PharmaDistiPro.Controllers
 
         // Api create user và customer
         [HttpPost("CreateUser")]
+
+
+
         public async Task<IActionResult> CreateUser([FromForm] UserInputRequest user)
         {
             var response = await _userService.CreateNewUserOrCustomer(user);
@@ -75,6 +80,7 @@ namespace PharmaDistiPro.Controllers
 
         //Api update user
         [HttpPut("UpdateUser")]
+
         public async Task<IActionResult> UpdateUser([FromForm] UserInputRequest user)
         {
             var response = await _userService.UpdateUser(user);

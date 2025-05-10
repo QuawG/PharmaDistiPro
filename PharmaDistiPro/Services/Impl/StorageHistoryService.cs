@@ -9,6 +9,7 @@ using System;
 using PharmaDistiPro.Helper.Enums;
 using PharmaDistiPro.Repositories.Impl;
 using System.Net.Mail;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace PharmaDistiPro.Services.Impl
 {
@@ -22,7 +23,7 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<StorageHistoryService> _logger;
         private readonly IEmailService _emailService;
-
+        private readonly IMemoryCache _memoryCache; // Tạo một instance của IMemoryCache
         public StorageHistoryService(
             IStorageRoomRepository storageRoomRepository,
             IStorageHistoryRepository storageHistoryRepository,
@@ -31,7 +32,7 @@ namespace PharmaDistiPro.Services.Impl
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             ILogger<StorageHistoryService> logger,
-            IEmailService emailService)
+            IEmailService emailService, IMemoryCache memoryCache)
         {
             _storageRoomRepository = storageRoomRepository ?? throw new ArgumentNullException(nameof(storageRoomRepository));
             _storageHistoryRepository = storageHistoryRepository ?? throw new ArgumentNullException(nameof(storageHistoryRepository));
@@ -41,6 +42,7 @@ namespace PharmaDistiPro.Services.Impl
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); // Đảm bảo không null
+            _memoryCache = memoryCache;
         }
         public async Task<StorageHistoryDTO> CreateStorageHistoryAsync(StorageHistoryInputRequest request)
         {
@@ -87,7 +89,7 @@ namespace PharmaDistiPro.Services.Impl
 
                 var result = _mapper.Map<StorageHistoryDTO>(history);
 
-                // Kiểm tra và gửi cảnh báo nếu cần
+                
                 if (storageRoom.Type.HasValue)
                 {
                     var (exceedsLimit, alertMessage, detail) = CheckStorageThreshold(
@@ -122,38 +124,86 @@ namespace PharmaDistiPro.Services.Impl
             switch (type)
             {
                 case StorageRoomType.Normal:
-                    if (temp < 15 || temp > 30 || humidity >= 75)
+                    
+                    if ((temp < 15 || temp > 30) && humidity >= 75)
                     {
                         exceedsLimit = true;
-                        alertMessage = "Nhiệt độ hoặc độ ẩm của Phòng thường vượt ngưỡng (Nhiệt độ: 15-30°C; Độ ẩm < 75%)";
+                        alertMessage = "Cả nhiệt độ và độ ẩm của Phòng thường đều vượt ngưỡng (Nhiệt độ: 15-30°C; Độ ẩm < 75%)";
+                        detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (15-30°C)\n";
+                        detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 75%)\n";
+                    }
+                   
+                    else
+                    {
                         if (temp < 15 || temp > 30)
+                        {
+                            exceedsLimit = true;
+                            alertMessage = "Nhiệt độ của Phòng thường vượt ngưỡng (Nhiệt độ: 15-30°C)";
                             detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (15-30°C)\n";
+                        }
+
                         if (humidity >= 75)
+                        {
+                            exceedsLimit = true;
+                            alertMessage = "Độ ẩm của Phòng thường vượt ngưỡng (Độ ẩm < 75%)";
                             detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 75%)\n";
+                        }
                     }
                     break;
 
                 case StorageRoomType.Cool:
-                    if (temp < 8 || temp > 15 || humidity >= 70)
+                    
+                    if ((temp < 8 || temp > 15) && humidity >= 70)
                     {
                         exceedsLimit = true;
-                        alertMessage = "Nhiệt độ hoặc độ ẩm của Phòng mát vượt ngưỡng (Nhiệt độ: 8-15°C; Độ ẩm < 70%)";
+                        alertMessage = "Cả nhiệt độ và độ ẩm của Phòng mát đều vượt ngưỡng (Nhiệt độ: 8-15°C; Độ ẩm < 70%)";
+                        detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (8-15°C)\n";
+                        detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 70%)\n";
+                    }
+                    // Kiểm tra riêng biệt từng điều kiện nếu không cùng vượt ngưỡng
+                    else
+                    {
                         if (temp < 8 || temp > 15)
+                        {
+                            exceedsLimit = true;
+                            alertMessage = "Nhiệt độ của Phòng mát vượt ngưỡng (Nhiệt độ: 8-15°C)";
                             detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (8-15°C)\n";
+                        }
+
                         if (humidity >= 70)
+                        {
+                            exceedsLimit = true;
+                            alertMessage = "Độ ẩm của Phòng mát vượt ngưỡng (Độ ẩm < 70%)";
                             detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 70%)\n";
+                        }
                     }
                     break;
 
                 case StorageRoomType.Freezer:
-                    if (temp < 2 || temp > 8 || humidity >= 45)
+                    // Kiểm tra cả nhiệt độ và độ ẩm vượt ngưỡng
+                    if ((temp < 2 || temp > 8) && humidity >= 45)
                     {
                         exceedsLimit = true;
-                        alertMessage = "Nhiệt độ hoặc độ ẩm của Phòng đông lạnh vượt ngưỡng (Nhiệt độ: 2-8°C; Độ ẩm < 45%)";
+                        alertMessage = "Cả nhiệt độ và độ ẩm của Phòng đông lạnh đều vượt ngưỡng (Nhiệt độ: 2-8°C; Độ ẩm < 45%)";
+                        detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (2-8°C)\n";
+                        detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 45%)\n";
+                    }
+                    // Kiểm tra riêng biệt từng điều kiện nếu không cùng vượt ngưỡng
+                    else
+                    {
                         if (temp < 2 || temp > 8)
+                        {
+                            exceedsLimit = true;
+                            alertMessage = "Nhiệt độ của Phòng đông lạnh vượt ngưỡng (Nhiệt độ: 2-8°C)";
                             detail += $"- Nhiệt độ ({temp}°C) vượt ngưỡng cho phép (2-8°C)\n";
+                        }
+
                         if (humidity >= 45)
+                        {
+                            exceedsLimit = true;
+                            alertMessage = "Độ ẩm của Phòng đông lạnh vượt ngưỡng (Độ ẩm < 45%)";
                             detail += $"- Độ ẩm ({humidity}%) vượt ngưỡng cho phép (< 45%)\n";
+                        }
                     }
                     break;
             }
@@ -167,6 +217,17 @@ namespace PharmaDistiPro.Services.Impl
         {
             var users = await _userRepository.GetUsersByRoleIdAsync(2);
             var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+            var cacheKey = $"LastAlertSent_{roomName}";
+
+            if (_memoryCache.TryGetValue(cacheKey, out DateTime lastAlertSent))
+            {
+                // Nếu đã gửi email trong vòng 2 phút theo giờ Việt Nam thì bỏ qua
+                if ((vietnamTime- lastAlertSent).TotalMinutes < 2)
+                {
+                    _logger.LogInformation("An alert was sent recently for room {RoomName}, skipping this alert.", roomName);
+                    return; // Không gửi email nếu đã gửi trong vòng 5 phút
+                }
+            }
 
             foreach (var user in users)
             {
@@ -188,6 +249,10 @@ PharmaDistiPro
 
                 await _emailService.SendEmailAsync(user.Email, "Cảnh báo môi trường kho", emailBody);
             }
+            _memoryCache.Set(cacheKey, vietnamTime, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2) // Đặt thời gian hết hạn cache là 2 phút
+            });
         }
 
 

@@ -17,6 +17,7 @@ namespace PharmaDistiPro.Services.Impl
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper; // Khai báo _mapper
         private readonly ILotRepository _lotRepository;
+
         public ProductLotService(IProductLotRepository productLotRepository, IStorageRoomRepository storageRoomRepository, IProductRepository productRepository, IMapper mapper, ILotRepository lotRepository)
         {
             _productLotRepository = productLotRepository;
@@ -67,8 +68,32 @@ namespace PharmaDistiPro.Services.Impl
                         Message = "Danh sách lô hàng không có giá trị!"
                     };
                 }
+             
+                
+               foreach (var productLot in productLots)
+                {
 
+                    StorageRoom room = _storageRoomRepository.GetById(productLot.StorageRoomId);
+                    Product product  =  await _productRepository.GetByIdAsyncProduct(productLot.ProductId);
+                    if(room.Type.HasValue != product.Storageconditions.HasValue)
+                    {
+                        return new Response<List<ProductLotResponse>>
+                        {
+                            StatusCode = 400,
+                            Message = $" Sản phẩm {product.ProductName} không phù hợp với môi trường phòng {room.StorageRoomName}, cần điều kiện {ConvertTypeToString(product.Storageconditions)}"
+                        };
+                    }
+                    if(room.RemainingRoomVolume - Math.Round((double)((productLot.OrderQuantity * product.VolumePerUnit) / 1000000), 3) < 0)
+                    {
+                        return new Response<List<ProductLotResponse>>
+                        {
+                            StatusCode = 400,
+                            Message = $"Phòng {room.StorageRoomName} không chứa được lô hàng  {product.ProductName}này"
+                        };
+                    }
+                }
                 var productLotResponses = new List<ProductLotResponse>();
+                
                 var storageRoomsToUpdate = new Dictionary<int, StorageRoom>();
 
                 foreach (var productLotRequest in productLots)
@@ -130,7 +155,7 @@ namespace PharmaDistiPro.Services.Impl
                     }
 
                     
-                    double requiredVolume = product.VolumePerUnit.Value * productLotRequest.OrderQuantity.Value;
+                    double requiredVolume =   Math.Round((double)((productLotRequest.OrderQuantity * product.VolumePerUnit) / 1000000), 3);
 
                     // Lấy phòng từ cache hoặc DB một lần
                     StorageRoom? storageRoom;
@@ -395,7 +420,7 @@ namespace PharmaDistiPro.Services.Impl
 
                     if (lot.ExpiredDate <= now) 
                     {
-                        lot.Status = 4; // Hết hạn
+                        lot.Status = 3; // Hết hạn
                     }
                     else if (lot.ExpiredDate <= now.AddMonths(3))
                     {
@@ -615,7 +640,10 @@ namespace PharmaDistiPro.Services.Impl
                 }
 
                 // Bước 4: Tính dung tích cần thiết
-                double requiredVolume = (product.VolumePerUnit ?? 0) * (productLot.OrderQuantity ?? 0);
+                double requiredVolume = Math.Round(
+      ((double)(product.VolumePerUnit.GetValueOrDefault(0) / 1000000)) * (productLot.OrderQuantity.GetValueOrDefault(0)),
+      2
+  );
                 if (requiredVolume <= 0)
                 {
                     response.Success = false;
@@ -660,7 +688,7 @@ namespace PharmaDistiPro.Services.Impl
                         StorageRoomName = room.StorageRoomName,
                         Type = ConvertTypeToString(room.Type),
                         Capacity = room.Capacity,
-                        RemainingRoomVolume = room.RemainingRoomVolume,
+                        RemainingRoomVolume = Math.Round((double)(room.Capacity ?? 0) - requiredVolume, 2),
                         Status = room.Status,
                         CreatedBy = room.CreatedBy,
                         CreatedDate = room.CreatedDate

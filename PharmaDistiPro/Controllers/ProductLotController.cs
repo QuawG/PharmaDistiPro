@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.ProductLots;
 using PharmaDistiPro.DTO.StorageRooms;
@@ -48,6 +49,7 @@ namespace PharmaDistiPro.Controllers
         }
 
         [HttpPost]
+
         public async Task<IActionResult> CreateProductLot([FromBody] List<ProductLotRequest> productLots)
         {
             if (!ModelState.IsValid)

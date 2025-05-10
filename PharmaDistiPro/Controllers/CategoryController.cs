@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.Categorys;
 using PharmaDistiPro.Models;
@@ -34,6 +35,7 @@ namespace PharmaDistiPro.Controllers
 
 
         [HttpGet("subcategory")]
+
         public async Task<IActionResult> GetSubCategory()
         {
             var result = await _categoryService.GetAllSubCategoriesAsync();
@@ -46,6 +48,7 @@ namespace PharmaDistiPro.Controllers
 
         // 2. Tạo mới category
         [HttpPost]
+
         public async Task<IActionResult> CreateCategory([FromForm] CategoryInputRequest request)
         {
             var result = await _categoryService.CreateCategoryAsync(request);
@@ -57,6 +60,7 @@ namespace PharmaDistiPro.Controllers
         }
         // 3. Cập nhật category
         [HttpPut("{id:int}")]
+ 
         public async Task<IActionResult> UpdateCategory(int id, [FromForm] CategoryInputRequest request)
         {
             var result = await _categoryService.UpdateCategoryAsync(id, request);
@@ -69,6 +73,7 @@ namespace PharmaDistiPro.Controllers
 
         // 4. Lọc danh mục
         [HttpGet("filter")]
+   
         public async Task<IActionResult> FilterCategories([FromQuery] string? searchTerm)
         {
             var result = await _categoryService.FilterCategoriesAsync(searchTerm);

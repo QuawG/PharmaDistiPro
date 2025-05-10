@@ -131,9 +131,6 @@ namespace PharmaDistiPro.Services.Impl
                     }
                 }
 
-
-                // totalAmount += totalAmount * 0.05 + totalAmount;
-
                 if (totalAmount != orderRequestDto.TotalAmount)
                 {
                     response.Success = false;

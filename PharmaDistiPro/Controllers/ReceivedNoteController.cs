@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PharmaDistiPro.DTO.ReceivedNotes;
 using PharmaDistiPro.Services.Interface;
 using PharmaDistiPro.Models;
+using Microsoft.AspNetCore.Authorization;
 namespace PharmaDistiPro.Controllers
 {
     [Route("api/[controller]")]
@@ -46,6 +47,7 @@ namespace PharmaDistiPro.Controllers
             return StatusCode(response.StatusCode, new { response.Message, response.Errors, response.Data });
         }
         [HttpPost]
+
         public async Task<IActionResult> CreateReceivedNote([FromBody] ReceivedNoteRequest receivedNote)
         {
             if (!ModelState.IsValid)

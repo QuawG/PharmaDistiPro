@@ -78,7 +78,7 @@ namespace PharmaDistiPro
                        .EnableSensitiveDataLogging());
 
             builder.Services.AddHttpContextAccessor();
-
+            builder.Services.AddMemoryCache(); // Cấu hình MemoryCache
             // CORS
             builder.Services.AddCors(options =>
             {
@@ -123,7 +123,19 @@ namespace PharmaDistiPro
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
                 };
             });
-
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Director", policy =>
+                    policy.RequireRole("Director"));
+                options.AddPolicy("WarehouseManager", policy =>
+                   policy.RequireRole("WarehouseManager"));
+                options.AddPolicy("SalesManager", policy =>
+                   policy.RequireRole("SalesManager"));
+                options.AddPolicy("SalesMan", policy =>
+                   policy.RequireRole("SalesMan"));
+                options.AddPolicy("Customer", policy =>
+                   policy.RequireRole("Customer"));// Customize as needed
+            });
             // GHN Service
             builder.Services.AddHttpClient<IGHNService, GHNService>();
 
@@ -167,16 +179,12 @@ namespace PharmaDistiPro
             // AutoMapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-            #region Hangfire Configuration
-            // Hangfire Configuration (SQL Server storage)
-            builder.Services.AddHangfire(config =>
-                config.UseSqlServerStorage(connectionString));
-
-            // Add Hangfire server
-            builder.Services.AddHangfireServer();
-            #endregion
+          
 
             var app = builder.Build();
+
+          
+          
 
             // Configure the HTTP request pipeline.
             app.UseSwagger();
@@ -188,10 +196,6 @@ namespace PharmaDistiPro
             app.UseAuthorization();
             app.MapControllers();
 
-            #region Hangfire Dashboard
-            // Hangfire Dashboard
-            app.UseHangfireDashboard("/hangfire");
-            #endregion
 
             app.Run();
         }

@@ -47,7 +47,7 @@ namespace PharmaDistiPro.Services.Impl
                     {
                         // Gán danh sách ảnh
                         productDto.Images = product.ImageProducts?.Select(ip => ip.Image).ToList();
-
+                
                         // Gán tên điều kiện bảo quản
                         productDto.Storageconditions = product.Storageconditions switch
                         {

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CloudinaryDotNet;
+using MailKit.Search;
 using PharmaDistiPro.DTO.Orders;
 using PharmaDistiPro.DTO.ProductShortage;
 using PharmaDistiPro.DTO.PurchaseOrders;
@@ -151,18 +152,35 @@ namespace PharmaDistiPro.Services.Impl
                 var purchaseOrders = await _purchaseOrderRepository.GetByConditionAsync(x => x.Status == (int)PurchaseOrderStatus.HOAN_THANH,
                     includes: new string[] { "CreatedByNavigation", "Supplier" });
 
-                var groupedOrders = purchaseOrders.GroupBy(x => x.SupplierId)
+                     if (!purchaseOrders.Any())
+                {
+                    return new Response<IEnumerable<PurchaseOrdersDto>>
+                    {
+                        Success = false,
+                        Message = "Không có dữ liệu"
+                    };
+                }
+                var groupedOrders = purchaseOrders.GroupBy(x=> x.SupplierId)
+                    .Select(x=> new
+                    {
+                        SupplierId = x.Key,
+                        AmountPaid = x.Sum(x => x.TotalAmount),
+                        Supplier = x.ToList()
+
+                    })
+                    .ToList();
+            /*    var groupedOrders = purchaseOrders.GroupBy(x => x.SupplierId)
                     .Select(x => new {                  
                         SupplierId = x.Key,                    
                         AmountPaid = x.Sum(y => y.TotalAmount),
                         Supplier = x.ToList()
                     })
                     .OrderByDescending(x => x.AmountPaid)
-                    .Take(topSupplier ?? 5);
+                    .Take(topSupplier ?? 5);*/
 
                 var resultOrders = groupedOrders.Select(x => new PurchaseOrdersDto
                 {
-                    SupplierId = x.SupplierId,
+                   SupplierId = x.SupplierId,
                     Supplier = _mapper.Map<SupplierDTO>(x.Supplier.FirstOrDefault().Supplier),
                     AmountPaid = x.AmountPaid
 

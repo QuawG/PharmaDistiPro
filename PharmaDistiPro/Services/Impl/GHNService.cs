@@ -178,7 +178,7 @@ namespace PharmaDistiPro.Services.Impl
             orderRequest.RequiredNote = "KHONGCHOXEMHANG";
             orderRequest.CODAmount = 0;
             orderRequest.InsuranceValue = 0;
-            orderRequest.ServiceTypeId = 5;
+            orderRequest.ServiceTypeId = 2;
             orderRequest.Content = "Content TEST API GHN";
             // From info
             orderRequest.FromName = _fromName;
@@ -197,7 +197,7 @@ namespace PharmaDistiPro.Services.Impl
             orderRequest.ClientOrderCode = orders.OrderCode;
             orderRequest.Coupon = "";
             // order info
-            orderRequest.Weight = (int)(orderDetails.Sum(s=>s.Product.Weight)*1000);
+            orderRequest.Weight = (int)(orderDetails.Sum(s=>s.Product.Weight * s.Quantity)*1000);
             List<OrderItem> listItem = new List<OrderItem>();
             foreach (var orderDetail in orderDetails)
             {

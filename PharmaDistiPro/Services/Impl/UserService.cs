@@ -301,22 +301,22 @@ Trân trọng,
                 }
 
                 // Cập nhật các trường nếu có thay đổi
-                if (string.IsNullOrEmpty(userToUpdate.UserName))
+                if (!string.IsNullOrEmpty(userUpdateRequest.UserName))
                     userToUpdate.UserName = userUpdateRequest.UserName;
 
-                if (string.IsNullOrEmpty(userToUpdate.Email))
+                if (!string.IsNullOrEmpty(userUpdateRequest.Email))
                     userToUpdate.Email = userUpdateRequest.Email;
 
-                if (string.IsNullOrEmpty(userToUpdate.FirstName))
+                if (!string.IsNullOrEmpty(userUpdateRequest.FirstName))
                     userToUpdate.FirstName = userUpdateRequest.FirstName;
 
-                if (string.IsNullOrEmpty(userToUpdate.LastName))
+                if (!string.IsNullOrEmpty(userUpdateRequest.LastName))
                     userToUpdate.LastName = userUpdateRequest.LastName;
 
-                if (string.IsNullOrEmpty(userToUpdate.Phone))
+                if (!string.IsNullOrEmpty(userUpdateRequest.Phone))
                     userToUpdate.Phone = userUpdateRequest.Phone;
 
-                if (string.IsNullOrEmpty(userToUpdate.TaxCode))
+                if (!string.IsNullOrEmpty(userUpdateRequest.TaxCode))
                     userToUpdate.TaxCode = userUpdateRequest.TaxCode;
 
                 if (userToUpdate.RoleId != userUpdateRequest.RoleId)
@@ -325,12 +325,8 @@ Trân trọng,
                 if (userToUpdate.Age != userUpdateRequest.Age)
                     userToUpdate.Age = userUpdateRequest.Age;
 
-                if (string.IsNullOrEmpty(userToUpdate.Address))
+                if (!string.IsNullOrEmpty(userUpdateRequest.Address))
                     userToUpdate.Address = userUpdateRequest.Address;
-
-
-
-
 
 
                 await _userRepository.UpdateAsync(userToUpdate);
