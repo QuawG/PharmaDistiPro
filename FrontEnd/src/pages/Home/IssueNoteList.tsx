@@ -30,7 +30,7 @@ const IssueNoteListPage: React.FC<IssueNoteListPageProps> = ({ handleChangePage 
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteList", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteList", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

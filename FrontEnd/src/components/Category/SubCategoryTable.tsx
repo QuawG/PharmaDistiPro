@@ -2,16 +2,12 @@ import React, { useState, useEffect } from "react";
 import {
   MoreOutlined,
   EditOutlined,
-  // DeleteOutlined,
-  // ExclamationCircleOutlined,
   UnorderedListOutlined,
-  // FileExcelOutlined,
-  // PrinterOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 import { Dropdown, Menu, Table, Button, Modal, Input, Form, Upload, message, Select } from "antd";
-// import * as XLSX from "xlsx";
-import axios from "axios";
+import { apiClient } from "../../pages/Home/AuthContext"; // Sử dụng apiClient từ AuthContext
+import { useAuth } from "../../pages/Home/AuthContext"; // Sử dụng useAuth để kiểm tra xác thực
 
 interface SubCategory {
   id: number;
@@ -47,12 +43,15 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [mainCategories, setMainCategories] = useState<MainCategory[]>([]);
+  const { user, loading } = useAuth(); // Kiểm tra trạng thái xác thực
 
   // Lấy danh sách danh mục chính từ API
   useEffect(() => {
+    if (loading || !user) return; // Đợi xác thực hoàn tất
+
     const fetchMainCategories = async () => {
       try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/Category/tree", {
+        const response = await apiClient.get("/Category/tree", {
           headers: { Accept: "*/*" },
         });
         if (response.data.success) {
@@ -61,13 +60,15 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
             categoryName: cat.categoryName,
           }));
           setMainCategories(categories);
+        } else {
+          message.error("Không thể lấy danh mục chính!");
         }
       } catch (error) {
-        message.error("Không thể lấy danh mục chính!");
+      message.error("Lỗi khi lấy danh mục chính!");
       }
     };
     fetchMainCategories();
-  }, []);
+  }, [loading, user]);
 
   useEffect(() => {
     if (subCategory) {
@@ -95,13 +96,13 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
   };
 
   const handleSave = async () => {
+    if (!user) {
+      message.error("Vui lòng đăng nhập để thực hiện thao tác này!");
+      return;
+    }
+
     try {
       const values = await form.validateFields();
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại.");
-      }
-
       const formData = new FormData();
       formData.append("CategoryName", values.name);
       formData.append("CategoryCode", subCategory!.code);
@@ -110,16 +111,11 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
         formData.append("Image", file);
       }
 
-      const response = await axios.put(
-        `http://pharmadistiprobe.fun/api/Category/${subCategory?.id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiClient.put(`/Category/${subCategory?.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.data.success) {
         const updatedSubCategory: SubCategory = {
@@ -203,10 +199,6 @@ const UpdateSubCategory: React.FC<UpdateSubCategoryProps> = ({ isOpen, onClose, 
             ))}
           </Select>
         </Form.Item>
-{/* 
-        <Form.Item name="description" label="Mô tả">
-          <Input.TextArea />
-        </Form.Item> */}
       </Form>
     </Modal>
   );
@@ -221,12 +213,15 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA,  
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [mainCategories, setMainCategories] = useState<MainCategory[]>([]);
   const [selectedMainCategory, setSelectedMainCategory] = useState<number | null>(null);
+  const { user, loading } = useAuth(); // Kiểm tra trạng thái xác thực
 
   // Lấy danh sách danh mục chính từ API
   useEffect(() => {
+    if (loading || !user) return; // Đợi xác thực hoàn tất
+
     const fetchMainCategories = async () => {
       try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/Category/tree", {
+        const response = await apiClient.get("/Category/tree", {
           headers: { Accept: "*/*" },
         });
         if (response.data.success) {
@@ -235,13 +230,15 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA,  
             categoryName: cat.categoryName,
           }));
           setMainCategories(categories);
+        } else {
+          message.error("Không thể lấy danh mục chính!");
         }
       } catch (error) {
-        message.error("Không thể lấy danh mục chính!");
+        message.error("Lỗi khi lấy danh mục chính!");
       }
     };
     fetchMainCategories();
-  }, []);
+  }, [loading, user]);
 
   const removeVietnameseTones = (str: string) => {
     return str
@@ -252,78 +249,9 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA,  
       .toLowerCase();
   };
 
-  // const showDeleteConfirm = (subCategory: SubCategory) => {
-  //   Modal.confirm({
-  //     title: "Xác nhận xóa",
-  //     icon: <ExclamationCircleOutlined />,
-  //     content: `Bạn có chắc chắn muốn xóa danh mục thuốc "${subCategory.name}" không?`,
-  //     okText: "Xóa",
-  //     okType: "danger",
-  //     cancelText: "Hủy",
-  //     onOk() {
-  //       setSubCategories(subCategories.filter((sub) => sub.id !== subCategory.id));
-  //       message.success("Xóa danh mục thuốc thành công!");
-  //     },
-  //   });
-  // };
-
   const handleRowSelectionChange = (selectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(selectedRowKeys as number[]);
   };
-
-  // const printTable = () => {
-  //   const selectedSubCategories =
-  //     selectedRowKeys.length > 0
-  //       ? subCategories.filter((subCategory) => selectedRowKeys.includes(subCategory.id))
-  //       : subCategories;
-
-  //   if (selectedSubCategories.length === 0) {
-  //     message.warning("Không có danh mục thuốc nào được chọn để in.");
-  //     return;
-  //   }
-
-  //   const printContents = `
-  //     <h2 style="text-align: center;">Danh sách danh mục thuốc</h2>
-  //     <table border="1" style="width: 100%; border-collapse: collapse;">
-  //       <thead>
-  //         <tr>
-  //           <th>Mã danh mục</th>
-  //           <th>Tên danh mục</th>
-  //           <th>Chủng loại</th>
-  //           <th>Người tạo</th>
-  //         </tr>
-  //       </thead>
-  //       <tbody>
-  //         ${selectedSubCategories
-  //           .map(
-  //             (subCategory) => `
-  //           <tr>
-  //             <td>${subCategory.code}</td>
-  //             <td>${subCategory.name}</td>
-  //             <td>${subCategory.parentCategory}</td>
-  //             <td>${subCategory.createdBy}</td>
-  //           </tr>
-  //         `
-  //           )
-  //           .join("")}
-  //       </tbody>
-  //     </table>
-  //   `;
-
-  //   const printWindow = window.open("", "", "height=800,width=1000");
-  //   if (printWindow) {
-  //     printWindow.document.write(printContents);
-  //     printWindow.document.close();
-  //     printWindow.print();
-  //   }
-  // };
-
-  // const exportToExcel = () => {
-  //   const worksheet = XLSX.utils.json_to_sheet(subCategories);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "SubCategories");
-  //   XLSX.writeFile(workbook, "DanhSachDanhMucPhu.xlsx");
-  // };
 
   const filterSubCategories = () => {
     let filteredSubCategories = [...SUBCATEGORY_DATA];
@@ -373,11 +301,6 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA,  
       dataIndex: "parentCategory",
       key: "parentCategory",
     },
-    // {
-    //   title: "Người tạo",
-    //   dataIndex: "createdBy",
-    //   key: "createdBy",
-    // },
     {
       title: <UnorderedListOutlined />,
       key: "actions",
@@ -394,9 +317,6 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA,  
               >
                 <EditOutlined /> Chỉnh sửa
               </Menu.Item>
-              {/* <Menu.Item key="delete" onClick={() => showDeleteConfirm(record)} danger>
-                <DeleteOutlined /> Xóa
-              </Menu.Item> */}
             </Menu>
           }
           trigger={["click"]}
@@ -428,18 +348,6 @@ const SubCategoryTable: React.FC<SubCategoryTableProps> = ({ SUBCATEGORY_DATA,  
             </Select.Option>
           ))}
         </Select>
-        {/* <Button type="primary" icon={<FileExcelOutlined />} onClick={exportToExcel}>
-          Xuất Excel
-        </Button>
-        <Button type="primary" icon={<PrinterOutlined />} onClick={printTable}>
-          In danh sách
-        </Button> */}
-        {/* <Button
-          type="primary"
-          onClick={() => handleChangePage("Tạo danh mục thuốc")}
-        >
-          + Tạo danh mục thuốc mới
-        </Button> */}
       </div>
 
       <Table

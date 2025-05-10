@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import {  Input, Select, Space, Typography, Row, Col, Card } from 'antd';
-import {  FilterOutlined,   } from '@ant-design/icons';
-// import * as XLSX from 'xlsx';
+import { Input, Select, Space, Typography, Row, Col, Card } from 'antd';
+import { FilterOutlined } from '@ant-design/icons';
 import StorageRoomTable from '../../components/StorageRoom/StorageRoomTable';
 import axios from 'axios';
+import { useAuth } from '../Home/AuthContext';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -29,31 +29,56 @@ interface StorageRoom {
   createdDate: string;
 }
 
-const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({  }) => {
+const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({ /* handleChangePage */ }) => {
+  const { user } = useAuth();
   const [storageRooms, setStorageRooms] = useState<StorageRoom[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
   const fetchStorageRooms = async () => {
     try {
-      const response = await axios.get('http://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList');
-      const validRooms = (response.data.data || []).map((room: any) => ({
-        ...room,
-        storageRoomCode: room.storageRoomCode?.toString() || '',
-        storageRoomName: room.storageRoomName?.toString() || '',
-      })).filter((room: StorageRoom) => 
-        room.storageRoomCode && room.storageRoomName
-      );
-      setStorageRooms(validRooms as StorageRoom[]);
-    } catch (error) {
-      console.error('Error fetching storage rooms:', error);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      }
+
+      const response = await axios.get('https://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': '*/*',
+        },
+      });
+
+      if (response.data.success) {
+        const validRooms = (response.data.data || []).map((room: any) => ({
+          ...room,
+          storageRoomCode: room.storageRoomCode?.toString() || '',
+          storageRoomName: room.storageRoomName?.toString() || '',
+        })).filter((room: StorageRoom) => 
+          room.storageRoomCode && room.storageRoomName
+        );
+        setStorageRooms(validRooms as StorageRoom[]);
+      } else {
+        throw new Error(response.data.message || 'Không thể tải danh sách kho!');
+      }
+    } catch (error: any) {
+      console.error('Lỗi khi lấy danh sách kho:', error);
       setStorageRooms([]);
+      // const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tải danh sách kho!';
+      // Không hiển thị thông báo lỗi nếu là lỗi 401, vì AuthContext sẽ xử lý làm mới token
+      if (error.response?.status !== 401) {
+        // Có thể thêm thông báo lỗi bằng Ant Design message nếu cần
+        // message.error(errorMessage);
+      }
     }
   };
 
   useEffect(() => {
-    fetchStorageRooms();
-  }, []);
+    if (user) {
+      fetchStorageRooms();
+    }
+  }, [user]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -76,13 +101,6 @@ const StorageRoomListPage: React.FC<{ handleChangePage: (page: string) => void }
       (selectedStatus === 'Hoạt động' ? room.status : !room.status);
     return matchesSearch && matchesStatus;
   });
-
-  // const exportToExcel = () => {
-  //   const worksheet = XLSX.utils.json_to_sheet(filteredRooms);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, 'StorageRooms');
-  //   XLSX.writeFile(workbook, 'StorageRooms.xlsx');
-  // };
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">

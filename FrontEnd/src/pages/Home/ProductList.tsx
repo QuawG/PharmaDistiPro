@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Select, Button, Space, Collapse } from 'antd';
-import { SearchOutlined,  FilterOutlined } from '@ant-design/icons';
+import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import ProductTable from '../../components/Product/ProductTable';
+import { useAuth } from '../Home/AuthContext';
 
 const { Panel } = Collapse;
 const { Option } = Select;
@@ -39,6 +40,7 @@ interface ProductListPageProps {
 }
 
 const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) => {
+  const { user } = useAuth();
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -52,31 +54,56 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
 
-  const token = localStorage.getItem('accessToken');
-
   // Fetch product data from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://pharmadistiprobe.fun/api/Product/ListProduct', {
-          headers: { Authorization: `Bearer ${token}` },
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
+        }
+
+        const response = await axios.get('https://pharmadistiprobe.fun/api/Product/ListProduct', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': '*/*',
+          },
         });
-        const validProducts = response.data.data.filter((product: Product) => product.productId != null);
-        setFilteredProducts(validProducts);
-      } catch (error) {
+
+        if (response.data.success) {
+          const validProducts = response.data.data.filter((product: Product) => product.productId != null);
+          setFilteredProducts(validProducts);
+        } else {
+          throw new Error(response.data.message || 'Không thể tải danh sách sản phẩm!');
+        }
+      } catch (error: any) {
         console.error('Lỗi khi lấy danh sách sản phẩm:', error);
         setFilteredProducts([]);
+        // const errorMessage = error.response?.data?.message || error.message || 'Lỗi khi tải danh sách sản phẩm!';
+        if (error.response?.status !== 401) {
+          // Có thể thêm thông báo lỗi bằng Ant Design message nếu cần
+          // message.error(errorMessage);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, [token]);
+    if (user) {
+      fetchProducts();
+    }
+  }, [user]);
 
   // Fetch user information for createdBy
   useEffect(() => {
     const fetchUsers = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.error('Không tìm thấy token khi lấy thông tin người dùng.');
+        return;
+      }
+
       const userIds = Array.from(
         new Set(filteredProducts.map((product) => product.createdBy).filter((id): id is number => id != null))
       );
@@ -84,28 +111,37 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
       const newUsersMap = new Map<number, User>();
       for (const userId of userIds) {
         try {
-          const response = await axios.get(`http://pharmadistiprobe.fun/api/User/GetUserById/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+          const response = await axios.get(`https://pharmadistiprobe.fun/api/User/GetUserById/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept': '*/*',
+            },
           });
-          const userData = response.data.data;
-          newUsersMap.set(userId, {
-            customerId: userId,
-            username: userData.userName,
-            address: userData.address || 'Chưa có địa chỉ',
-            avatar: userData.userAvatar,
-            roleName: userData.roleName,
-          });
+
+          if (response.data.success) {
+            const userData = response.data.data;
+            newUsersMap.set(userId, {
+              customerId: userId,
+              username: userData.userName,
+              address: userData.address || 'Chưa có địa chỉ',
+              avatar: userData.userAvatar,
+              roleName: userData.roleName,
+            });
+          } else {
+            console.error(`Không thể tải thông tin người dùng ${userId}:`, response.data.message);
+          }
         } catch (error) {
-          console.error(`Failed to fetch user ${userId}:`, error);
+          console.error(`Lỗi khi lấy thông tin người dùng ${userId}:`, error);
         }
       }
       setUsersMap(newUsersMap);
     };
 
-    if (filteredProducts.length > 0) {
+    if (user && filteredProducts.length > 0) {
       fetchUsers();
     }
-  }, [filteredProducts, token]);
+  }, [user, filteredProducts]);
 
   // Filter utilities
   const uniqueCreators = Array.from(
@@ -148,6 +184,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ handleChangePage }) =
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ width: 200 }}
+              allowClear
             />
             <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
               Lọc

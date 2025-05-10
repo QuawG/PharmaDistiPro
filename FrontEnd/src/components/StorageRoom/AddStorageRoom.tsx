@@ -47,7 +47,7 @@ export default function AddStorageRoom() {
 
     try {
       const response = await axios.post(
-        "http://pharmadistiprobe.fun/api/StorageRoom/CreateStorageRoom",
+        "https://pharmadistiprobe.fun/api/StorageRoom/CreateStorageRoom",
         formData,
         {
           headers: {

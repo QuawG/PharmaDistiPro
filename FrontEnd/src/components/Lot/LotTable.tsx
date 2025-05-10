@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, notification } from "antd";
 import {
@@ -22,11 +23,11 @@ interface ProductLot {
   manufacturedDate: string;
   expiredDate: string;
   supplyPrice: number | null;
-  status: 0 | 1 | 2 | null; // 0: Ngừng bán, 1: Còn hạn, 2: Ưu tiên xuất
+  status: 0 | 1 | 2 | 3 | null;
   productName: string;
   lotCode: string;
   unit: string;
-  storageRoomId: number;
+  storageRoomId: number | null;
 }
 
 interface Product {
@@ -54,7 +55,6 @@ interface LotTableProps {
 }
 
 const LotTable: React.FC<LotTableProps> = ({
-  // handleChangePage,
   rowSelection,
 }) => {
   const [filteredLots, setFilteredLots] = useState<ProductLot[]>([]);
@@ -69,42 +69,57 @@ const LotTable: React.FC<LotTableProps> = ({
   const [lotCodeFilter, setLotCodeFilter] = useState<string>("");
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [prevLots, setPrevLots] = useState<ProductLot[]>([]);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [statusModalLots, setStatusModalLots] = useState<ProductLot[]>([]);
   const [statusModalTitle, setStatusModalTitle] = useState<string>("");
+  const [lastNotified, setLastNotified] = useState<number>(0);
 
-  // Hàm ánh xạ trạng thái thành văn bản
-  const getStatusText = (status: 0 | 1 | 2 | null) => {
+  const getStatusText = (status: 0 | 1 | 2 | 3 | null) => {
     switch (status) {
       case 0:
-        return "Ngừng bán";
+        return "Sắp hết hạn - Ngừng bán";
       case 1:
         return "Còn hạn";
       case 2:
-        return "Ưu tiên xuất";
+        return "Sắp hết hạn - Ưu tiên xuất";
+      case 3:
+        return "Hết hạn";
       default:
         return "Không xác định";
     }
   };
 
+  const getStatusColor = (status: 0 | 1 | 2 | 3 | null) => {
+    switch (status) {
+      case 1:
+        return "#389e0d"; // Xanh
+      case 0:
+      case 2:
+        return "#fa8c16"; // Vàng
+      case 3:
+        return "#ff4d4f"; // Đỏ
+      default:
+        return "#595959"; // Xám
+    }
+  };
+
   const fetchData = async () => {
     try {
-      // Fetch ProductLots
-      const lotResponse = await axios.get("http://pharmadistiprobe.fun/api/ProductLot");
+      // Lấy danh sách lô hàng
+      const lotResponse = await axios.get("https://pharmadistiprobe.fun/api/ProductLot");
       const productLots = lotResponse.data.data || [];
 
-      // Fetch Products to get unit
-      const productResponse = await axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct");
+      // Lấy danh sách sản phẩm
+      const productResponse = await axios.get("https://pharmadistiprobe.fun/api/Product/ListProduct");
       const products = productResponse.data.data || [];
 
-      // Map products to a lookup object
+      // Tạo bản đồ sản phẩm
       const productMap = products.reduce((acc: { [key: number]: Product }, product: Product) => {
         acc[product.productId] = product;
         return acc;
       }, {});
 
-      // Merge unit into ProductLots
+      // Gộp dữ liệu lô hàng
       const validLots = productLots.map((lot: ProductLot) => {
         const product = productMap[lot.productId];
         return {
@@ -112,30 +127,79 @@ const LotTable: React.FC<LotTableProps> = ({
           quantity: lot.quantity ?? 0,
           supplyPrice: lot.supplyPrice ?? 0,
           productName: lot.productName || "Không xác định",
-          lotCode: lot.lotCode || "N/A",
+          lotCode: lot.lotCode || `Lô ${lot.id}`,
           unit: product?.unit || "N/A",
+          storageRoomId: lot.storageRoomId ?? null,
         };
       });
 
-      // Kiểm tra thay đổi trạng thái
-      if (prevLots.length > 0) {
-        validLots.forEach((newLot: ProductLot) => {
-          const prevLot = prevLots.find((lot: ProductLot) => lot.id === newLot.id);
-          if (prevLot && prevLot.status !== newLot.status) {
+      setAllLots(validLots);
+      setFilteredLots(validLots);
+
+      // Chuẩn hóa định dạng ngày
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+      // Gọi API để lấy lô thay đổi trạng thái
+      const checkResponse = await axios.put("https://pharmadistiprobe.fun/api/ProductLot/CheckAndUpdateExpiredLots");
+      const changedLotsToday = checkResponse.data.data || [];
+
+      // Lưu vào localStorage với ngày hiện tại
+      try {
+        localStorage.setItem("changedLotsToday", JSON.stringify({ date: today, lots: changedLotsToday }));
+      } catch (error) {
+        console.error("Error saving to localStorage:", error);
+      }
+
+      // Cập nhật statusModalLots để hiển thị ngay lập tức nếu có lô
+      if (changedLotsToday.length > 0) {
+        const formattedLots = changedLotsToday.map((l: ProductLot) => {
+          const product = productMap[l.productId] || { unit: "N/A" };
+          return {
+            ...l,
+            quantity: l.quantity ?? 0,
+            supplyPrice: l.supplyPrice ?? 0,
+            productName: l.productName || "Không xác định",
+            lotCode: l.lotCode || `Lô ${l.id}`,
+            unit: product.unit || "N/A",
+            storageRoomId: l.storageRoomId ?? null,
+          };
+        });
+        setStatusModalLots(formattedLots);
+        setStatusModalTitle(`Danh sách lô thay đổi trạng thái ngày ${today}`);
+      } else {
+        setStatusModalLots([]);
+        setStatusModalTitle(`Danh sách lô thay đổi trạng thái ngày ${today}`);
+      }
+
+      const now = Date.now();
+      if (now - lastNotified >= 30000) {
+        if (changedLotsToday.length > 0) {
+          changedLotsToday.forEach((lot: ProductLot) => {
+            const displayLotCode = lot.lotCode || `Lô ${lot.id}`;
             notification.info({
               message: "Thay đổi trạng thái",
               description: (
                 <div>
-                  Lô <strong>{newLot.lotCode}</strong> đã đổi trạng thái thành{" "}
-                  <strong>{getStatusText(newLot.status)}</strong>.
+                  {`Lô ${displayLotCode} (${lot.productName})`} đã đổi trạng thái thành{" "}
+                  <strong style={{ color: getStatusColor(lot.status) }}>{getStatusText(lot.status)}</strong>.
                   <br />
                   <Button
                     type="link"
                     onClick={() => {
-                      setStatusModalLots(
-                        validLots.filter((lot: ProductLot) => lot.status === newLot.status)
-                      );
-                      setStatusModalTitle(`Danh sách lô: ${getStatusText(newLot.status)}`);
+                      const formattedLots = changedLotsToday.map((l: ProductLot) => {
+                        const product = productMap[l.productId] || { unit: "N/A" };
+                        return {
+                          ...l,
+                          quantity: l.quantity ?? 0,
+                          supplyPrice: l.supplyPrice ?? 0,
+                          productName: l.productName || "Không xác định",
+                          lotCode: l.lotCode || `Lô ${l.id}`,
+                          unit: product.unit || "N/A",
+                          storageRoomId: l.storageRoomId ?? null,
+                        };
+                      });
+                      setStatusModalLots(formattedLots);
+                      setStatusModalTitle(`Danh sách lô thay đổi trạng thái ngày ${today}`);
                       setIsStatusModalOpen(true);
                     }}
                     style={{ padding: 0, marginTop: 8 }}
@@ -146,25 +210,33 @@ const LotTable: React.FC<LotTableProps> = ({
               ),
               duration: 5,
             });
-          }
-        });
+          });
+        } else {
+          notification.info({
+            message: "Thông báo",
+            description: "Không có lô nào thay đổi trạng thái trong ngày hôm nay.",
+            duration: 3,
+          });
+        }
+        setLastNotified(now);
       }
-
-      setPrevLots(validLots);
-      setAllLots(validLots);
-      setFilteredLots(validLots);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách sản phẩm trong lô hoặc sản phẩm:", error);
+      console.error("Lỗi khi lấy danh sách lô hoặc kiểm tra trạng thái:", error);
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể lấy dữ liệu lô hàng hoặc kiểm tra trạng thái. Vui lòng thử lại.",
+        duration: 5,
+      });
     }
 
     try {
-      // Fetch Lot Codes
-      const lotResponse = await axios.get("http://pharmadistiprobe.fun/api/Lot");
+      // Lấy danh sách mã lô
+      const lotResponse = await axios.get("https://pharmadistiprobe.fun/api/Lot");
       let lotCodesArray: string[] = [];
       if (Array.isArray(lotResponse.data)) {
-        lotCodesArray = lotResponse.data.map((lot: Lot) => lot.lotCode || "N/A");
+        lotCodesArray = lotResponse.data.map((lot: Lot) => lot.lotCode || `Lô ${lot.lotId}`);
       } else if (lotResponse.data && Array.isArray(lotResponse.data.data)) {
-        lotCodesArray = lotResponse.data.data.map((lot: Lot) => lot.lotCode || "N/A");
+        lotCodesArray = lotResponse.data.data.map((lot: Lot) => lot.lotCode || `Lô ${lot.lotId}`);
       }
       setLotCodes(lotCodesArray);
     } catch (error) {
@@ -172,9 +244,73 @@ const LotTable: React.FC<LotTableProps> = ({
     }
   };
 
+  const handleViewStoredLots = async () => {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    try {
+      const storedData = localStorage.getItem("changedLotsToday");
+      if (storedData) {
+        const { date, lots } = JSON.parse(storedData);
+        if (date === today && Array.isArray(lots) && lots.length > 0) {
+          // Lấy danh sách sản phẩm để lấy unit
+          const productResponse = await axios.get("https://pharmadistiprobe.fun/api/Product/ListProduct");
+          const products = productResponse.data.data || [];
+          const productMap = products.reduce((acc: { [key: number]: Product }, product: Product) => {
+            acc[product.productId] = product;
+            return acc;
+          }, {});
+
+          // Format lại lots từ localStorage
+          const formattedLots = lots.map((lot: ProductLot) => {
+            const product = productMap[lot.productId] || { unit: "N/A" };
+            return {
+              ...lot,
+              quantity: lot.quantity ?? 0,
+              supplyPrice: lot.supplyPrice ?? 0,
+              productName: lot.productName || "Không xác định",
+              lotCode: lot.lotCode || `Lô ${lot.id}`,
+              unit: product.unit || "N/A",
+              storageRoomId: lot.storageRoomId ?? null,
+            };
+          });
+
+          setStatusModalLots(formattedLots);
+          setStatusModalTitle(`Danh sách lô thay đổi trạng thái ngày ${today}`);
+          setIsStatusModalOpen(true);
+        } else {
+          // Dữ liệu hết hạn hoặc không có lô
+          setStatusModalLots([]);
+          setStatusModalTitle(`Danh sách lô thay đổi trạng thái ngày ${today}`);
+          setIsStatusModalOpen(true);
+          notification.info({
+            message: "Thông báo",
+            description: "Không có lô nào thay đổi trạng thái trong ngày hôm nay hoặc dữ liệu đã hết hạn.",
+            duration: 3,
+          });
+        }
+      } else {
+        // Không có dữ liệu trong localStorage
+        setStatusModalLots([]);
+        setStatusModalTitle(`Danh sách lô thay đổi trạng thái ngày ${today}`);
+        setIsStatusModalOpen(true);
+        notification.info({
+          message: "Thông báo",
+          description: "Không có lô nào thay đổi trạng thái trong ngày hôm nay.",
+          duration: 3,
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách lô từ localStorage:", error);
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể lấy danh sách lô thay đổi trạng thái. Vui lòng thử lại.",
+        duration: 5,
+      });
+    }
+  };
+
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
+    fetchData(); // Gọi lần đầu khi mount
+    const interval = setInterval(fetchData, 30000); // Thăm dò mỗi 30 giây
     return () => clearInterval(interval);
   }, []);
 
@@ -260,8 +396,8 @@ const LotTable: React.FC<LotTableProps> = ({
   const fetchLotDetail = async (id: number) => {
     try {
       const [lotResponse, productResponse] = await Promise.all([
-        axios.get(`http://pharmadistiprobe.fun/api/ProductLot/${id}`),
-        axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct"),
+        axios.get(`https://pharmadistiprobe.fun/api/ProductLot/${id}`),
+        axios.get("https://pharmadistiprobe.fun/api/Product/ListProduct"),
       ]);
 
       const lot = lotResponse.data.data;
@@ -273,12 +409,18 @@ const LotTable: React.FC<LotTableProps> = ({
         quantity: lot.quantity ?? 0,
         supplyPrice: lot.supplyPrice ?? 0,
         productName: lot.productName || "Không xác định",
-        lotCode: lot.lotCode || "N/A",
+        lotCode: lot.lotCode || `Lô ${lot.id}`,
         unit: product?.unit || "N/A",
+        storageRoomId: lot.storageRoomId ?? null,
       });
       setIsDetailModalOpen(true);
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết lô hoặc sản phẩm:", error);
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể lấy chi tiết lô hàng. Vui lòng thử lại.",
+        duration: 5,
+      });
     }
   };
 
@@ -305,7 +447,11 @@ const LotTable: React.FC<LotTableProps> = ({
       : filteredLots;
 
     if (selectedLots.length === 0) {
-      alert("Không có lô hàng nào được chọn để in.");
+      notification.warning({
+        message: "Cảnh báo",
+        description: "Không có lô hàng nào được chọn để in.",
+        duration: 5,
+      });
       return;
     }
 
@@ -338,7 +484,7 @@ const LotTable: React.FC<LotTableProps> = ({
               <td>${formatRemainingDays(lot.manufacturedDate, lot.expiredDate)}</td>
               <td>${new Date(lot.manufacturedDate).toLocaleDateString("vi-VN")}</td>
               <td>${lot.unit}</td>
-              <td>${getStatusText(lot.status)}</td>
+              <td style="color: ${getStatusColor(lot.status)}">${getStatusText(lot.status)}</td>
             </tr>
           `
             )
@@ -399,7 +545,9 @@ const LotTable: React.FC<LotTableProps> = ({
       key: "status",
       width: 120,
       sorter: (a: ProductLot, b: ProductLot) => (a.status ?? -1) - (b.status ?? -1),
-      render: (status: 0 | 1 | 2 | null) => getStatusText(status),
+      render: (status: 0 | 1 | 2 | 3 | null) => (
+        <span style={{ color: getStatusColor(status), fontWeight: 500 }}>{getStatusText(status)}</span>
+      ),
     },
     {
       title: "Số Ngày Còn Hạn",
@@ -464,7 +612,9 @@ const LotTable: React.FC<LotTableProps> = ({
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: (status: 0 | 1 | 2 | null) => getStatusText(status),
+      render: (status: 0 | 1 | 2 | 3 | null) => (
+        <span style={{ color: getStatusColor(status), fontWeight: 500 }}>{getStatusText(status)}</span>
+      ),
     },
   ];
 
@@ -484,13 +634,6 @@ const LotTable: React.FC<LotTableProps> = ({
         >
           Lọc
         </Button>
-        {/* <Button
-          type="primary"
-          onClick={() => handleChangePage("Tạo lô hàng")}
-          style={{ borderRadius: "6px" }}
-        >
-          + Tạo lô mới
-        </Button> */}
         <Button
           type="primary"
           icon={<FileExcelOutlined />}
@@ -506,6 +649,13 @@ const LotTable: React.FC<LotTableProps> = ({
           style={{ borderRadius: "6px" }}
         >
           In danh sách
+        </Button>
+        <Button
+          type="primary"
+          onClick={handleViewStoredLots}
+          style={{ backgroundColor: "#1890ff", borderColor: "#1890ff", borderRadius: "6px" }}
+        >
+          Xem lô thay đổi hôm nay ({statusModalLots.length})
         </Button>
       </div>
 
@@ -555,9 +705,10 @@ const LotTable: React.FC<LotTableProps> = ({
                 style={{ width: "100%", borderRadius: "6px" }}
               >
                 <Option value="">Chọn trạng thái</Option>
-                <Option value="0">Ngừng bán</Option>
+                <Option value="0">Sắp hết hạn - Ngừng bán</Option>
                 <Option value="1">Còn hạn</Option>
-                <Option value="2">Ưu tiên xuất</Option>
+                <Option value="2">Sắp hết hạn - Ưu tiên xuất</Option>
+                <Option value="3">Hết hạn</Option>
               </Select>
               <div className="md:col-span-3">
                 <span style={{ display: "block", marginBottom: 8, color: "#595959" }}>
@@ -635,17 +786,12 @@ const LotTable: React.FC<LotTableProps> = ({
                 <span style={{ color: "#262626" }}>{selectedLot.lotCode}</span>
 
                 <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Tên Sản Phẩm:</span>
-                <span style={{ color: "262626" }}>{selectedLot.productName}</span>
+                <span style={{ color: "#262626" }}>{selectedLot.productName}</span>
 
                 <span style={{ fontWeight: "500", color: "#8c8c8c" }}>Trạng Thái:</span>
                 <span
                   style={{
-                    color:
-                      selectedLot.status === 1
-                        ? "#389e0d"
-                        : selectedLot.status === 2
-                        ? "#fa8c16"
-                        : "#cf1322",
+                    color: getStatusColor(selectedLot.status),
                     fontWeight: "500",
                   }}
                 >
@@ -703,7 +849,14 @@ const LotTable: React.FC<LotTableProps> = ({
       <Modal
         open={isStatusModalOpen}
         onCancel={() => setIsStatusModalOpen(false)}
-        footer={null}
+        footer={[
+          <Button key="refresh" type="primary" onClick={fetchData} style={{ marginRight: 8 }}>
+            Làm mới
+          </Button>,
+          <Button key="close" onClick={() => setIsStatusModalOpen(false)}>
+            Đóng
+          </Button>,
+        ]}
         width={800}
         title={statusModalTitle}
         className="rounded-lg"

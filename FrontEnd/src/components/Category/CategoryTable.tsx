@@ -90,7 +90,7 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({ isOpen, onClose, catego
       }); // Debug: Xem dữ liệu gửi đi
 
       const response = await axios.put(
-        `http://pharmadistiprobe.fun/api/Category/${category?.id}`,
+        `https://pharmadistiprobe.fun/api/Category/${category?.id}`,
         formData,
         {
           headers: {
@@ -121,7 +121,7 @@ const UpdateCategory: React.FC<UpdateCategoryProps> = ({ isOpen, onClose, catego
       }
     } catch (error: any) {
       console.error('Lỗi khi cập nhật chủng loại:', error); // Debug: Ghi log lỗ
-      message.error(error.message || 'Cập nhật chủng loại thất bại! Vui lòng thử lại.');
+      // message.error(error.message || 'Cập nhật chủng loại thất bại! Vui lòng thử lại.');
     }
   };
 

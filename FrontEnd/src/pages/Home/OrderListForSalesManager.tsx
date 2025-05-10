@@ -1,9 +1,8 @@
-// src/pages/OrderListForSalesManager.tsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import OrderTableForSalesManager from "../../components/Order/OrderTableForSalesManager";
-import { useAuth } from "./AuthContext"; // Import AuthContext
-import { Result } from "antd"; // Import Result để hiển thị thông báo lỗi
+import { useAuth } from "./AuthContext";
+import { Result } from "antd";
 
 interface Order {
   orderId: number;
@@ -37,26 +36,33 @@ interface OrderListPageProps {
 
 const OrderListForSalesManager: React.FC<OrderListPageProps> = ({ handleChangePage }) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/Order/GetAllOrders");
-        setOrders(response.data.data || []);
+        const response = await axios.get("https://pharmadistiprobe.fun/api/Order/GetAllOrders");
+        let fetchedOrders = response.data.data || [];
+        
+        // Filter orders for Salesman to show only those with status 4 (Vận chuyển)
+        if (user?.roleName === "SalesMan") {
+          fetchedOrders = fetchedOrders.filter((order: Order) => order.status === 4);
+        }
+        
+        setOrders(fetchedOrders);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đơn hàng:", error);
       }
     };
 
-    // Chỉ gọi API nếu người dùng là Sales Manager
-    if (user?.roleName === "SalesManager") {
+    // Fetch orders if user is SalesManager or Salesman
+    if (user?.roleName === "SalesManager" || user?.roleName === "SalesMan") {
       fetchOrders();
     }
   }, [user]);
 
-  // Nếu không phải Sales Manager, hiển thị thông báo không có quyền truy cập
-  if (!user || user.roleName !== "SalesManager") {
+  // If user is not SalesManager or Salesman, show access denied
+  if (!user || (user.roleName !== "SalesManager" && user.roleName !== "SalesMan")) {
     return (
       <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
         <Result
@@ -72,7 +78,9 @@ const OrderListForSalesManager: React.FC<OrderListPageProps> = ({ handleChangePa
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
       <div className="flex justify-between items-center mb-[25px]">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Danh sách đơn hàng (Sales Manager)</h1>
+          <h1 className="text-xl font-semibold text-gray-900">
+            {user.roleName === "SalesMan" ? "Danh sách đơn hàng (Salesman)" : "Danh sách đơn hàng (Sales Manager)"}
+          </h1>
           <p className="text-sm text-gray-500">Quản lý đơn hàng của bạn</p>
         </div>
       </div>

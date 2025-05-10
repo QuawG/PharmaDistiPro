@@ -135,7 +135,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://pharmadistiprobe.fun/api/Category/subcategory', {
+        const response = await axios.get('https://pharmadistiprobe.fun/api/Category/subcategory', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCategories(response.data.data);
@@ -322,7 +322,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
     const status = newStatus === 'true';
     try {
       const response = await axios.put(
-        `http://pharmadistiprobe.fun/api/Product/activate/${productId}?update=${status}`,
+        `https://pharmadistiprobe.fun/api/Product/activate/${productId}?update=${status}`,
         null,
         {
           headers: {
@@ -603,7 +603,7 @@ const handleEditProduct = (productId: number) => {
   
       // Gửi yêu cầu PUT
       const response = await axios.put(
-        `http://pharmadistiprobe.fun/api/Product/${selectedProductId}`,
+        `https://pharmadistiprobe.fun/api/Product/${selectedProductId}`,
         formDataToSend,
         {
           headers: {

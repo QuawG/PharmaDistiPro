@@ -22,7 +22,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ handleChangePage }) => 
         try {
           const token = localStorage.getItem("accessToken");
           const response = await axios.put(
-            `http://pharmadistiprobe.fun/api/Order/UpdateOrderStatus/${numericOrderId}/2`,
+            `https://pharmadistiprobe.fun/api/Order/UpdateOrderStatus/${numericOrderId}/2`,
             null,
             {
               headers: {

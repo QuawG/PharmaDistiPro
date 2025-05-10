@@ -71,7 +71,7 @@ export default function UpdateCustomerDetail({
 
     try {
       const response = await axios.put(
-        "http://pharmadistiprobe.fun/api/User/UpdateUser",
+        "https://pharmadistiprobe.fun/api/User/UpdateUser",
         formPayload,
         {
           headers: { "Content-Type": "multipart/form-data" },

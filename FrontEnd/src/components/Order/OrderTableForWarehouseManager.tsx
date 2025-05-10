@@ -77,7 +77,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://pharmadistiprobe.fun/api/Order/GetOrderToCreateIssueNoteList", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/Order/GetOrderToCreateIssueNoteList", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -95,7 +95,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
   const fetchOrderDetails = async (orderId: number) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`, {
+      const response = await axios.get(`https://pharmadistiprobe.fun/api/Order/GetOrdersDetailByOrderId/${orderId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           accept: "*/*",
@@ -126,7 +126,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
         try {
           const token = localStorage.getItem("accessToken");
           const response = await axios.post(
-            `http://pharmadistiprobe.fun/api/IssueNote/CreateIssueNote/${orderId}`,
+            `https://pharmadistiprobe.fun/api/IssueNote/CreateIssueNote/${orderId}`,
             null,
             {
               headers: {
@@ -159,7 +159,7 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
       title: "Khách hàng",
       dataIndex: "customer",
       key: "customer",
-      render: (customer: Order["customer"]) => `${customer.firstName.trim()} ${customer.lastName}`,
+      render: (customer: Order["customer"]) => ` ${customer.lastName}`,
     },
     {
       title: "Người xác nhận",
@@ -174,10 +174,14 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
       render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
     },
     {
-      title: "Tổng tiền",
+      title: "Tổng tiền (VND)",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      render: (amount: number) => amount.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+      render: (amount: number, record: Order) => {
+        const deliveryFee = record.deliveryFee ?? 0;
+        const totalWithDelivery = amount + deliveryFee;
+        return totalWithDelivery.toLocaleString("vi-VN");
+      },
     },
     {
       title: "Trạng thái",
@@ -231,16 +235,24 @@ const OrderTableForWarehouseManager: React.FC<OrderTableProps> = ({  }) => {
       render: (vat: number) => (vat != null ? `${vat}%` : "N/A"),
     },
     {
-      title: "Đơn giá",
+      title: "Đơn giá (VND)" ,
       dataIndex: ["product", "sellingPrice"],
       key: "sellingPrice",
-      render: (price: number) => price.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+      render: (price: number) => price.toLocaleString("vi-VN"),
     },
     {
-      title: "Thành tiền",
+      title: "Thành tiền (VND)",
       key: "total",
       render: (record: OrderDetail) =>
-        (record.quantity * record.product.sellingPrice).toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+        (record.quantity * record.product.sellingPrice).toLocaleString("vi-VN"),
+    },
+    {
+      title: "Chi phí giao hàng (VND)",
+      key: "deliveryFee",
+      render: () => {
+        const deliveryFee = selectedOrder?.deliveryFee ?? 0;
+        return deliveryFee != null ? `${deliveryFee.toLocaleString("vi-VN")} ` : "N/A";
+      },
     },
   ];
 

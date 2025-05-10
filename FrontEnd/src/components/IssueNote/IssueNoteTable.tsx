@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Table, Select, Button, Modal, Input, Collapse, DatePicker, Dropdown, Menu, message, notification } from "antd";
+import { Table, Input, Collapse, Button, Modal, DatePicker, Dropdown, Menu,  notification, Select } from "antd";
 const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
 import {
   EyeOutlined,
   FilterOutlined,
-  // FileExcelOutlined,
   PrinterOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-// import * as XLSX from "xlsx";
 import axios from "axios";
 import { useAuth } from "../../pages/Home/AuthContext";
 
@@ -78,11 +76,17 @@ interface Customer {
 interface ProductLotAPI {
   id: number;
   storageRoomId: number;
+  lotId: number;
 }
 
 interface StorageRoom {
   storageRoomId: number;
   storageRoomName: string;
+}
+
+interface Lot {
+  lotId: number;
+  lotCode: string;
 }
 
 interface IssueNoteTableProps {
@@ -141,10 +145,10 @@ const numberToWords = (num: number): string => {
 const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
   notes,
   // handleChangePage,
-  onUpdate,
+  // onUpdate,
   rowSelection,
 }) => {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const [filteredNotes, setFilteredNotes] = useState<IssueNote[]>(notes);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<IssueNote | null>(null);
@@ -154,11 +158,13 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [issueNoteDetails, setIssueNoteDetails] = useState<IssueNoteDetail[]>([]);
+  const [lotStorageMap, setLotStorageMap] = useState<{ [productLotId: number]: string }>({});
+  const [lotCodeMap, setLotCodeMap] = useState<{ [productLotId: number]: string }>({});
 
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://pharmadistiprobe.fun/api/User/GetUserList", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/User/GetUserList", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const userList = response.data.data.map((user: any) => ({
@@ -177,48 +183,78 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(
-        `http://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteDetailByIssueNoteId/${issueNoteId}`,
+        `https://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteDetailByIssueNoteId/${issueNoteId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setIssueNoteDetails(response.data.data || []);
+      const details = response.data.data || [];
+      setIssueNoteDetails(details);
+
+      // Lấy thông tin lô và kho
+      const { lotCodeMap, storageMap } = await fetchLotAndStorageInfo(details);
+      setLotCodeMap(lotCodeMap);
+      setLotStorageMap(storageMap);
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết phiếu xuất kho:", error);
       setIssueNoteDetails([]);
+      setLotCodeMap({});
+      setLotStorageMap({});
     }
   };
 
-  const fetchStorageRoomForLots = async (details: IssueNoteDetail[]): Promise<string> => {
+  const fetchLotAndStorageInfo = async (details: IssueNoteDetail[]): Promise<{
+    lotCodeMap: { [productLotId: number]: string };
+    storageMap: { [productLotId: number]: string };
+  }> => {
     try {
-      const lotResponse = await axios.get("http://pharmadistiprobe.fun/api/ProductLot");
+      // Lấy danh sách ProductLot
+      const lotResponse = await axios.get("https://pharmadistiprobe.fun/api/ProductLot");
       const productLots: ProductLotAPI[] = lotResponse.data.data || [];
 
-      const storageRoomResponse = await axios.get("http://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList");
+      // Lấy danh sách Lot
+      const lotApiResponse = await axios.get("https://pharmadistiprobe.fun/api/Lot");
+      const lots: Lot[] = lotApiResponse.data.data || [];
+
+      // Lấy danh sách StorageRoom
+      const storageRoomResponse = await axios.get("https://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList");
       const storageRooms: StorageRoom[] = storageRoomResponse.data.data || [];
 
+      // Tạo ánh xạ từ lotId sang lotCode
+      const lotCodeMap = lots.reduce((acc: { [key: number]: string }, lot: Lot) => {
+        acc[lot.lotId] = lot.lotCode;
+        return acc;
+      }, {});
+
+      // Tạo ánh xạ từ storageRoomId sang storageRoomName
       const storageRoomMap = storageRooms.reduce((acc: { [key: number]: string }, room: StorageRoom) => {
         acc[room.storageRoomId] = room.storageRoomName;
         return acc;
       }, {});
 
-      const storageRoomIds = details
-        .map((detail) => productLots.find((lot) => lot.id === detail.productLotId)?.storageRoomId)
-        .filter((id): id is number => id !== undefined);
+      // Tạo ánh xạ từ productLotId sang lotCode và storageRoomName
+      const lotCodeResult: { [productLotId: number]: string } = {};
+      const storageResult: { [productLotId: number]: string } = {};
+      details.forEach((detail) => {
+        const productLot = productLots.find((lot) => lot.id === detail.productLotId);
+        if (productLot) {
+          lotCodeResult[detail.productLotId] = lotCodeMap[productLot.lotId] || "N/A";
+          storageResult[detail.productLotId] = storageRoomMap[productLot.storageRoomId] || "N/A";
+        } else {
+          lotCodeResult[detail.productLotId] = "N/A";
+          storageResult[detail.productLotId] = "N/A";
+        }
+      });
 
-      const uniqueStorageRoomNames = [...new Set(
-        storageRoomIds.map((id) => storageRoomMap[id] || "N/A")
-      )];
-
-      return uniqueStorageRoomNames.length > 0 ? uniqueStorageRoomNames[0] : "N/A";
+      return { lotCodeMap: lotCodeResult, storageMap: storageResult };
     } catch (error) {
-      console.error("Lỗi khi lấy thông tin kho:", error);
-      return "N/A";
+      console.error("Lỗi khi lấy thông tin lô và kho:", error);
+      return { lotCodeMap: {}, storageMap: {} };
     }
   };
 
   const fetchCustomerName = async (customerId: number): Promise<string> => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://pharmadistiprobe.fun/api/User/GetCustomerList", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/User/GetCustomerList", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const customers: Customer[] = response.data.data;
@@ -265,118 +301,6 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
     filterNotes();
   }, [searchTerm, statusFilter, dateRange, notes]);
 
-  const handleStatusChange = (noteId: number, newStatus: string) => {
-    const statusText = {
-      "0": "Hủy",
-      "1": "Đang xử lý",
-      "2": "Đã xuất",
-    }[newStatus];
-
-    Modal.confirm({
-      title: "Xác nhận thay đổi trạng thái",
-      content: `Bạn có chắc chắn muốn thay đổi trạng thái của phiếu này thành "${statusText}" không?`,
-      okText: "Có",
-      cancelText: "Hủy",
-      onOk: async () => {
-        try {
-          const token = localStorage.getItem("accessToken");
-          await axios.put(
-            `http://pharmadistiprobe.fun/api/IssueNote/UpdateIssueNoteStatus/${noteId}/${newStatus}`,
-            null,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          const updatedNote = filteredNotes.find((note) => note.id === noteId);
-          if (updatedNote) {
-            const newNote = { ...updatedNote, status: Number(newStatus) };
-            setFilteredNotes((prevNotes) =>
-              prevNotes.map((note) => (note.id === noteId ? newNote : note))
-            );
-            onUpdate(newNote);
-            message.success(`Đã thay đổi trạng thái thành "${statusText}" thành công!`);
-          }
-        } catch (error) {
-          console.error("Lỗi khi cập nhật trạng thái phiếu:", error);
-          message.error("Không thể cập nhật trạng thái. Vui lòng thử lại!");
-        }
-      },
-      onCancel: () => {
-        // Không làm gì nếu người dùng hủy
-      },
-    });
-  };
-
-  // const exportToExcel = () => {
-  //   const dataToExport = filteredNotes.map((note) => ({
-  //     ...note,
-  //     createdBy: getUserNameById(note.createdBy),
-  //   }));
-  //   const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachPhieuXuatKho");
-  //   XLSX.writeFile(workbook, "DanhSachPhieuXuatKho.xlsx");
-  // };
-
-  // const printTable = () => {
-  //   const selectedNotes =
-  //     rowSelection && rowSelection.selectedRowKeys.length > 0
-  //       ? filteredNotes.filter((note) => rowSelection.selectedRowKeys.includes(note.id))
-  //       : filteredNotes;
-
-  //   if (selectedNotes.length === 0) {
-  //     notification.error({
-  //       message: "Lỗi",
-  //       description: "Không có phiếu nào được chọn để in.",
-  //     });
-  //     return;
-  //   }
-
-  //   const printContents = `
-  //     <div style="text-align: center; margin-bottom: 20px;">
-  //       <h2>Danh sách phiếu xuất kho</h2>
-  //     </div>
-  //     <table border="1" style="width: 100%; border-collapse: collapse;">
-  //       <thead>
-  //         <tr>
-  //           <th>Mã Phiếu</th>
-  //           <th>Trạng Thái</th>
-  //           <th>Người Tạo</th>
-  //           <th>Tổng Tiền</th>
-  //           <th>Ngày Tạo</th>
-  //         </tr>
-  //       </thead>
-  //       <tbody>
-  //         ${selectedNotes
-  //           .map(
-  //             (note) => `
-  //           <tr>
-  //             <td>${note.issueNoteCode}</td>
-  //             <td>${["Chờ xử lý", "Đã xử lý", "Đã xuất"][note.status] || note.status}</td>
-  //             <td>${getUserNameById(note.createdBy)}</td>
-  //             <td>${note.totalAmount.toLocaleString()} VND</td>
-  //             <td>${new Date(note.createdDate).toLocaleDateString("vi-VN")}</td>
-  //           </tr>
-  //         `
-  //           )
-  //           .join("")}
-  //       </tbody>
-  //     </table>
-  //   `;
-
-  //   const printWindow = window.open("", "", "height=800,width=1000");
-  //   if (printWindow) {
-  //     printWindow.document.write("<html><head><title>In Danh Sách</title></head><body>");
-  //     printWindow.document.write(printContents);
-  //     printWindow.document.write("</body></html>");
-  //     printWindow.document.close();
-  //     printWindow.print();
-  //   }
-  // };
-
   const printIssueNote = async (issueNoteId: number) => {
     const note = filteredNotes.find((note) => note.id === issueNoteId);
     if (!note) {
@@ -414,12 +338,15 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(
-        `http://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteDetailByIssueNoteId/${note.id}`,
+        `https://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteDetailByIssueNoteId/${note.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const details: IssueNoteDetail[] = response.data.data || [];
       const customerName = await fetchCustomerName(note.customerId);
-      const storageRoomName = await fetchStorageRoomForLots(details);
+
+      // Lấy thông tin lô và kho cho in ấn
+      const { storageMap } = await fetchLotAndStorageInfo(details);
+      const storageRoomName = Object.values(storageMap)[0] || "N/A";
 
       const totalQuantity = details.reduce(
         (sum, detail) => sum + detail.quantity,
@@ -431,8 +358,7 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
       );
 
       const createdDate = new Date(note.createdDate);
-      const formattedDate = `Ngày ${createdDate.getDate()} tháng ${createdDate.getMonth() + 1} năm ${createdDate.getFullYear()}`;
-
+      const formattedDate = `Ngày ${createdDate.getDate()} tháng ${createdDate.getMonth() + 1} năm ${createdDate.getFullYear()}`; 
 
       printContents += `
         <div class="ticket">
@@ -562,25 +488,12 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
       title: "Trạng Thái",
       dataIndex: "status",
       key: "status",
-      render: (status: number, record: IssueNote) => {
-        const statusText = ["Chờ xử lý", "Đã xử lý", "Đã xuất"][status] || status;
-        if (user?.roleName === "WarehouseManager") {
-          return (
-            <Select
-              value={String(status)}
-              onChange={(value) => handleStatusChange(record.id, value)}
-              style={{ width: 120 }}
-            >
-              <Select.Option value="0">Hủy</Select.Option>
-              <Select.Option value="1">Đang xử lý</Select.Option>
-              <Select.Option value="2">Đã xuất</Select.Option>
-            </Select>
-          );
-        }
+      render: (status: number) => {
+        const statusText = ["Hủy", "Chờ xử lý",  "Đã xuất"][status] || status;
         return (
           <span
             style={{
-              color: status === 0 ? "#f5222d" : status === 1 ? "#fa8c16" : "#52c41a",
+              color: status === 0 ? "#f5222d" : status === 1 ? "#fa8c16" : status === 2 ? "#52c41a" : "#d9d9d9",
               fontWeight: "500",
             }}
           >
@@ -654,8 +567,9 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
       key: "productCode",
     },
     {
-      title: "Mã lot",
-      
+      title: "Mã lô",
+      key: "lotCode",
+      render: (_: any, record: IssueNoteDetail) => lotCodeMap[record.productLotId] || "N/A",
     },
     {
       title: "Số lượng",
@@ -671,9 +585,9 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
     },
     {
       title: "Phòng kho",
-      
-    }
-    
+      key: "storageRoom",
+      render: (_: any, record: IssueNoteDetail) => lotStorageMap[record.productLotId] || "N/A",
+    },
   ];
 
   return (
@@ -691,22 +605,6 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
         {/* <Button type="primary" onClick={() => handleChangePage("Tạo phiếu xuất kho")}>
           + Tạo phiếu mới
         </Button> */}
-        {/* <Button
-          type="primary"
-          icon={<FileExcelOutlined />}
-          onClick={exportToExcel}
-          style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}
-        >
-          Xuất Excel
-        </Button>
-        <Button
-          type="primary"
-          icon={<PrinterOutlined />}
-          onClick={printTable}
-          style={{ marginLeft: 8 }}
-        >
-          In danh sách
-        </Button> */}
       </div>
 
       {showFilters && (
@@ -720,9 +618,10 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
                 style={{ width: "100%" }}
               >
                 <Select.Option value="">Chọn trạng thái</Select.Option>
-                <Select.Option value="0">Chờ xử lý</Select.Option>
-                <Select.Option value="1">Đã xử lý</Select.Option>
-                <Select.Option value="2">Đã xuất</Select.Option>
+                <Select.Option value="0">Hủy</Select.Option>
+                <Select.Option value="1">Chờ xử lý</Select.Option>
+                <Select.Option value="2">Đã xử lý</Select.Option>
+                <Select.Option value="3">Đã xuất</Select.Option>
               </Select>
               <div className="col-span-3">
                 <span style={{ marginRight: 8, marginBottom: 8 }}>Lọc theo ngày tạo</span>
@@ -776,6 +675,8 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
         onCancel={() => {
           setIsOpen(false);
           setIssueNoteDetails([]);
+          setLotCodeMap({});
+          setLotStorageMap({});
         }}
         footer={
           <div style={{ textAlign: "right", padding: "8px" }}>
@@ -784,6 +685,8 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
               onClick={() => {
                 setIsOpen(false);
                 setIssueNoteDetails([]);
+                setLotCodeMap({});
+                setLotStorageMap({});
               }}
               style={{
                 backgroundColor: "#1890ff",
@@ -842,11 +745,13 @@ const IssueNoteTable: React.FC<IssueNoteTableProps> = ({
                           ? "#f5222d"
                           : selectedNote.status === 1
                           ? "#fa8c16"
-                          : "#52c41a",
+                          : selectedNote.status === 2
+                          ? "#52c41a"
+                          : "#d9d9d9",
                       fontWeight: "500",
                     }}
                   >
-                    {["Chờ xử lý", "Đã xử lý", "Đã xuất"][selectedNote.status] ||
+                    {["Hủy", "Chờ xử lý", "Đã xử lý", "Đã xuất"][selectedNote.status] ||
                       selectedNote.status}
                   </span>
                 </div>

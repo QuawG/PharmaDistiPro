@@ -14,11 +14,9 @@ import {
 import {
   EyeOutlined,
   FilterOutlined,
-  // FileExcelOutlined,
   PrinterOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-// import * as XLSX from "xlsx";
 import axios from "axios";
 
 const { RangePicker } = DatePicker;
@@ -91,12 +89,14 @@ interface PurchaseOrderTableProps {
     selectedRowKeys: React.Key[];
     onChange: (selectedRowKeys: React.Key[], selectedRows: PurchaseOrder[]) => void;
   };
+  onRefreshPurchaseOrders?: () => void;
 }
 
 const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
-  // handleChangePage,
+  handleChangePage,
   // onDelete,
   rowSelection,
+  onRefreshPurchaseOrders,
 }) => {
   const [filteredOrders, setFilteredOrders] = useState<PurchaseOrder[]>([]);
   const [allOrders, setAllOrders] = useState<PurchaseOrder[]>([]);
@@ -109,31 +109,86 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch purchase orders
-  useEffect(() => {
-    const fetchPurchaseOrders = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const response = await axios.get(
-          "http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList",
+  // Hàm lấy danh sách đơn hàng
+  const fetchPurchaseOrders = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get(
+        "https://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setAllOrders(response.data.data || []);
+      setFilteredOrders(response.data.data || []);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách đơn đặt hàng:", error);
+      message.error("Không thể tải danh sách đơn đặt hàng!");
+    }
+  };
+
+  // Hàm lấy tình trạng nhập hàng
+  const fetchStockStatus = async (id: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      // Gọi API CheckReceivedStockStatus trước
+      const stockResponse = await axios.get(
+        `https://pharmadistiprobe.fun/api/PurchaseOrders/CheckReceivedStockStatus/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      let stockData = stockResponse.data.data || [];
+
+      // Nếu API trả về mảng rỗng (có thể là đơn hàng đã hoàn thành), lấy chi tiết đơn hàng
+      if (stockData.length === 0) {
+        const orderResponse = await axios.get(
+          `https://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setAllOrders(response.data.data || []);
-        setFilteredOrders(response.data.data || []);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách đơn đặt hàng:", error);
-        message.error("Không thể tải danh sách đơn đặt hàng!");
+        const orderDetails = orderResponse.data.data || [];
+        stockData = orderDetails.map((detail: PurchaseOrderDetail) => ({
+          productId: detail.productId,
+          productName: detail.product.productName,
+          orderedQuantity: detail.quantity,
+          receivedQuantity: detail.quantity,
+          shortageQuantity: 0,
+        }));
       }
-    };
 
+      setStockStatus(stockData);
+      setIsStockStatusModalOpen(true);
+    } catch (error) {
+      console.error(`Lỗi khi lấy tình trạng nhập hàng cho đơn hàng ${id}:`, error);
+      message.error("Không thể tải tình trạng nhập hàng!");
+    }
+  };
+
+  // Gọi fetchPurchaseOrders khi component mount
+  useEffect(() => {
     fetchPurchaseOrders();
   }, []);
 
-  // Filter and sort orders by creation date
+  // Làm mới dữ liệu khi onRefreshPurchaseOrders được gọi
+  useEffect(() => {
+    if (onRefreshPurchaseOrders) {
+      fetchPurchaseOrders();
+      // Nếu modal tình trạng nhập hàng đang mở, làm mới stockStatus
+      if (isStockStatusModalOpen && selectedOrder) {
+        fetchStockStatus(selectedOrder.purchaseOrderId);
+      }
+    }
+  }, [onRefreshPurchaseOrders, isStockStatusModalOpen, selectedOrder]);
+
+  // Lọc và sắp xếp đơn hàng
   useEffect(() => {
     let filteredData = [...allOrders];
 
@@ -173,12 +228,12 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
     setFilteredOrders(filteredData);
   }, [searchTerm, statusFilter, dateRange, allOrders]);
 
-  // Fetch order details
+  // Lấy chi tiết đơn hàng
   const fetchOrderDetail = async (id: number, callback?: (order: PurchaseOrder) => void) => {
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.get(
-        `http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`,
+        `https://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -204,97 +259,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
     }
   };
 
-  // Fetch stock status
-  const fetchStockStatus = async (id: number) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      const orderResponse = await axios.get(
-        `http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrderDetailByPoId/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const orderDetails = orderResponse.data.data || [];
-      const order = allOrders.find((o) => o.purchaseOrderId === id);
-
-      if (!order) {
-        throw new Error("Không tìm thấy đơn hàng!");
-      }
-
-      let fullStockStatus: StockStatus[];
-
-      if (order.status === 3) {
-        fullStockStatus = orderDetails.map((detail: PurchaseOrderDetail) => ({
-          productId: detail.productId,
-          productName: detail.product.productName,
-          orderedQuantity: detail.quantity,
-          receivedQuantity: detail.quantity,
-          shortageQuantity: 0,
-        }));
-      } else {
-        const stockResponse = await axios.get(
-          `http://pharmadistiprobe.fun/api/PurchaseOrders/CheckReceivedStockStatus/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const stockData = stockResponse.data.data || [];
-
-        fullStockStatus = orderDetails.map((detail: PurchaseOrderDetail) => {
-          const stockItem =
-            stockData.find(
-              (item: StockStatus) => item.productId === detail.productId
-            ) || {
-              productId: detail.productId,
-              productName: detail.product.productName,
-              orderedQuantity: detail.quantity,
-              receivedQuantity: 0,
-              shortageQuantity: detail.quantity,
-            };
-
-          return {
-            productId: detail.productId,
-            productName: detail.product.productName,
-            orderedQuantity: detail.quantity,
-            receivedQuantity: stockItem.receivedQuantity,
-            shortageQuantity: detail.quantity - stockItem.receivedQuantity,
-          };
-        });
-      }
-
-      setStockStatus(fullStockStatus);
-      setIsStockStatusModalOpen(true);
-    } catch (error) {
-      console.error("Lỗi khi lấy tình trạng nhập hàng:", error);
-      message.error("Không thể tải tình trạng nhập hàng!");
-    }
-  };
-
-  // Export to Excel
-  // const exportToExcel = () => {
-  //   const worksheet = XLSX.utils.json_to_sheet(
-  //     filteredOrders.map((order) => ({
-  //       "Mã Đơn": order.purchaseOrderCode,
-  //       "Nhà Cung Cấp": order.supplier?.supplierName || "N/A",
-  //       "Ngày Đặt": new Date(order.createDate).toLocaleDateString("vi-VN"),
-  //       "Tổng Tiền": order.totalAmount,
-  //       "Trạng Thái":
-  //         ["Hủy", "Chờ nhập hàng", "Thiếu hàng", "Hoàn thành"][order.status] ||
-  //         "Không xác định",
-  //     }))
-  //   );
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachDonDatHang");
-  //   XLSX.writeFile(workbook, "DanhSachDonDatHang.xlsx");
-  // };
-
-  // Print function for a single order
   const printTable = (order: PurchaseOrder) => {
     if (!order) {
       message.error("Không có đơn hàng để in.");
@@ -329,21 +293,16 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         </head>
         <body>
           <div class="container">
-            <!-- Header -->
             <div class="header">
               <h1>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h1>
               <h2>Độc lập - Tự do - Hạnh phúc</h2>
               <h2>SOCIALIST REPUBLIC OF VIETNAM</h2>
               <h2>Independence - Freedom - Happiness</h2>
             </div>
-
-            <!-- Order Title and Number -->
             <div style="text-align: center; margin-bottom: 20px;">
               <h1 style="font-size: 16pt; text-transform: uppercase;">ĐƠN ĐẶT HÀNG / ORDER</h1>
               <p>Số: ${order.purchaseOrderCode}</p>
             </div>
-
-            <!-- Customer Information -->
             <div class="order-info">
               <p><strong>Kính gửi / Kindly attention:</strong> Công ty cổ phần dược phẩm Vinh Nguyên</p>
               <h3>THÔNG TIN KHÁCH HÀNG / Customer Information</h3>
@@ -351,8 +310,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
               <p><strong>Địa chỉ / Address:</strong> Số 15 lô 8 Khu Đô thị Mỗ lao, Phường Mộ Lao, Quận Hà Đông, Thành phố Hà Nội, Việt Nam</p>
               <p><strong>MST / Tax code:</strong> 0106195140</p>
             </div>
-
-            <!-- Order Items Table -->
             <h3>ĐẶT HÀNG / Order</h3>
             <table class="table">
               <thead>
@@ -393,19 +350,13 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
             <p class="total">Tổng cộng (Giá trị đơn hàng) / Total (Order value): ${order.totalAmount.toLocaleString(
               "vi-VN"
             )} VND</p>
-
-            <!-- Shipping Information -->
             <div class="section">
               <h3>NƠI NHẬN HÀNG / Ship to</h3>
               <p><strong>Địa chỉ / Address:</strong> </p>
-              <p><strong>Thời gian nhận hàng / Time:</strong>  </p>
+              <p><strong>Thời gian nhận hàng / Time:</strong> </p>
               <p><strong>Phương tiện vận chuyển / Delivery means:</strong> </p>
               <p><strong>Chi phí vận chuyển / Delivery fee:</strong> </p>
             </div>
-
-
-
-            <!-- Signatures -->
             <div class="signatures">
               <div class="signature">
                 <p><strong>ĐƠN VỊ ĐẶT HÀNG / ORDERED BY</strong></p>
@@ -440,32 +391,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
       printWindow.print();
     }
   };
-
-  // Print selected orders (existing functionality)
-  // const printSelectedOrders = () => {
-  //   const selectedOrders = rowSelection?.selectedRowKeys.length
-  //     ? filteredOrders.filter((order) =>
-  //         rowSelection.selectedRowKeys.includes(order.purchaseOrderId)
-  //       )
-  //     : filteredOrders;
-
-  //   if (selectedOrders.length === 0) {
-  //     message.error("Không có đơn hàng nào được chọn để in.");
-  //     return;
-  //   }
-
-  //   Promise.all(
-  //     selectedOrders.map((order) =>
-  //       new Promise<PurchaseOrder>((resolve) => {
-  //         fetchOrderDetail(order.purchaseOrderId, (detailedOrder) => {
-  //           resolve(detailedOrder);
-  //         });
-  //       })
-  //     )
-  //   ).then((ordersWithDetails) => {
-  //     ordersWithDetails.forEach((order) => printTable(order));
-  //   });
-  // };
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("vi-VN");
@@ -527,6 +452,15 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
               >
                 In đơn hàng
               </Menu.Item>
+              <Menu.Item
+                key="createReceivedNote"
+                icon={<EyeOutlined />}
+                onClick={() =>
+                  handleChangePage("Tạo phiếu nhập kho", record.purchaseOrderId)
+                }
+              >
+                Tạo phiếu nhập kho
+              </Menu.Item>
             </Menu>
           }
           trigger={["click"]}
@@ -552,29 +486,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         >
           Lọc
         </Button>
-        {/* <Button
-          type="primary"
-          onClick={() => handleChangePage("Tạo đơn đặt hàng(PO)")}
-          className="bg-blue-500"
-        >
-          + Tạo đơn mới
-        </Button> */}
-        {/* <Button
-          type="primary"
-          icon={<FileExcelOutlined />}
-          onClick={exportToExcel}
-          style={{ backgroundColor: "#28a745", borderColor: "#28a745" }}
-        >
-          Xuất Excel
-        </Button>
-        <Button
-          type="primary"
-          icon={<PrinterOutlined />}
-          onClick={printSelectedOrders}
-          style={{ marginLeft: 8 }}
-        >
-          In danh sách
-        </Button> */}
       </div>
 
       {showFilters && (
@@ -632,7 +543,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
         rowSelection={rowSelection}
       />
 
-      {/* Order Detail Modal */}
       <Modal
         title={
           <div className="text-xl font-semibold text-gray-800">
@@ -727,7 +637,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
                 </div>
               </div>
             </div>
-
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <h3 className="text-lg font-medium text-gray-700 mb-4">
                 Chi tiết đơn đặt hàng
@@ -770,8 +679,6 @@ const PurchaseOrderTable: React.FC<PurchaseOrderTableProps> = ({
           </div>
         )}
       </Modal>
-
-      {/* Stock Status Modal */}
       <Modal
         title={
           <div className="text-xl font-semibold text-gray-800">

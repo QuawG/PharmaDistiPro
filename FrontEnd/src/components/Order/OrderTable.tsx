@@ -87,7 +87,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
   // Fetch product list to get units
   const fetchProducts = async () => {
     try {
-      const response = await axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/Product/ListProduct", {
         headers: { accept: "text/plain" },
       });
       const productList: Product[] = response.data.data.map((item: any) => ({
@@ -228,9 +228,10 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
       localStorage.setItem("lastOrderId", order.orderId.toString());
       localStorage.setItem("lastUsername", order.customer.userName);
       const description = `${order.customer.userName} chuyển tiền`;
+      const totalWithDelivery = order.totalAmount + (order.deliveryFee || 0);
       const response = await apiClient.get(`/VNPay/CreatePaymentUrl`, {
         params: {
-          moneyToPay: order.totalAmount,
+          moneyToPay: totalWithDelivery,
           description: description,
           orderId: order.orderId,
         },
@@ -268,10 +269,11 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
   };
 
   const showPayConfirm = (order: Order) => {
+    const totalWithDelivery = order.totalAmount + (order.deliveryFee || 0);
     Modal.confirm({
       title: "Xác nhận thanh toán đơn hàng",
       icon: <PayCircleOutlined />,
-      content: `Bạn có chắc chắn muốn thanh toán đơn hàng "${order.orderCode}" với số tiền ${order.totalAmount.toLocaleString()} VND không?`,
+      content: `Bạn có chắc chắn muốn thanh toán đơn hàng "${order.orderCode}" với số tiền ${totalWithDelivery.toLocaleString()} VND (bao gồm ${order.deliveryFee?.toLocaleString() || 0} VND phí vận chuyển) không?`,
       okText: "Thanh toán",
       okType: "primary",
       cancelText: "Thoát",
@@ -320,7 +322,7 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
       title: "Khách hàng",
       dataIndex: "customer",
       key: "customer",
-      render: (customer: Order["customer"]) => `${customer.firstName} ${customer.lastName}`,
+      render: (customer: Order["customer"]) => ` ${customer.lastName}`,
     },
     {
       title: "Ngày tạo",
@@ -329,10 +331,19 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
       render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
     },
     {
+      title: "Phí vận chuyển (VND)",
+      dataIndex: "deliveryFee",
+      key: "deliveryFee",
+      render: (fee: number | null) => (fee != null ? fee.toLocaleString("vi-VN") : "N/A"),
+    },
+    {
       title: "Tổng tiền (VND)",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      render: (amount: number) => amount.toLocaleString("vi-VN"),
+      render: (amount: number, record: Order) => {
+        const totalWithDelivery = amount + (record.deliveryFee || 0);
+        return totalWithDelivery.toLocaleString("vi-VN");
+      },
     },
     {
       title: "",
@@ -395,14 +406,12 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders, handleChangePage, onUpd
       render: (record: OrderDetail) =>
         (record.quantity * record.product.sellingPrice).toLocaleString("vi-VN"),
     },
-    
-        
-      { title: "Thành tiền (đã bao gồm thuế GTGT)",
-        key: "totalWithTax",
-        render: (record: OrderDetail) =>
-          ((record.quantity * record.product.sellingPrice) * (1 + (record.product.vat || 0) / 100)).toLocaleString("vi-VN"),
-    }
-
+    {
+      title: "Thành tiền (đã bao gồm thuế GTGT)",
+      key: "totalWithTax",
+      render: (record: OrderDetail) =>
+        ((record.quantity * record.product.sellingPrice) * (1 + (record.product.vat || 0) / 100)).toLocaleString("vi-VN"),
+    },
   ];
 
   return (

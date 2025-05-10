@@ -23,7 +23,14 @@ interface NoteCheckDetailForm {
   storageQuantity: number;
   actualQuantity: number;
   errorQuantity: number;
-  differenceQuatity: number; // Giữ trong giao diện, không gửi API
+  differenceQuatity: number;
+}
+
+interface NoteCheck {
+  noteCheckId: number;
+  storageRoomId: number;
+  status: boolean | null;
+  noteCheckDetails: { productLotId: number }[];
 }
 
 interface AddNoteCheckProps {
@@ -35,13 +42,13 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
   const [form] = Form.useForm();
   const [storageRooms, setStorageRooms] = useState<StorageRoom[]>([]);
   const [productLots, setProductLots] = useState<ProductLot[]>([]);
+  const [pendingNoteCheckProductLotIds, setPendingNoteCheckProductLotIds] = useState<number[]>([]);
   const [details, setDetails] = useState<NoteCheckDetailForm[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [apiLoading, setApiLoading] = useState<boolean>(true);
   const [selectedStorageRoomId, setSelectedStorageRoomId] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  // Không gửi Authorization để khớp với curl
   const USE_AUTH_TOKEN = false;
 
   useEffect(() => {
@@ -54,7 +61,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
     try {
       const token = Cookies.get("token");
       if (!token) {
-        message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
         navigate("/login");
         return;
       }
@@ -70,8 +76,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
           : []
       );
     } catch (error) {
-      message.error("Không thể tải danh sách kho. Vui lòng kiểm tra API.");
-      console.error("Lỗi khi lấy danh sách kho:", error);
       setStorageRooms([]);
     }
     setApiLoading(false);
@@ -82,7 +86,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
     try {
       const token = Cookies.get("token");
       if (!token) {
-        message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
         navigate("/login");
         return;
       }
@@ -100,18 +103,39 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
           }))
         : [];
       setProductLots(lots);
-      console.log("Danh sách lô sản phẩm:", JSON.stringify(lots, null, 2));
     } catch (error) {
-      message.error("Không thể tải danh sách lô sản phẩm. Vui lòng kiểm tra API.");
       console.error("Lỗi khi lấy danh sách lô sản phẩm:", error);
       setProductLots([]);
     }
     setApiLoading(false);
   };
 
+  const fetchPendingNoteChecks = async (storageRoomId: number) => {
+    try {
+      const response = await apiClient.get("/NoteCheck", {
+        headers: { accept: "*/*" },
+      });
+      const pendingNotes = Array.isArray(response.data)
+        ? response.data.filter(
+            (note: NoteCheck) =>
+              note.storageRoomId === storageRoomId && note.status === false
+          )
+        : [];
+      const productLotIds = pendingNotes
+        .flatMap((note: NoteCheck) => note.noteCheckDetails)
+        .map((detail: { productLotId: number }) => detail.productLotId);
+      setPendingNoteCheckProductLotIds([...new Set(productLotIds)]);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách phiếu kiểm kê chờ duyệt:", error);
+      setPendingNoteCheckProductLotIds([]);
+    }
+  };
+
   const handleStorageRoomChange = (value: number) => {
     setSelectedStorageRoomId(value);
     form.resetFields(["productLotId", "storageQuantity", "actualQuantity", "errorQuantity"]);
+    setDetails([]);
+    fetchPendingNoteChecks(value);
   };
 
   const handleProductLotChange = (productLotId: number) => {
@@ -133,19 +157,24 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
     if (
       isNaN(storageQuantity) ||
       isNaN(actualQuantity) ||
-      // isNaN(errorQuantity) ||
       isNaN(productLotId) ||
       storageQuantity < 0 ||
-      actualQuantity < 0 
-      // errorQuantity < 0
+      actualQuantity < 0
     ) {
-      message.error("Vui lòng nhập số hợp lệ và không âm cho số lượng kho, thực tế và lỗi.");
+      message.error("Vui lòng nhập số hợp lệ và không âm cho số lượng kho và thực tế.");
       return;
     }
 
     const selectedLot = productLots.find((lot) => lot.id === productLotId);
     if (!selectedLot || selectedLot.storageRoomId !== selectedStorageRoomId) {
       message.error("Lô sản phẩm không hợp lệ hoặc không thuộc kho đã chọn.");
+      return;
+    }
+
+    if (pendingNoteCheckProductLotIds.includes(productLotId)) {
+      message.error(
+        "Lô sản phẩm này đã có trong một phiếu kiểm kê chờ duyệt. Vui lòng chọn lô khác."
+      );
       return;
     }
 
@@ -175,12 +204,20 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
       return;
     }
 
+    // Double-check for pending note conflicts
+    const conflictingLots = details.filter((detail) =>
+      pendingNoteCheckProductLotIds.includes(detail.productLotId)
+    );
+    if (conflictingLots.length > 0) {
+      message.error(
+        "Một hoặc nhiều lô sản phẩm đã có trong phiếu kiểm kê chờ duyệt. Vui lòng kiểm tra lại."
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const token = Cookies.get("token");
-      console.log("Token gửi đi:", token || "Không có token");
-
-      // Payload tối giản, khớp với curl
       const payload = {
         storageRoomId: Number(values.storageRoomId),
         reasonCheck: values.reasonCheck || "",
@@ -194,7 +231,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
         })),
       };
 
-      // Kiểm tra payload trước khi gửi
       if (isNaN(payload.storageRoomId) || payload.storageRoomId <= 0) {
         throw new Error("storageRoomId không hợp lệ.");
       }
@@ -206,10 +242,8 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
           isNaN(detail.productLotId) ||
           isNaN(detail.storageQuantity) ||
           isNaN(detail.actualQuantity) ||
-          // isNaN(detail.errorQuantity) ||
           detail.storageQuantity < 0 ||
-          detail.actualQuantity < 0 
-          // detail.errorQuantity < 0
+          detail.actualQuantity < 0
         ) {
           throw new Error(`Dữ liệu chi tiết không hợp lệ: ${JSON.stringify(detail)}`);
         }
@@ -225,9 +259,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
         ...(USE_AUTH_TOKEN && token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
-      console.log("Headers gửi đi:", headers);
-      console.log("Payload gửi đi:", JSON.stringify(payload, null, 2));
-
       const response = await apiClient.post("/NoteCheck/create", payload, { headers });
 
       message.success(response.data.message || "Tạo phiếu kiểm kê thành công");
@@ -239,9 +270,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
         "Không thể tạo phiếu kiểm kê. Vui lòng kiểm tra API.";
       message.error(errorMessage);
       console.error("Lỗi khi tạo phiếu kiểm kê:", error);
-      console.error("Phản hồi API:", error.response?.data);
-      console.error("Trạng thái HTTP:", error.response?.status);
-      console.error("Payload lỗi:", JSON.stringify(error.config?.data, null, 2));
     }
     setLoading(false);
   };
@@ -284,11 +312,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
       dataIndex: "differenceQuatity",
       key: "differenceQuatity",
     },
-    // {
-    //   title: "Số lượng lỗi",
-    //   dataIndex: "errorQuantity",
-    //   key: "errorQuantity",
-    // },
     {
       title: "Hành động",
       key: "action",
@@ -343,6 +366,16 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
               loading={apiLoading}
               disabled={apiLoading || !selectedStorageRoomId || details.length > 0}
               onChange={handleProductLotChange}
+              showSearch
+              filterOption={(input, option) => {
+                const lot = filteredProductLots.find((lot) => lot.id === option?.value);
+                if (!lot) return false;
+                const searchText = input.toLowerCase();
+                return (
+                  lot.productName.toLowerCase().includes(searchText) ||
+                  lot.lotCode.toLowerCase().includes(searchText)
+                );
+              }}
             >
               {Array.isArray(filteredProductLots) &&
                 filteredProductLots.map((lot) => (
@@ -398,29 +431,6 @@ const AddNoteCheck: React.FC<AddNoteCheckProps> = ({ handleChangePage }) => {
               disabled={details.length > 0}
             />
           </Form.Item>
-          {/* <Form.Item
-            name="errorQuantity"
-            label="Số lượng lỗi"
-            rules={[
-              { required: true, message: "Vui lòng nhập số lượng lỗi" },
-              {
-                validator: async (_, value) => {
-                  if (value && (isNaN(Number(value)) || Number(value) < 0)) {
-                    return Promise.reject(new Error("Số lượng lỗi phải là số không âm"));
-                  }
-                  return Promise.resolve();
-                },
-              },
-            ]}
-            style={{ display: "inline-block", width: 150, marginRight: 16 }}
-          >
-            <Input
-              type="number"
-              placeholder="Số lượng lỗi"
-              min={0}
-              disabled={details.length > 0}
-            />
-          </Form.Item> */}
           <Form.Item style={{ display: "inline-block" }}>
             <Button
               type="primary"

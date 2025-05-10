@@ -80,7 +80,7 @@ export default function UpdateUserDetail({
     formPayload.append("Status", formData.status === "active" ? "1" : "0");
 
     try {
-      const response = await axios.put("http://pharmadistiprobe.fun/api/User/UpdateUser", formPayload, {
+      const response = await axios.put("https://pharmadistiprobe.fun/api/User/UpdateUser", formPayload, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

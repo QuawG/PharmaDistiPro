@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import SubCategoryTable from "../../components/Category/SubCategoryTable"; // Điều chỉnh đường dẫn theo cấu trúc dự án
 import {  message } from "antd";
 import axios from "axios";
-import { useAuth } from "../../pages/Home/AuthContext"; // Giả sử bạn có AuthContext để lấy token
+import { useAuth } from '../Home/AuthContext'; // Giả sử bạn có AuthContext để lấy token
 
 interface SubCategory {
   id: number;
@@ -29,7 +29,7 @@ const SubCategoryList: React.FC<SubCategoryListPageProps> = ({ handleChangePage 
     try {
       setLoading(true);
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://pharmadistiprobe.fun/api/Category/subcategory", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/Category/subcategory", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -61,7 +61,7 @@ const SubCategoryList: React.FC<SubCategoryListPageProps> = ({ handleChangePage 
   // Lấy danh sách danh mục chính để ánh xạ parentCategory
   const fetchMainCategories = async () => {
     try {
-      const response = await axios.get("http://pharmadistiprobe.fun/api/Category/tree", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/Category/tree", {
         headers: { Accept: "*/*" },
       });
       if (response.data.success) {

@@ -35,9 +35,12 @@ interface Customer {
 }
 
 interface OrderDetail {
+  orderDetailId: number;
+  orderId: number | null; // May be null in current API
   productId: number;
+  quantity: number | null;
   totalQuantity: number;
-  product: { productName: string; sellingPrice: number };
+  product: { productId: number; productName: string; sellingPrice: number };
 }
 
 const Dashboard: React.FC = () => {
@@ -64,6 +67,58 @@ const Dashboard: React.FC = () => {
     return monthANum - monthBNum;
   };
 
+  // Filter data by date range
+  const filterByDateRange = <T extends { createdDate?: string }>(
+    data: T[],
+    dateField: keyof T = "createdDate"
+  ): T[] => {
+    if (!startMonth || !endMonth) return data;
+    const [startMonthNum, startYear] = startMonth.split("-").map(Number);
+    const [endMonthNum, endYear] = endMonth.split("-").map(Number);
+    const startDate = new Date(startYear, startMonthNum - 1, 1);
+    const endDate = new Date(endYear, endMonthNum, 0); // Last day of end month
+
+    return data.filter(item => {
+      const dateStr = item[dateField] as string;
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      return date >= startDate && date <= endDate;
+    });
+  };
+
+  // Aggregate OrderDetail by product
+  const aggregateOrderDetails = (orderDetails: OrderDetail[], filteredOrders: Order[]): OrderDetail[] => {
+    // Since orderId is null in API, we assume all details are valid for now
+    // If orderId were available, we'd filter by matching orderId to filteredOrders
+    const productMap = new Map<number, OrderDetail>();
+
+    orderDetails.forEach(detail => {
+      const productId = detail.productId;
+      // Check if detail's orderId matches a filtered order (if orderId exists)
+      const order = detail.orderId
+        ? filteredOrders.find(o => o.orderId === detail.orderId)
+        : null;
+      // If orderId is null (current API), include all details (fallback)
+      // Ideally, we'd only include details where orderId matches a filtered order
+      if (!detail.orderId || order) {
+        if (productMap.has(productId)) {
+          const existing = productMap.get(productId)!;
+          productMap.set(productId, {
+            ...existing,
+            totalQuantity: existing.totalQuantity + detail.totalQuantity,
+          });
+        } else {
+          productMap.set(productId, {
+            ...detail,
+            totalQuantity: detail.totalQuantity,
+          });
+        }
+      }
+    });
+
+    return Array.from(productMap.values());
+  };
+
   // Fetch data from API and generate month options
   useEffect(() => {
     const fetchData = async () => {
@@ -76,11 +131,11 @@ const Dashboard: React.FC = () => {
           productsRes,
           ordersRes,
         ] = await Promise.all([
-          axios.get("http://pharmadistiprobe.fun/api/PurchaseOrders/GetTopSupplierList?topSupplier=10"),
-          axios.get("http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersRevenueList"),
-          axios.get("http://pharmadistiprobe.fun/api/Order/GetTopCustomerRevenue?topCustomer=10"),
-          axios.get("http://pharmadistiprobe.fun/api/Order/GetAllOrderDetails?topProduct=10"),
-          axios.get("http://pharmadistiprobe.fun/api/Order/GetOrdersRevenueList"),
+          axios.get("https://pharmadistiprobe.fun/api/PurchaseOrders/GetTopSupplierList?topSupplier=10"),
+          axios.get("https://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersRevenueList"),
+          axios.get("https://pharmadistiprobe.fun/api/Order/GetTopCustomerRevenue?topCustomer=10"),
+          axios.get("https://pharmadistiprobe.fun/api/Order/GetAllOrderDetails?topProduct=10"),
+          axios.get("https://pharmadistiprobe.fun/api/Order/GetOrdersRevenueList"),
         ]);
 
         const suppliers: Supplier[] = suppliersRes.data.data;
@@ -95,7 +150,7 @@ const Dashboard: React.FC = () => {
 
         // Generate month options for the last 5 years
         const currentDate = new Date();
-        const startDate = new Date(currentDate.getFullYear() - 5, 0, 1); // 5 years ago
+        const startDate = new Date(currentDate.getFullYear() - 5, 0, 1);
         const months: string[] = [];
         let current = new Date(startDate);
         while (current <= currentDate) {
@@ -106,15 +161,12 @@ const Dashboard: React.FC = () => {
         setMonthOptions(months);
         if (months.length > 0) {
           const defaultEndIndex = months.length - 1;
-          const defaultStartIndex = Math.max(0, defaultEndIndex - 11); // Last 12 months
+          const defaultStartIndex = Math.max(0, defaultEndIndex - 11);
           setStartMonth(months[defaultStartIndex]);
           setEndMonth(months[defaultEndIndex]);
         }
 
         setSuppliers(suppliers);
-        setTotalPurchase(purchases.reduce((sum: number, p: PurchaseOrder) => sum + (p.totalAmount || 0), 0));
-        setTotalRevenue(orders.reduce((sum: number, o: Order) => sum + (o.totalAmount || 0), 0));
-        setOrderCount(orders.length);
         setPurchaseData(purchases);
         setOrderData(orders);
         setCustomerData(customers);
@@ -129,13 +181,20 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  // Validate month range (max 16 months) and ensure startMonth <= endMonth
+  // Update overview statistics based on filtered data
+  useEffect(() => {
+    const filteredPurchases = filterByDateRange(purchaseData);
+    const filteredOrders = filterByDateRange(orderData);
+    setTotalPurchase(filteredPurchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0));
+    setTotalRevenue(filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0));
+    setOrderCount(filteredOrders.length);
+  }, [purchaseData, orderData, startMonth, endMonth]);
+
+  // Validate month range
   useEffect(() => {
     if (startMonth && endMonth) {
       const [startMonthNum, startYear] = startMonth.split("-").map(Number);
       const [endMonthNum, endYear] = endMonth.split("-").map(Number);
-      // const startDate = new Date(startYear, startMonthNum - 1);
-      // const endDate = new Date(endYear, endMonthNum - 1);
       const monthDiff = (endYear - startYear) * 12 + endMonthNum - startMonthNum + 1;
 
       if (monthDiff > 16) {
@@ -148,7 +207,7 @@ const Dashboard: React.FC = () => {
     }
   }, [startMonth, endMonth]);
 
-  // Handle startMonth change
+  // Handle month changes
   const handleStartMonthChange = (newStartMonth: string) => {
     setStartMonth(newStartMonth);
     if (endMonth && compareMonths(newStartMonth, endMonth) > 0) {
@@ -156,7 +215,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Handle endMonth change
   const handleEndMonthChange = (newEndMonth: string) => {
     setEndMonth(newEndMonth);
     if (startMonth && compareMonths(startMonth, newEndMonth) > 0) {
@@ -164,9 +222,9 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Process chart data with month range filter
+  // Process monthly chart data
   const getMonthlyData = (data: (PurchaseOrder | Order)[]) => {
-    if (!startMonth || !endMonth) {
+    if (!startMonth || !endMonth || rangeError) {
       return { months: ["Không có dữ liệu"], monthlyData: [0] };
     }
 
@@ -187,9 +245,7 @@ const Dashboard: React.FC = () => {
       const filteredData = data.filter(d => {
         if (!d.createdDate) return false;
         const date = new Date(d.createdDate);
-        const isValid = !isNaN(date.getTime());
         return (
-          isValid &&
           date.getMonth() + 1 === monthNum &&
           date.getFullYear() === year
         );
@@ -205,157 +261,152 @@ const Dashboard: React.FC = () => {
     return { months: displayMonths, monthlyData };
   };
 
-  // Purchase Cost Chart (Bar)
+  // Filter suppliers based on purchase orders' dates
+  const filteredSuppliers = suppliers.map(supplier => {
+    const relatedPurchases = filterByDateRange(purchaseData).filter(
+      p => p.purchaseOrderId === supplier.supplierId // Adjust based on actual relationship
+    );
+    return {
+      ...supplier,
+      amountPaid: relatedPurchases.reduce((sum, p) => sum + p.totalAmount, 0),
+    };
+  }).filter(s => s.amountPaid > 0);
+
+  // Filter customers based on orders' dates
+  const filteredCustomers = customerData.map(customer => {
+    const relatedOrders = filterByDateRange(orderData).filter(
+      o => o.customerId === customer.customerId
+    );
+    return {
+      ...customer,
+      totalRevenue: relatedOrders.reduce((sum, o) => sum + o.totalAmount, 0),
+    };
+  }).filter(c => c.totalRevenue > 0);
+
+  // Filter and aggregate products based on orders' dates
+  const filteredOrders = filterByDateRange(orderData);
+  const filteredProducts = aggregateOrderDetails(productData, filteredOrders).filter(
+    p => p.totalQuantity > 0
+  );
+
+  // Chart Options and Series
   const purchaseChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { columnWidth: "45%" } },
     title: { text: "Chi phí mua hàng", align: "left", style: { fontSize: "16px", color: "#111827" } },
-    xaxis: { categories: getMonthlyData(purchaseData).months, labels: { rotate: -45 } },
+    xaxis: { categories: getMonthlyData(filterByDateRange(purchaseData)).months, labels: { rotate: -45 } },
     yaxis: {
       title: { text: "Số tiền (VND)" },
-      labels: {
-        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
-      },
+      labels: { formatter: (val: number) => val.toLocaleString("vi-VN") },
       min: 0,
       forceNiceScale: true,
     },
     colors: ["#EF4444"],
-    tooltip: {
-      y: {
-        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
-      },
-    },
-    noData: { text: "Không có dữ liệu chi phí mua hàng", align: "center", verticalAlign: "middle" },
+    tooltip: { y: { formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND` } },
+    noData: { text: "Không có dữ liệu chi phí mua hàng" },
   };
 
   const purchaseChartSeries = [
-    { name: "Mua hàng", data: getMonthlyData(purchaseData).monthlyData },
+    { name: "Mua hàng", data: getMonthlyData(filterByDateRange(purchaseData)).monthlyData },
   ];
 
-  // Sales Revenue Chart (Bar)
   const salesChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { columnWidth: "45%" } },
     title: { text: "Doanh thu bán hàng", align: "left", style: { fontSize: "16px", color: "#111827" } },
-    xaxis: { categories: getMonthlyData(orderData).months, labels: { rotate: -45 } },
+    xaxis: { categories: getMonthlyData(filterByDateRange(orderData)).months, labels: { rotate: -45 } },
     yaxis: {
       title: { text: "Số tiền (VND)" },
-      labels: {
-        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
-      },
+      labels: { formatter: (val: number) => val.toLocaleString("vi-VN") },
       min: 0,
       forceNiceScale: true,
     },
     colors: ["#3B82F6"],
-    tooltip: {
-      y: {
-        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
-      },
-    },
-    noData: { text: "Không có dữ liệu doanh thu bán hàng", align: "center", verticalAlign: "middle" },
+    tooltip: { y: { formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND` } },
+    noData: { text: "Không có dữ liệu doanh thu bán hàng" },
   };
 
   const salesChartSeries = [
-    { name: "Bán hàng", data: getMonthlyData(orderData).monthlyData },
+    { name: "Bán hàng", data: getMonthlyData(filterByDateRange(orderData)).monthlyData },
   ];
 
-  // Product Quantity Chart (Bar) - Không thay đổi vì không liên quan đến tiền
   const productQuantityChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "55%" } },
     title: { text: "Sản phẩm bán chạy (Theo số lượng)", align: "left", style: { fontSize: "16px", color: "#111827" } },
-    xaxis: { categories: productData.map(p => p.product.productName), labels: { rotate: -45 } },
+    xaxis: { categories: filteredProducts.map(p => p.product.productName), labels: { rotate: -45 } },
     yaxis: { title: { text: "Số lượng" }, min: 0 },
     colors: ["#10B981"],
     tooltip: { y: { formatter: val => `${val} đơn vị` } },
-    noData: { text: "Không có dữ liệu sản phẩm", align: "center", verticalAlign: "middle" },
+    noData: { text: "Không có dữ liệu sản phẩm" },
   };
 
   const productQuantityChartSeries = [
-    { name: "Số Lượng", data: productData.map(p => p.totalQuantity) },
+    { name: "Số Lượng", data: filteredProducts.map(p => p.totalQuantity) },
   ];
 
-  // Product Revenue Chart (Bar)
   const productRevenueChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "55%" } },
     title: { text: "Sản phẩm bán chạy (Theo doanh thu)", align: "left", style: { fontSize: "16px", color: "#111827" } },
-    xaxis: { categories: productData.map(p => p.product.productName), labels: { rotate: -45 } },
+    xaxis: { categories: filteredProducts.map(p => p.product.productName), labels: { rotate: -45 } },
     yaxis: {
       title: { text: "Doanh thu (VND)" },
-      labels: {
-        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
-      },
+      labels: { formatter: (val: number) => val.toLocaleString("vi-VN") },
       min: 0,
       forceNiceScale: true,
     },
     colors: ["#3B82F6"],
-    tooltip: {
-      y: {
-        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
-      },
-    },
-    noData: { text: "Không có dữ liệu sản phẩm", align: "center", verticalAlign: "middle" },
+    tooltip: { y: { formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND` } },
+    noData: { text: "Không có dữ liệu sản phẩm" },
   };
 
   const productRevenueChartSeries = [
-    { name: "Doanh thu", data: productData.map(p => p.totalQuantity * p.product.sellingPrice) },
+    { name: "Doanh thu", data: filteredProducts.map(p => p.totalQuantity * p.product.sellingPrice) },
   ];
 
-  // Supplier Payment Chart (Bar)
   const supplierChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "55%" } },
     title: { text: "Số tiền đã thanh toán theo nhà cung cấp", align: "left", style: { fontSize: "16px", color: "#111827" } },
     xaxis: {
-      categories: suppliers.map(s => s.supplier?.supplierName || "Không xác định"),
+      categories: filteredSuppliers.map(s => s.supplier?.supplierName || "Không xác định"),
       labels: { rotate: -45 },
     },
     yaxis: {
       title: { text: "Số tiền (VND)" },
-      labels: {
-        formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
-      },
+      labels: { formatter: (val: number) => val.toLocaleString("vi-VN") },
       min: 0,
       forceNiceScale: true,
     },
     colors: ["#F59E0B"],
-    tooltip: {
-      y: {
-        formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND`, // Định dạng VND trong tooltip
-      },
-    },
-    noData: { text: "Không có dữ liệu nhà cung cấp", align: "center", verticalAlign: "middle" },
+    tooltip: { y: { formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND` } },
+    noData: { text: "Không có dữ liệu nhà cung cấp" },
   };
 
   const supplierChartSeries = [
-    { name: "Số tiền thanh toán", data: suppliers.map(s => s.amountPaid || 0) },
+    { name: "Số tiền thanh toán", data: filteredSuppliers.map(s => s.amountPaid || 0) },
   ];
 
-  // Customer Revenue and Order Chart (Bar)
   const customerChartOptions: ApexOptions = {
     chart: { type: "bar", height: 280, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "45%", distributed: false } },
     title: { text: "Doanh thu & đơn hàng theo khách hàng", align: "left", style: { fontSize: "16px", color: "#111827" } },
     xaxis: {
-      categories: customerData.map(c => `${c.customer.firstName} ${c.customer.lastName}`),
+      categories: filteredCustomers.map(c => `${c.customer.lastName}`),
       labels: { rotate: -45 },
     },
     yaxis: [
       {
         title: { text: "Doanh thu (VND)" },
-        labels: {
-          formatter: (val: number) => val.toLocaleString("vi-VN"), // Định dạng VND: 1.234.567
-        },
+        labels: { formatter: (val: number) => val.toLocaleString("vi-VN") },
         min: 0,
         forceNiceScale: true,
       },
       {
         opposite: true,
         title: { text: "Số đơn" },
-        labels: {
-          formatter: (val: number) => val.toFixed(0), // Số đơn là số nguyên
-        },
+        labels: { formatter: (val: number) => val.toFixed(0) },
         min: 0,
       },
     ],
@@ -363,32 +414,30 @@ const Dashboard: React.FC = () => {
     legend: { position: "top" },
     tooltip: {
       y: [
-        { formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND` }, // Định dạng VND cho doanh thu
-        { formatter: (val: number) => `${val} đơn` }, // Giữ nguyên cho số đơn
+        { formatter: (val: number) => `${val.toLocaleString("vi-VN")} VND` },
+        { formatter: (val: number) => `${val} đơn` },
       ],
     },
-    noData: { text: "Không có dữ liệu khách hàng", align: "center", verticalAlign: "middle" },
+    noData: { text: "Không có dữ liệu khách hàng" },
   };
 
   const customerChartSeries = [
-    { name: "Doanh thu", type: "column", data: customerData.map(c => c.totalRevenue) },
+    { name: "Doanh thu", type: "column", data: filteredCustomers.map(c => c.totalRevenue) },
     {
       name: "Số đơn",
       type: "column",
-      data: customerData.map(c => orderData.filter(o => o.customerId === c.customerId).length),
+      data: filteredCustomers.map(c => filterByDateRange(orderData).filter(o => o.customerId === c.customerId).length),
     },
   ];
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Thống kê tài chính</h1>
           <p className="text-sm text-gray-600">Cập nhật: {new Date().toLocaleDateString("vi-VN")}</p>
         </div>
 
-        {/* Month Range Selector */}
         <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
           <h2 className="text-lg font-semibold mb-2">Chọn khoảng thời gian</h2>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -428,7 +477,6 @@ const Dashboard: React.FC = () => {
           {rangeError && <p className="mt-2 text-sm text-red-600">{rangeError}</p>}
         </div>
 
-        {/* Overview Statistics */}
         {loading ? (
           <div className="text-center">Đang tải dữ liệu...</div>
         ) : error ? (
@@ -453,7 +501,6 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           <div className="bg-white p-4 rounded-lg shadow-sm">
             {rangeError ? (
@@ -470,21 +517,21 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            {productData.length === 0 ? (
+            {filteredProducts.length === 0 ? (
               <div className="text-center text-gray-500">Không có dữ liệu sản phẩm</div>
             ) : (
               <Chart options={productQuantityChartOptions} series={productQuantityChartSeries} type="bar" height={280} />
             )}
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            {productData.length === 0 ? (
+            {filteredProducts.length === 0 ? (
               <div className="text-center text-gray-500">Không có dữ liệu sản phẩm</div>
             ) : (
               <Chart options={productRevenueChartOptions} series={productRevenueChartSeries} type="bar" height={280} />
             )}
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            {suppliers.length === 0 || suppliers.every(s => s.amountPaid === 0) ? (
+            {filteredSuppliers.length === 0 || filteredSuppliers.every(s => s.amountPaid === 0) ? (
               <div className="text-center text-gray-500">Không có dữ liệu nhà cung cấp</div>
             ) : (
               <Chart options={supplierChartOptions} series={supplierChartSeries} type="bar" height={280} />
@@ -492,9 +539,8 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Customer Chart */}
         <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          {customerData.length === 0 ? (
+          {filteredCustomers.length === 0 ? (
             <div className="text-center text-gray-500">Không có dữ liệu khách hàng</div>
           ) : (
             <Chart options={customerChartOptions} series={customerChartSeries} type="bar" height={280} />

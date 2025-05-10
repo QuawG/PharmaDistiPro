@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Select, Upload, Button, Typography, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import axios from "axios";
-import { useAuth } from "../../pages/Home/AuthContext"; // Điều chỉnh đường dẫn theo cấu trúc dự án
+import { apiClient } from "../../pages/Home/AuthContext"; // Sử dụng apiClient từ AuthContext
+import { useAuth } from "../../pages/Home/AuthContext";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -13,17 +13,20 @@ interface MainCategory {
 }
 
 const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = ({ handleChangePage }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<any[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [mainCategories, setMainCategories] = useState<MainCategory[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lấy danh sách danh mục chính từ API
   useEffect(() => {
+    if (authLoading || !user) return;
+
     const fetchMainCategories = async () => {
       try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/Category/tree", {
+        const response = await apiClient.get("/Category/tree", {
           headers: { Accept: "*/*" },
         });
         if (response.data.success) {
@@ -35,34 +38,34 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
         } else {
           message.error("Không thể lấy danh mục chính: " + response.data.message);
         }
-      } catch (error) {
-        message.error("Lỗi khi lấy danh mục chính!");
+      } catch (error: any) {
+        message.error(error.message || "Lỗi khi lấy danh mục chính!");
       }
     };
     fetchMainCategories();
-  }, []);
+  }, [authLoading, user]);
 
+  // Xử lý submit form
   const handleSubmit = async (values: any) => {
-    try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại.");
-      }
-      if (!user) {
-        throw new Error("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
-      }
+    if (!user || !user.customerId) {
+      message.error("Vui lòng đăng nhập để thực hiện thao tác này!");
+      return;
+    }
 
+    setIsSubmitting(true);
+    try {
       const formData = new FormData();
       formData.append("CategoryName", values.categoryName);
-      formData.append("CategoryMainId", values.parentCategory);
+      formData.append("CategoryMainId", values.parentCategory.toString());
+      formData.append("CreatedBy", user.customerId.toString());
       if (fileList[0]) {
-        formData.append("Image", fileList[0]);
+        formData.append("Image", fileList[0].originFileObj);
       }
 
-      const response = await axios.post("http://pharmadistiprobe.fun/api/Category", formData, {
+      const response = await apiClient.post("/Category", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
+          Accept: "*/*",
         },
       });
 
@@ -76,10 +79,14 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
         message.error("Tạo danh mục thuốc thất bại: " + response.data.message);
       }
     } catch (error: any) {
-      message.error(error.message || "Tạo danh mục thuốc thất bại!");
+      console.error("Failed to create category:", error);
+      message.error(error.response?.data?.message || error.message || "Tạo danh mục thuốc thất bại!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Xử lý hủy
   const handleCancel = () => {
     form.resetFields();
     setFileList([]);
@@ -87,14 +94,31 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
     handleChangePage("Danh sách danh mục thuốc");
   };
 
+  // Xử lý thay đổi ảnh
   const handleImageChange = ({ file }: any) => {
+    const isImage = file.type.startsWith("image/");
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isImage) {
+      message.error("Chỉ được chọn tệp hình ảnh (PNG, JPG, JPEG, GIF)!");
+      return;
+    }
+    if (!isLt10M) {
+      message.error("Ảnh phải nhỏ hơn 10MB!");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setPreviewImage(reader.result as string);
     };
     reader.readAsDataURL(file);
-    setFileList([file]);
+    setFileList([{ ...file, originFileObj: file }]);
   };
+
+  // Không render nếu chưa xác thực
+  if (authLoading || !user) {
+    return null;
+  }
 
   return (
     <div className="p-6 mt-[60px] w-full bg-[#f8f9fc]">
@@ -154,10 +178,12 @@ const SubAddCategory: React.FC<{ handleChangePage: (page: string) => void }> = (
 
           {/* Nút lưu & hủy */}
           <div className="flex gap-4">
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={isSubmitting}>
               Lưu
             </Button>
-            <Button onClick={handleCancel}>Hủy</Button>
+            <Button onClick={handleCancel} disabled={isSubmitting}>
+              Hủy
+            </Button>
           </div>
         </Form>
       </div>

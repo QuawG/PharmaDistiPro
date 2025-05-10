@@ -75,12 +75,12 @@ const PurchaseOrderModal: React.FC = () => {
       const token = localStorage.getItem("accessToken") || "your-default-token";
 
       try {
-        const supplierResponse = await axios.get("http://pharmadistiprobe.fun/api/Supplier/GetSupplierList", {
+        const supplierResponse = await axios.get("https://pharmadistiprobe.fun/api/Supplier/GetSupplierList", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuppliers(supplierResponse.data.data || []);
 
-        const productResponse = await axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct", {
+        const productResponse = await axios.get("https://pharmadistiprobe.fun/api/Product/ListProduct", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProducts(productResponse.data.data || []);
@@ -234,7 +234,7 @@ const PurchaseOrderModal: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const response = await axios.post(
-        "http://pharmadistiprobe.fun/api/PurchaseOrders/CreatePurchaseOrders",
+        "https://pharmadistiprobe.fun/api/PurchaseOrders/CreatePurchaseOrders",
         purchaseOrderData,
         {
           headers: {

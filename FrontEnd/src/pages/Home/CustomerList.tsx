@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Input, Select, Typography, Space } from "antd";
-import {  SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import CustomerTable from "../../components/Customer/CustomerTable";
-import axios from "axios";
+import { apiClient } from "../../pages/Home/AuthContext"; // Sử dụng apiClient đã cấu hình interceptor
+import { useAuth } from "../../pages/Home/AuthContext";
 
 const { Title, Text } = Typography;
 
@@ -24,21 +25,32 @@ interface Customer {
 const CustomerListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
   // handleChangePage,
 }) => {
+  const { user, loading } = useAuth(); // Lấy thông tin user và trạng thái loading
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
 
   useEffect(() => {
+    if (loading) return; // Đợi xác thực hoàn tất
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+
     const fetchCustomers = async () => {
       try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/User/GetCustomerList");
+        const response = await apiClient.get("/User/GetCustomerList", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
         setAllCustomers(response.data.data);
       } catch (error) {
         console.error("Error fetching customers:", error);
       }
     };
     fetchCustomers();
-  }, []);
+  }, [user, loading]);
 
   const filteredCustomers = allCustomers.filter((customer) => {
     const matchesSearch =

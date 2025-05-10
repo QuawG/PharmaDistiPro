@@ -11,7 +11,7 @@ export default function AddSupplier() {
     
     try {
       // Gọi API để tạo nhà cung cấp
-      const response = await axios.post('http://pharmadistiprobe.fun/api/Supplier/CreateSupplier', values);
+      const response = await axios.post('https://pharmadistiprobe.fun/api/Supplier/CreateSupplier', values);
 
       if (response.data.success) {
         message.success("Nhà cung cấp đã được tạo mới!");

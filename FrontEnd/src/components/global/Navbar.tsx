@@ -62,7 +62,7 @@ export default function Navbar() {
               <img src={currentUser.avatar} alt="" className="w-8 h-8 rounded-full" />
               <div className="hidden sm:block text-left">
                 <div className="font-medium">{currentUser.name}</div>
-                <div className="text-sm text-gray-500">{currentUser.role}</div>
+                {/* <div className="text-sm text-gray-500">{currentUser.role}</div> */}
               </div>
             </button>
 

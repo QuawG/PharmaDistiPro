@@ -37,7 +37,7 @@ const IssueNoteListPageForWarehouseManager: React.FC<IssueNoteListPageProps> = (
       }
 
       const response = await axios.get(
-        "http://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteListByWarehouse",
+        "https://pharmadistiprobe.fun/api/IssueNote/GetIssueNoteListByWarehouse",
         {
           headers: {
             Authorization: `Bearer ${token}`,

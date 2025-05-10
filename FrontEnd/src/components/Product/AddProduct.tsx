@@ -35,13 +35,13 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://pharmadistiprobe.fun/api/Category/subcategory');
+        const response = await axios.get('https://pharmadistiprobe.fun/api/Category/subcategory');
         if (response.status === 200) {
           setCategories(response.data.data);
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error);
-        message.error('Không thể tải danh sách danh mục. Vui lòng thử lại!');
+        // message.error('Không thể tải danh sách danh mục. Vui lòng thử lại!');
       }
     };
 
@@ -126,7 +126,7 @@ export default function ProductAdd({ handleChangePage }: { handleChangePage: (pa
       });
 
       // Send request to API
-      const response = await axios.post('http://pharmadistiprobe.fun/api/Product', formDataToSend, {
+      const response = await axios.post('https://pharmadistiprobe.fun/api/Product', formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

@@ -35,7 +35,7 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers }) => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await axios.put(`http://pharmadistiprobe.fun/api/Supplier/ActivateDeactivateSupplier/${record.id}/${newStatus}`);
+          await axios.put(`https://pharmadistiprobe.fun/api/Supplier/ActivateDeactivateSupplier/${record.id}/${newStatus}`);
           message.success('Cập nhật trạng thái thành công!');
         } catch (error) {
           message.error('Lỗi khi cập nhật trạng thái!');

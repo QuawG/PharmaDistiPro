@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import LotTable from "../../components/Lot/LotTable";
+import { useAuth } from '../Home/AuthContext';
 
 // interface ProductLot {
 //   id: number;
@@ -19,6 +20,7 @@ interface LotListPageProps {
 }
 
 const LotListPage: React.FC<LotListPageProps> = ({ handleChangePage }) => {
+  const { user } = useAuth();
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
 
   const handleRowSelectionChange = (selectedRowKeys: React.Key[]) => {
@@ -28,14 +30,22 @@ const LotListPage: React.FC<LotListPageProps> = ({ handleChangePage }) => {
   // Hàm xử lý khi xóa lô (có thể gọi API DELETE nếu cần)
   const handleDelete = (id: number) => {
     console.log("Xóa lô:", id);
-    // Gọi API DELETE nếu có: axios.delete(`http://pharmadistiprobe.fun/api/ProductLot/${id}`);
+    // Gọi API DELETE nếu có: axios.delete(`https://pharmadistiprobe.fun/api/ProductLot/${id}`);
   };
 
   // Hàm xử lý khi cập nhật lô (có thể gọi API PUT nếu cần)
   // const handleUpdate = (updatedLot: ProductLot) => {
   //   console.log("Cập nhật lô:", updatedLot);
-  //   // Gọi API PUT nếu có: axios.put(`http://pharmadistiprobe.fun/api/ProductLot/${updatedLot.id}`, updatedLot);
+  //   // Gọi API PUT nếu có: axios.put(`https://pharmadistiprobe.fun/api/ProductLot/${updatedLot.id}`, updatedLot);
   // };
+
+  if (!user) {
+    return (
+      <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
+        <div className="text-red-500">Vui lòng đăng nhập để xem danh sách lô hàng.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">

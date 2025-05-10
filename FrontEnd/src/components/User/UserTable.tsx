@@ -1,6 +1,6 @@
 import { useState, forwardRef } from "react";
 import { Table, Modal, message, Select, Dropdown, Button, Menu, Avatar } from "antd";
-import { EyeOutlined, EditOutlined, MoreOutlined } from "@ant-design/icons";
+import { EyeOutlined,  MoreOutlined } from "@ant-design/icons";
 import UserDetailsModal from "./UserDetail";
 import UpdateUserDetailsModal from "./UpdateUserDetail";
 import axios from "axios";
@@ -42,7 +42,7 @@ const UserTable = forwardRef<HTMLDivElement, UserTableProps>(({ users, setUsers 
       onOk: async () => {
         try {
           await axios.put(
-            `http://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}/${newStatus}`
+            `https://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}/${newStatus}`
           );
           setUsers(
             users.map((item) =>
@@ -59,7 +59,7 @@ const UserTable = forwardRef<HTMLDivElement, UserTableProps>(({ users, setUsers 
   };
 
   const columns = [
-    { title: "ID", dataIndex: "userId", key: "userId" },
+    // { title: "ID", dataIndex: "userId", key: "userId" },
     {
       title: "Ảnh đại diện",
       dataIndex: "avatar",
@@ -87,7 +87,7 @@ const UserTable = forwardRef<HTMLDivElement, UserTableProps>(({ users, setUsers 
       ),
     },
     {
-      title: "Hành động",
+      title: "",
       key: "actions",
       render: (_: any, record: User) => (
         <Dropdown
@@ -103,7 +103,7 @@ const UserTable = forwardRef<HTMLDivElement, UserTableProps>(({ users, setUsers 
               >
                 Xem
               </Menu.Item>
-              <Menu.Item
+              {/* <Menu.Item
                 key="edit"
                 icon={<EditOutlined />}
                 onClick={() => {
@@ -112,7 +112,7 @@ const UserTable = forwardRef<HTMLDivElement, UserTableProps>(({ users, setUsers 
                 }}
               >
                 Chỉnh sửa
-              </Menu.Item>
+              </Menu.Item> */}
             </Menu>
           }
           trigger={["click"]}

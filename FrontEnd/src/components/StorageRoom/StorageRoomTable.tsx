@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Dropdown, Select, message, Form, Input, Typography } from 'antd';
 import { MoreOutlined, EditOutlined, EyeOutlined, CloseOutlined, LineChartOutlined } from '@ant-design/icons';
@@ -72,7 +73,7 @@ const StorageRoomDetail: React.FC<{
     if (isOpen && room?.storageRoomId) {
       setMounted(true);
       axios
-        .get(`http://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomById/${room.storageRoomId}`, {
+        .get(`https://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomById/${room.storageRoomId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
         })
         .then((response) => {
@@ -156,7 +157,7 @@ const UpdateStorageRoomDetail: React.FC<{
   useEffect(() => {
     const fetchRoomTypes = async () => {
       try {
-        const response = await axios.get('http://pharmadistiprobe.fun/api/StorageRoom/RoomTypes', {
+        const response = await axios.get('https://pharmadistiprobe.fun/api/StorageRoom/RoomTypes', {
           headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
         });
         const types = Object.entries(response.data).map(([id, name]) => ({
@@ -209,7 +210,7 @@ const UpdateStorageRoomDetail: React.FC<{
 
     try {
       const response = await axios.put(
-        'http://pharmadistiprobe.fun/api/StorageRoom/UpdateStorageRoom',
+        'https://pharmadistiprobe.fun/api/StorageRoom/UpdateStorageRoom',
         payload,
         {
           headers: {
@@ -355,14 +356,14 @@ const SensorChartModal: React.FC<{
     if (isOpen) {
       setLoading(true);
       axios
-        .get(`http://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${roomId}`, {
+        .get(`https://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${roomId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
         })
         .then((response) => {
           setHasSensor(response.data);
           if (response.data) {
             axios
-              .get(`http://pharmadistiprobe.fun/api/StorageHistory/Top50Earliest/${roomId}`, {
+              .get(`https://pharmadistiprobe.fun/api/StorageHistory/Top50Earliest/${roomId}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
               })
               .then((historyResponse) => {
@@ -400,7 +401,7 @@ const SensorChartModal: React.FC<{
 
   const fetchLatestSensorData = async () => {
     try {
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/StorageHistory/Newest/${roomId}`, {
+      const response = await axios.get(`https://pharmadistiprobe.fun/api/StorageHistory/Newest/${roomId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
         timeout: 5000,
       });
@@ -776,10 +777,12 @@ const SensorChartModal: React.FC<{
               </div>
             )}
             {alertInfo && (
-              <div style={{ marginBottom: 16, padding: 16, background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 4 }}>
-                <Text strong style={{ color: '#fa8c16' }}>Cảnh báo:</Text>
-                <div>{alertInfo.message}</div>
-                {alertInfo.detail && <div>{alertInfo.detail}</div>}
+              <div style={{ marginBottom: 16, padding: 16, background: '#fff1f0', border: '1px solid #ff4d4f', borderRadius: 4 }}>
+                <Text strong style={{ color: '#f5222d', display: 'block', marginBottom: 8 }}>Cảnh báo:</Text>
+                <Text style={{ color: '#595959', fontSize: 14 }}>{alertInfo.message}</Text>
+                {alertInfo.detail && (
+                  <Text style={{ color: '#595959', fontSize: 14, display: 'block', marginTop: 4 }}>{alertInfo.detail}</Text>
+                )}
               </div>
             )}
             <div style={{ marginBottom: 32, height: 300 }}>
@@ -825,7 +828,7 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
       try {
         const promises = storageRooms.map((room) =>
           axios
-            .get(`http://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${room.storageRoomId}`, {
+            .get(`https://pharmadistiprobe.fun/api/StorageHistory/HasSensor/${room.storageRoomId}`, {
               headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
             })
             .then((response) => {
@@ -874,7 +877,7 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await axios.put(`http://pharmadistiprobe.fun/api/StorageRoom/ActivateDeactivateStorageRoom/${room.storageRoomId}/${newStatus}`, {}, {
+          await axios.put(`https://pharmadistiprobe.fun/api/StorageRoom/ActivateDeactivateStorageRoom/${room.storageRoomId}/${newStatus}`, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
           });
           message.success('Cập nhật trạng thái thành công!');
@@ -899,10 +902,10 @@ const StorageRoomTable: React.FC<StorageRoomTableProps> = ({ storageRooms }) => 
 
   const columns = [
     { title: 'Mã Kho', dataIndex: 'storageRoomCode', key: 'storageRoomCode' },
-    { title: 'Tên Kho', dataIndex: 'storageRoomName', key: 'storageRoomName' },
+    { title: 'Tên kho - tên phòng', dataIndex: 'storageRoomName', key: 'storageRoomName' },
     { title: 'Loại Phòng', dataIndex: 'type', key: 'type' },
-    { title: 'Dung tích', dataIndex: 'capacity', key: 'capacity' },
-    { title: 'Dung tích còn lại', dataIndex: 'remainingRoomVolume', key: 'remainingRoomVolume' },
+    { title: 'Dung tích(m³)', dataIndex: 'capacity', key: 'capacity' },
+    { title: 'Dung tích còn lại(m³)', dataIndex: 'remainingRoomVolume', key: 'remainingRoomVolume' },
     {
       title: 'Trạng thái',
       dataIndex: 'status',

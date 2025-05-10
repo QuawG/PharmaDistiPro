@@ -53,7 +53,7 @@ const UpdateSupplierDetail: React.FC<UpdateSupplierDetailProps> = ({ isOpen, onC
     formPayload.append('CreatedDate', supplier.createdDate || new Date().toISOString());
 
     try {
-      const response = await axios.put('http://pharmadistiprobe.fun/api/Supplier/UpdateSupplier', formPayload, {
+      const response = await axios.put('https://pharmadistiprobe.fun/api/Supplier/UpdateSupplier', formPayload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 

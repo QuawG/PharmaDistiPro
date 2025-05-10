@@ -9,12 +9,12 @@ const menus = {
   "Người dùng": ["Danh sách người dùng", "Tạo người dùng"],
   "Nhà cung cấp": ["Danh sách nhà cung cấp", "Tạo nhà cung cấp"],
   "Đơn đặt hàng": ["Danh sách đơn đặt hàng(PO)", "Tạo đơn đặt hàng(PO)"],
-  "Đơn hàng": ["Danh sách đơn hàng", "Tạo đơn hàng"],
+  "Đơn hàng": ["Danh sách đơn hàng", "Tạo đơn hàng", "Đơn hàng (Sales Manager)"],
   "Lô hàng": ["Danh sách lô hàng", "Tạo lô hàng"],
   "Phiếu nhập kho": ["Danh sách phiếu nhập", "Tạo phiếu nhập kho"],
   "Phiếu xuất kho": ["Danh sách phiếu xuất kho"],
   "Kho": ["Danh sách kho", "Tạo kho mới"],
-  "Phiếu kiểm kê": ["Danh sách phiếu kiểm kê", "Tạo phiếu kiểm kê"], // Thêm menu mới
+  "Phiếu kiểm kê": ["Danh sách phiếu kiểm kê", "Tạo phiếu kiểm kê"],
 };
 
 interface SidebarProps {
@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
 
   useEffect(() => {
     if (user?.roleName === "SalesMan") {
-      const validPages = getMenuItems("Nhà thuốc"); // Lấy các mục hợp lệ
+      const validPages = [...getMenuItems("Nhà thuốc"), "Đơn hàng (Sales Manager)"];
       if (!validPages.includes(activeSidebar)) {
         setActiveItem("Danh sách nhà thuốc");
         handleChangePage("Danh sách nhà thuốc");
@@ -63,12 +63,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
       case "Lô hàng":
       case "Phiếu nhập kho":
       case "Phiếu xuất kho":
-      case "Phiếu kiểm kê": // Thêm quyền cho menu mới
+      case "Phiếu kiểm kê":
         return role === "SalesManager" || role === "WarehouseManager" || role === "Director";
       case "Kho":
         return role === "WarehouseManager" || role === "Director";
       case "Đơn hàng":
-        return !!getOrderMenuItems().length;
+        return role === "Customer" || role === "SalesManager" || role === "WarehouseManager" || role === "SalesMan";
       default:
         return true;
     }
@@ -105,8 +105,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
         return getOrderMenuItems();
       case "Phiếu xuất kho":
         return getIssueNoteMenuItems();
-      case "Phiếu kiểm kê": // Quyền cho menu mới
-        return items.filter(item => item === "Tạo phiếu kiểm kê" ? role === "WarehouseManager"  : true);
+      case "Phiếu kiểm kê":
+        return items.filter(item => item === "Tạo phiếu kiểm kê" ? role === "WarehouseManager" : true);
       default:
         return items;
     }
@@ -119,9 +119,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSidebar, handleChangePage }) =>
       return ["Đơn hàng (Sales Manager)"];
     } else if (user?.roleName === "WarehouseManager") {
       return ["Danh sách đơn hàng (Warehouse Manager)"];
-    } else {
-      return [];
+    } else if (user?.roleName === "SalesMan") {
+      return ["Đơn hàng (Sales Manager)"];
     }
+    return [];
   };
 
   const getIssueNoteMenuItems = () => {

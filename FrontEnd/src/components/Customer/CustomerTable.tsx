@@ -61,7 +61,7 @@ const CustomerTable = forwardRef<HTMLDivElement, CustomerTableProps>(({ customer
       onOk: async () => {
         try {
           await axios.put(
-            `http://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}/${newStatus}`
+            `https://pharmadistiprobe.fun/api/User/ActivateDeactivateUser/${record.userId}/${newStatus}`
           );
           setCustomers(
             customers.map((item) =>
@@ -71,14 +71,14 @@ const CustomerTable = forwardRef<HTMLDivElement, CustomerTableProps>(({ customer
           message.success("Cập nhật trạng thái thành công!");
         } catch (error) {
           console.error("Error updating status:", error);
-          message.error("Lỗi khi cập nhật trạng thái!");
+          // message.error("Lỗi khi cập nhật trạng thái!");
         }
       },
     });
   };
 
   const columns = [
-    { title: "ID", dataIndex: "userId", key: "userId" },
+    // { title: "ID", dataIndex: "userId", key: "userId" },
     { title: "Tên khách hàng", dataIndex: "lastName", key: "lastName" },
     {
       title: "Ảnh đại diện",
@@ -106,7 +106,7 @@ const CustomerTable = forwardRef<HTMLDivElement, CustomerTableProps>(({ customer
       ),
     },
     {
-      title: "Hành động",
+      title: "",
       key: "actions",
       render: (_: any, record: Customer) => (
         <Dropdown

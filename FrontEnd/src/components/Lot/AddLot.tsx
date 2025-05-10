@@ -29,6 +29,15 @@ interface SelectedProduct {
   OrderQuantity: number;
 }
 
+// Utility function to remove Vietnamese diacritics
+const removeVietnameseDiacritics = (str: string): string => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+};
+
 const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
   const { user } = useAuth();
   const [lotCode, setLotCode] = useState<string>("");
@@ -43,13 +52,13 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await axios.get("http://pharmadistiprobe.fun/api/Product/ListProduct", {
+        const response = await axios.get("https://pharmadistiprobe.fun/api/Product/ListProduct", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProducts(response.data.data || []);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách sản phẩm:", error);
-        message.error("Không thể tải danh sách sản phẩm.");
+        // console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+        // message.error("Không thể tải danh sách sản phẩm.");
       }
     };
     fetchProducts();
@@ -60,13 +69,13 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
     const fetchStorageRooms = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await axios.get("http://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList", {
+        const response = await axios.get("https://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStorageRooms(response.data.data.filter((room: StorageRoom) => room.status) || []);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách phòng kho:", error);
-        message.error("Không thể tải danh sách phòng kho.");
+        // console.error("Lỗi khi lấy danh sách phòng kho:", error);
+        // message.error("Không thể tải danh sách phòng kho.");
       }
     };
     fetchStorageRooms();
@@ -105,17 +114,39 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
     setSelectedProducts(selectedProducts.filter((p) => p.id !== id));
   };
 
-  const handleCreateLot = () => {
+  const handleCreateLot = async () => {
     if (!user) {
       setError("Vui lòng đăng nhập để tạo lô.");
       return;
     }
 
-    // Tạo mã lô tạm thời, không gọi API
-    const generatedLotCode = `LOT${Date.now()}`;
-    setLotCode(generatedLotCode);
-    setIsLotCreated(true);
-    message.success(`Mã lô tạm thời: ${generatedLotCode}. Vui lòng lưu sản phẩm để tạo lô .`);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.get("https://pharmadistiprobe.fun/api/Lot", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const lots = response.data.data || [];
+      let maxLotNumber = 0;
+
+      lots.forEach((lot: { lotCode: string }) => {
+        const match = lot.lotCode.match(/^LOT(\d+)$/);
+        if (match) {
+          const lotNumber = parseInt(match[1], 10);
+          if (lotNumber > maxLotNumber) {
+            maxLotNumber = lotNumber;
+          }
+        }
+      });
+
+      const newLotCode = `LOT${maxLotNumber + 1}`;
+      setLotCode(newLotCode);
+      setIsLotCreated(true);
+      message.success(`Mã lô tạm thời: ${newLotCode}. Vui lòng tạo sản phẩm để tạo lô.`);
+    } catch (error) {
+      // console.error("Lỗi khi lấy danh sách lô:", error);
+      // message.error("Không thể tạo mã lô mới.");
+    }
   };
 
   const handleSave = async () => {
@@ -129,7 +160,11 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
       return;
     }
 
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Normalize to midnight for comparison
+
     for (const product of selectedProducts) {
+      // Check for required fields
       if (
         !product.supplyPrice.trim() ||
         !product.manufacturedDate ||
@@ -137,7 +172,31 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
         !product.storageRoomId ||
         product.OrderQuantity <= 0
       ) {
-        setError("Vui lòng nhập đầy đủ thông tin cho tất cả sản phẩm (giá nhập, ngày sản xuất, ngày hết hạn, kho, số lượng đặt hàng).");
+        setError(
+          "Vui lòng nhập đầy đủ thông tin cho tất cả sản phẩm (giá nhập, ngày sản xuất, ngày hết hạn, kho, số lượng đặt hàng)."
+        );
+        return;
+      }
+
+      // Parse dates for validation
+      const manufacturedDate = new Date(product.manufacturedDate);
+      const expiredDate = new Date(product.expiredDate);
+
+      // Validate dates
+      if (isNaN(manufacturedDate.getTime()) || isNaN(expiredDate.getTime())) {
+        setError("Ngày sản xuất hoặc ngày hết hạn không hợp lệ.");
+        return;
+      }
+
+      // Manufacturing date should not be in the future
+      if (manufacturedDate > currentDate) {
+        setError("Ngày sản xuất không được sau ngày hiện tại.");
+        return;
+      }
+
+      // Expiration date should not be earlier than manufacturing date
+      if (expiredDate <= manufacturedDate) {
+        setError("Ngày hết hạn phải sau ngày sản xuất.");
         return;
       }
     }
@@ -147,13 +206,13 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      // Bước 1: Tạo lô thực sự
+      // Step 1: Create the lot
       const lotPayload = {
         lotCode: lotCode,
         createdBy: user.customerId,
       };
 
-      const createResponse = await axios.post("http://pharmadistiprobe.fun/api/Lot", lotPayload, {
+      const createResponse = await axios.post("https://pharmadistiprobe.fun/api/Lot", lotPayload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -162,9 +221,9 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
 
       const lotCodeFromResponse = createResponse.data.data.lotCode || lotCode;
 
-      // Lấy lotId
+      // Get lotId
       const getLotResponse = await axios.get(
-        `http://pharmadistiprobe.fun/api/Lot/${lotCodeFromResponse}`,
+        `https://pharmadistiprobe.fun/api/Lot/${lotCodeFromResponse}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -180,7 +239,7 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
         throw new Error("Không thể lấy lotId hợp lệ từ API Get Lot.");
       }
 
-      // Bước 2: Lưu sản phẩm vào lô
+      // Step 2: Save products to the lot
       const payload = selectedProducts.map((product) => ({
         lotId: lotId,
         productId: Number(product.id),
@@ -193,7 +252,7 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
         storageRoomId: product.storageRoomId,
       }));
 
-      const response = await axios.post("http://pharmadistiprobe.fun/api/ProductLot", payload, {
+      const response = await axios.post("https://pharmadistiprobe.fun/api/ProductLot", payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -204,17 +263,17 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
       handleChangePage("Danh sách lô hàng");
     } catch (error: any) {
       console.error("Lỗi khi lưu lô và sản phẩm:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.errors?.[0] ||
-        "Không thể tạo lô hoặc thêm sản phẩm.";
-      message.error(errorMessage);
-      setError(errorMessage);
+      // const errorMessage =
+      //   error.response?.data?.message ||
+      //   error.response?.data?.errors?.[0] ||
+      //   "Không thể tạo lô hoặc thêm sản phẩm.";
+      // message.error(errorMessage);
+      // setError(errorMessage);
     }
   };
 
   const columns = [
-    { title: "Mã SP", dataIndex: "id", key: "id" },
+    // { title: "Mã SP", dataIndex: "id", key: "id" },
     { title: "Tên SP", dataIndex: "name", key: "name" },
     {
       title: "Số lượng đặt hàng",
@@ -332,10 +391,16 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
           <>
             <Form.Item label="Sản phẩm" required>
               <Select
+                showSearch
                 options={productOptions}
                 onChange={handleSelectProduct}
-                placeholder="Chọn sản phẩm..."
+                placeholder="Chọn hoặc tìm kiếm sản phẩm..."
                 style={{ width: "100%" }}
+                filterOption={(input, option) =>
+                  removeVietnameseDiacritics(option?.label ?? "")
+                    .toLowerCase()
+                    .includes(removeVietnameseDiacritics(input).toLowerCase())
+                }
               />
             </Form.Item>
 
@@ -355,7 +420,7 @@ const AddLot: React.FC<AddLotProps> = ({ handleChangePage }) => {
         <Space style={{ marginTop: "20px" }}>
           {isLotCreated && (
             <Button type="primary" htmlType="submit" className="bg-blue-500">
-              Lưu 
+              Lưu
             </Button>
           )}
           <Button onClick={() => handleChangePage("Danh sách lô hàng")}>Quay lại</Button>

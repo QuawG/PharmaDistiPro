@@ -6,7 +6,9 @@ import { useAuth, apiClient } from '../../pages/Home/AuthContext';
 import Cookies from 'js-cookie';
 import Sidebar from "../../components/global/Sidebar";
 import Navbar from "../../components/global/Navbar";
-const { Title, Text } = Typography;
+import type { UploadChangeParam, UploadFile } from 'antd/es/upload/interface';
+
+const { Title } = Typography;
 
 interface ProfileFormValues {
   username: string;
@@ -17,7 +19,6 @@ interface ProfileFormValues {
   age: number | null;
   address: string;
   taxCode: string;
-  avatar?: any; // File hoặc URL
 }
 
 const Profile: React.FC = () => {
@@ -26,9 +27,9 @@ const Profile: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(user?.avatar);
-  const [fileList, setFileList] = useState<any[]>([]);
-  const [userData, setUserData] = useState<any>(null); // Lưu dữ liệu người dùng gốc
-  const [activePage, ] = useState<string>(""); // Không highlight mục nào trong sidebar
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [userData, setUserData] = useState<any>(null);
+  const [activePage] = useState<string>("");
 
   useEffect(() => {
     if (!user) {
@@ -37,7 +38,6 @@ const Profile: React.FC = () => {
       return;
     }
 
-    // Lấy thông tin người dùng từ API
     const fetchProfile = async () => {
       setLoading(true);
       try {
@@ -46,7 +46,7 @@ const Profile: React.FC = () => {
         });
         if (response.data.success) {
           const fetchedUserData = response.data.data;
-          setUserData(fetchedUserData); // Lưu dữ liệu gốc
+          setUserData(fetchedUserData);
           form.setFieldsValue({
             username: fetchedUserData.userName,
             firstName: fetchedUserData.firstName || '',
@@ -72,12 +72,14 @@ const Profile: React.FC = () => {
     fetchProfile();
   }, [user, form, navigate]);
 
-  const handleAvatarChange = (info: any) => {
-    const file = info.fileList[info.fileList.length - 1]?.originFileObj;
-    if (file) {
+  const handleAvatarChange = (info: UploadChangeParam<UploadFile>) => {
+    const file = info.file;
+    if (file.status !== 'removed') {
       setFileList([file]);
-      const url = URL.createObjectURL(file);
-      setAvatarUrl(url);
+      if (file.originFileObj) {
+        const url = URL.createObjectURL(file.originFileObj);
+        setAvatarUrl(url);
+      }
     } else {
       setFileList([]);
       setAvatarUrl(userData?.avatar || user?.avatar);
@@ -88,30 +90,25 @@ const Profile: React.FC = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      // Gửi các trường bắt buộc và giữ nguyên các trường không được thay đổi
       formData.append('UserId', userData.userId.toString());
       formData.append('UserName', values.username);
       formData.append('FirstName', values.firstName || '');
       formData.append('LastName', values.lastName || '');
       formData.append('Phone', values.phone || '');
       formData.append('Email', values.email || '');
-      formData.append('Password', userData.password || '');
       formData.append('Age', values.age ? values.age.toString() : '');
       formData.append('Address', values.address || '');
-      formData.append('RoleId', userData.roleId.toString());
+      formData.append('RoleId', userData.roleId ? userData.roleId.toString() : '');
       formData.append('EmployeeCode', userData.employeeCode || '');
       formData.append('TaxCode', values.taxCode || '');
       formData.append('Status', userData.status.toString());
       formData.append('CreatedBy', userData.createdBy ? userData.createdBy.toString() : '');
       formData.append('CreatedDate', userData.createdDate || '');
-
       if (fileList.length > 0 && fileList[0].originFileObj) {
         formData.append('Avatar', fileList[0].originFileObj);
-      } else {
-        formData.append('Avatar', userData.avatar || '');
       }
 
-      const response = await apiClient.put(`/User/UpdateUser`, formData, {
+      const response = await apiClient.put('/User/UpdateUser', formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
           'Content-Type': 'multipart/form-data',
@@ -153,7 +150,6 @@ const Profile: React.FC = () => {
   };
 
   const handleChangePage = (page: string) => {
-    // Navigate to /home and pass the selected page as state
     navigate('/home', { state: { activePage: page } });
   };
 
@@ -188,7 +184,10 @@ const Profile: React.FC = () => {
                 <Form.Item
                   label="Tên người dùng"
                   name="username"
-                  rules={[{ required: true, message: 'Vui lòng nhập tên người dùng!' }]}
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập tên người dùng!' },
+                    { whitespace: true, message: 'Tên người dùng không được chỉ chứa khoảng trắng!' },
+                  ]}
                 >
                   <Input />
                 </Form.Item>
@@ -201,19 +200,46 @@ const Profile: React.FC = () => {
                   <Input />
                 </Form.Item>
 
-                <Form.Item label="Số điện thoại" name="phone">
+                <Form.Item
+                  label="Số điện thoại"
+                  name="phone"
+                  rules={[
+                    {
+                      validator: async (_: any, value: string) => {
+                        if (value && !/^[0-9]{10,11}$/.test(value)) {
+                          throw new Error('Số điện thoại phải có 10-11 chữ số!');
+                        }
+                      },
+                    },
+                  ]}
+                >
                   <Input />
                 </Form.Item>
 
                 <Form.Item
                   label="Email"
                   name="email"
-                  rules={[{ type: 'email', message: 'Vui lòng nhập email hợp lệ!' }]}
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập email!' },
+                    { type: 'email', message: 'Vui lòng nhập email hợp lệ!' },
+                  ]}
                 >
                   <Input />
                 </Form.Item>
 
-                <Form.Item label="Tuổi" name="age">
+                <Form.Item
+                  label="Tuổi"
+                  name="age"
+                  rules={[
+                    {
+                      validator: async (_: any, value: number | null) => {
+                        if (value !== null && value <= 0) {
+                          throw new Error('Tuổi phải lớn hơn 0!');
+                        }
+                      },
+                    },
+                  ]}
+                >
                   <Input type="number" min={0} />
                 </Form.Item>
 
@@ -225,7 +251,7 @@ const Profile: React.FC = () => {
                   <Input />
                 </Form.Item>
 
-                <Form.Item label="Ảnh đại diện">
+                <Form.Item label="Ảnh đại diện" name="avatar">
                   {avatarUrl && (
                     <img
                       src={avatarUrl}
@@ -235,16 +261,12 @@ const Profile: React.FC = () => {
                   )}
                   <Upload
                     fileList={fileList}
-                    beforeUpload={() => false} // Ngăn tải lên tự động
+                    beforeUpload={() => false}
                     onChange={handleAvatarChange}
                     accept="image/*"
                   >
                     <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
                   </Upload>
-                </Form.Item>
-
-                <Form.Item label="Vai trò">
-                  <Text>{user.roleName || 'User'}</Text>
                 </Form.Item>
 
                 <Form.Item>

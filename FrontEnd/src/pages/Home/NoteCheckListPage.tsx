@@ -101,7 +101,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
     try {
       const token = Cookies.get("token");
       if (!token) {
-        message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        message.error("Không tìm thấy người dùng. Vui lòng đăng nhập lại.");
         navigate("/login");
         return;
       }
@@ -116,7 +116,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
       console.log("NoteChecks data:", sortedData);
       setNoteChecks(sortedData);
     } catch (error) {
-      message.error("Không thể tải danh sách phiếu kiểm kê");
+      // message.error("Không thể tải danh sách phiếu kiểm kê");
       console.error(error);
       setNoteChecks([]);
     }
@@ -127,7 +127,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
     try {
       const token = Cookies.get("token");
       if (!token) {
-        message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        message.error("Không tìm thấy người dùng. Vui lòng đăng nhập lại.");
         navigate("/login");
         return;
       }
@@ -189,7 +189,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
 
       setErrorProducts(sortedErrorProducts);
     } catch (error) {
-      message.error("Không thể tải danh sách sản phẩm lỗi");
+      // message.error("Không thể tải danh sách sản phẩm lỗi");
       console.error(error);
       setErrorProducts([]);
     }
@@ -199,7 +199,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
     try {
       const token = Cookies.get("token");
       if (!token) {
-        message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        message.error("Không tìm thấy người dùng. Vui lòng đăng nhập lại.");
         navigate("/login");
         return;
       }
@@ -217,7 +217,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
       console.log("Storage rooms data:", rooms);
       setStorageRooms(rooms);
     } catch (error) {
-      message.error("Không thể tải danh sách kho");
+      // message.error("Không thể tải danh sách kho");
       console.error(error);
       setStorageRooms([]);
     }
@@ -228,7 +228,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
     try {
       const token = Cookies.get("token");
       if (!token) {
-        message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        message.error("Không tìm thấy người dùng. Vui lòng đăng nhập lại.");
         navigate("/login");
         return;
       }
@@ -240,7 +240,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
       message.success("Duyệt phiếu kiểm kê thành công");
       fetchNoteChecks();
     } catch (error: any) {
-      message.error(`Không thể duyệt phiếu kiểm kê: ${error.response?.data?.message || error.message}`);
+      // message.error(`Không thể duyệt phiếu kiểm kê: ${error.response?.data?.message || error.message}`);
       console.error(error);
     }
   };
@@ -249,7 +249,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
     try {
       const token = Cookies.get("token");
       if (!token) {
-        message.error("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        message.error("Không tìm thấy người dùng. Vui lòng đăng nhập lại.");
         navigate("/login");
         return;
       }
@@ -321,7 +321,7 @@ const NoteCheckListPage: React.FC<NoteCheckListPageProps> = ({ handleChangePage 
         onOk() {},
       });
     } catch (error) {
-      message.error("Không thể tải chi tiết phiếu kiểm kê");
+      // message.error("Không thể tải chi tiết phiếu kiểm kê");
       console.error(error);
     }
   };

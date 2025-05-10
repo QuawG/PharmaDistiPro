@@ -45,7 +45,7 @@ const OrderListPage: React.FC<OrderListPageProps> = ({ handleChangePage }) => {
       try {
         const token = localStorage.getItem("accessToken");
         const response = await axios.get(
-          `http://pharmadistiprobe.fun/api/Order/GetOrderByCustomerId?customerId=${user.customerId}`,
+          `https://pharmadistiprobe.fun/api/Order/GetOrderByCustomerId?customerId=${user.customerId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

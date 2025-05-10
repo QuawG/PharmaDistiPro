@@ -95,7 +95,7 @@ const NewOrder: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get("http://pharmadistiprobe.fun/api/Category/subcategory")
+      .get("https://pharmadistiprobe.fun/api/Category/subcategory")
       .then((response) => {
         const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
         setCategories(data);
@@ -108,7 +108,7 @@ const NewOrder: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get("http://pharmadistiprobe.fun/api/Product/ListProductCustomer")
+      .get("https://pharmadistiprobe.fun/api/Product/ListProductCustomer")
       .then(async (response) => {
         const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
         const validProducts = data.filter(
@@ -120,7 +120,7 @@ const NewOrder: React.FC = () => {
           validProducts.map(async (product: Product) => {
             try {
               const quantityResponse = await axios.get(
-                `http://pharmadistiprobe.fun/api/ProductLot/CheckProductQuantity/${product.productId}`,
+                `https://pharmadistiprobe.fun/api/ProductLot/CheckProductQuantity/${product.productId}`,
                 {
                   headers: { accept: "*/*" },
                 }
@@ -148,7 +148,7 @@ const NewOrder: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get("http://pharmadistiprobe.fun/api/GHN/provinces")
+      .get("https://pharmadistiprobe.fun/api/GHN/provinces")
       .then((response) => {
         setProvinces(response.data.data || []);
       })
@@ -161,7 +161,7 @@ const NewOrder: React.FC = () => {
   useEffect(() => {
     if (selectedProvince) {
       axios
-        .get(`http://pharmadistiprobe.fun/api/GHN/districts/${selectedProvince}`)
+        .get(`https://pharmadistiprobe.fun/api/GHN/districts/${selectedProvince}`)
         .then((response) => {
           setDistricts(response.data.data || []);
           setSelectedDistrict(null);
@@ -180,7 +180,7 @@ const NewOrder: React.FC = () => {
   useEffect(() => {
     if (selectedDistrict) {
       axios
-        .get(`http://pharmadistiprobe.fun/api/GHN/wards/${selectedDistrict}`)
+        .get(`https://pharmadistiprobe.fun/api/GHN/wards/${selectedDistrict}`)
         .then((response) => {
           setWards(response.data.data || []);
           setSelectedWard(null);
@@ -205,10 +205,9 @@ const NewOrder: React.FC = () => {
       return;
     }
 
-    // Tính tổng khối lượng (weight) từ giỏ hàng
     const totalWeight = orderItems.reduce((acc, item) => {
       const product = products.find((p) => p.productId === item.productId);
-      return acc + (product ? product.weight * item.quantity : 0);
+      return acc + (product ? product.weight * item.quantity * 1000: 0);
     }, 0);
 
     if (totalWeight <= 0) {
@@ -222,11 +221,13 @@ const NewOrder: React.FC = () => {
       service_type_id: 2,
       to_district_id: selectedDistrict,
       to_ward_code: selectedWard.toString(),
-      weight: Math.round(totalWeight), // Sử dụng tổng khối lượng tính được
+      weight: Math.round(totalWeight),
+      
     };
+    console.log("Payload tính phí vận chuyển:", payload); // Debug: Xem payload gửi đi
 
     axios
-      .post("http://pharmadistiprobe.fun/api/GHN/calculate-fee", payload, {
+      .post("https://pharmadistiprobe.fun/api/GHN/calculate-fee", payload, {
         headers: {
           "Content-Type": "application/json",
           accept: "*/*",
@@ -257,7 +258,7 @@ const NewOrder: React.FC = () => {
     if (selectedProvince && selectedDistrict && selectedWard) {
       axios
         .post(
-          "http://pharmadistiprobe.fun/api/GHN/calculate-expected-delivery-time",
+          "https://pharmadistiprobe.fun/api/GHN/calculate-expected-delivery-time",
           null,
           {
             params: {
@@ -350,7 +351,7 @@ const NewOrder: React.FC = () => {
 
     axios
       .post(
-        "http://pharmadistiprobe.fun/api/Cart/AddToCart",
+        "https://pharmadistiprobe.fun/api/Cart/AddToCart",
         { productId: product.productId, quantity: 1 },
         {
           headers: { "Content-Type": "application/json" },
@@ -403,7 +404,7 @@ const NewOrder: React.FC = () => {
 
     axios
       .put(
-        `http://pharmadistiprobe.fun/api/Cart/UpdateCart/${productId}/${value}`
+        `https://pharmadistiprobe.fun/api/Cart/UpdateCart/${productId}/${value}`
       )
       .then((response) => {
         if (response.data.success) {
@@ -432,7 +433,7 @@ const NewOrder: React.FC = () => {
   const removeItem = (productId: number) => {
     axios
       .delete(
-        `http://pharmadistiprobe.fun/api/Cart/RemoveFromCart/${productId}`
+        `https://pharmadistiprobe.fun/api/Cart/RemoveFromCart/${productId}`
       )
       .then((response) => {
         if (response.data.success) {
@@ -466,6 +467,7 @@ const NewOrder: React.FC = () => {
     const product = products.find((p) => p.productId === item.productId);
     return acc + item.price * item.quantity * (product ? product.vat / 100 : 0);
   }, 0);
+  // Total for display includes shipping fee
   const total = subtotal + tax + (shippingFee || 0);
 
   const handleCheckout = () => {
@@ -511,7 +513,8 @@ const NewOrder: React.FC = () => {
       customerId: user.customerId,
       updatedStatusDate: new Date().toISOString(),
       stockReleaseDate: new Date().toISOString(),
-      totalAmount: Math.round(total),
+      // Total amount excludes shipping fee for checkout
+      totalAmount: Math.round(subtotal + tax),
       wardCode: selectedWard || "",
       districtId: selectedDistrict || 0,
       deliveryFee: shippingFee || 0,
@@ -525,7 +528,7 @@ const NewOrder: React.FC = () => {
     };
 
     axios
-      .post("http://pharmadistiprobe.fun/api/Order/CheckOut", payload, {
+      .post("https://pharmadistiprobe.fun/api/Order/CheckOut", payload, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

@@ -1,43 +1,54 @@
 import React, { useState } from "react";
 import { Form, Input, Button, Select, message } from "antd";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import $ from "jquery"; // Import jQuery nếu bạn cần dùng nó
-
+import axios from "axios";
 
 const { Option } = Select;
 
-// Define role mapping
 const roles = {
-  1: "Giám đốc",
   2: "Quản lí kho",
   3: "Trưởng phòng kinh doanh",
   4: "Nhân viên bán hàng",
 };
 
+interface FormValues {
+  userName: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  address: string;
+  age: number;
+  roleId: string;
+  status: boolean;
+  avatar?: File | null;
+}
+
 export default function AddUser() {
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null); // Specify the type as string | null
-  const [form] = Form.useForm(); // Sử dụng Form instance của Ant Design để quản lý form
-  const [file, setFile] = useState<File | null>(null); // Specify the type as File | null
+  const [form] = Form.useForm();
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileInput = e.target as HTMLInputElement;
-
+    const fileInput = e.target;
     if (fileInput.files && fileInput.files[0]) {
       const selectedFile = fileInput.files[0];
-      setFile(selectedFile); // TypeScript will now know that 'file' can be a File or null
-      
+      setFile(selectedFile);
+
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (event.target && event.target.result) {
-          setAvatarPreview(event.target.result as string); // 'avatarPreview' is now a string or null
+        if (event.target?.result) {
+          setAvatarPreview(event.target.result as string);
         }
       };
       reader.readAsDataURL(selectedFile);
+    } else {
+      setFile(null);
+      setAvatarPreview(null);
     }
   };
 
-  // Handle form submission
-  const handleSubmit = async (values:any) => {
+  const handleSubmit = async (values: FormValues) => {
     const formData = new FormData();
     formData.append("UserName", values.userName);
     formData.append("FirstName", values.firstName);
@@ -46,35 +57,41 @@ export default function AddUser() {
     formData.append("Email", values.email);
     formData.append("Password", values.password);
     formData.append("Address", values.address);
-    formData.append("Age", values.age.toString()); // Chuyển số thành chuỗi
-    formData.append("RoleId", values.roleId.toString());
+    formData.append("Age", values.age.toString());
+    formData.append("RoleId", values.roleId);
     formData.append("Status", values.status.toString());
     if (file) {
-      formData.append("avatar", file); // Thêm file avatar nếu có
+      formData.append("avatar", file);
     }
-    $.ajax({
-        async: false,
-        type: "POST",
-        url: 'http://pharmadistiprobe.fun/api/User/CreateUser',
-        data: formData,
-        processData: false, // không xử lý dữ liệu
-        contentType: false, // không gửi content type mặc định
-        success: function (receivedData) {
-            // remove localStorage
-            console.log(receivedData);
-           message.success("Đã tạo người dùng thành công!");
-        form.resetFields(); // Reset form sau khi thành công
-        setAvatarPreview(null);
-        setFile(null);        },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        error: function (xhr) {
-            console.error(xhr.responseText);
-            $('#errorMessage').removeClass('d-none');
-            $('#errorMessage').fadeIn().delay(3000).fadeOut();
-        }
-    });
 
-    
+    try {
+      const response = await axios.post(
+        "https://pharmadistiprobe.fun/api/User/CreateUser",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        message.success("Đã tạo người dùng thành công!");
+        form.resetFields();
+        setAvatarPreview(null);
+        setFile(null);
+      } else {
+        message.error(response.data.message || "Có lỗi xảy ra khi tạo người dùng!");
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        message.error(
+          error.response?.data.message || "Có lỗi xảy ra khi gửi yêu cầu!"
+        );
+      } else {
+        message.error("Lỗi không xác định!");
+      }
+    }
   };
 
   return (
@@ -89,9 +106,9 @@ export default function AddUser() {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ status: true }} // Giá trị mặc định cho status
+          initialValues={{ status: true }}
         >
-          <Form.Item label="Avatar">
+          <Form.Item label="Avatar" name="avatar">
             <Input
               id="avatarInput"
               type="file"
@@ -111,7 +128,10 @@ export default function AddUser() {
             <Form.Item
               label="Tên đăng nhập"
               name="userName"
-              rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tên đăng nhập!" },
+                { whitespace: true, message: "Tên đăng nhập không được chỉ chứa khoảng trắng!" },
+              ]}
             >
               <Input placeholder="Nhập tên đăng nhập" />
             </Form.Item>
@@ -119,7 +139,10 @@ export default function AddUser() {
             <Form.Item
               label="Tên riêng"
               name="firstName"
-              rules={[{ required: true, message: "Vui lòng nhập tên riêng!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tên riêng!" },
+                { whitespace: true, message: "Tên riêng không được chỉ chứa khoảng trắng!" },
+              ]}
             >
               <Input placeholder="Nhập tên riêng" />
             </Form.Item>
@@ -127,7 +150,10 @@ export default function AddUser() {
             <Form.Item
               label="Tên họ"
               name="lastName"
-              rules={[{ required: true, message: "Vui lòng nhập tên họ!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tên họ!" },
+                { whitespace: true, message: "Tên họ không được chỉ chứa khoảng trắng!" },
+              ]}
             >
               <Input placeholder="Nhập tên họ" />
             </Form.Item>
@@ -135,7 +161,13 @@ export default function AddUser() {
             <Form.Item
               label="Số điện thoại"
               name="phone"
-              rules={[{ required: true, message: "Vui lòng nhập số điện thoại!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập số điện thoại!" },
+                {
+                  pattern: /^[0-9]{10,11}$/,
+                  message: "Số điện thoại phải có 10-11 chữ số!",
+                },
+              ]}
             >
               <Input type="tel" placeholder="Nhập số điện thoại" />
             </Form.Item>
@@ -143,7 +175,10 @@ export default function AddUser() {
             <Form.Item
               label="Email"
               name="email"
-              rules={[{ required: true, message: "Vui lòng nhập email!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập email!" },
+                { type: "email", message: "Email không hợp lệ!" },
+              ]}
             >
               <Input type="email" placeholder="Nhập email" />
             </Form.Item>
@@ -151,7 +186,16 @@ export default function AddUser() {
             <Form.Item
               label="Tuổi"
               name="age"
-              rules={[{ required: true, message: "Vui lòng nhập tuổi!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tuổi!" },
+                {
+                  type: "number",
+                  min: 18,
+                  max: 100,
+                  message: "Tuổi phải từ 18 đến 100!",
+                  transform: (value) => Number(value),
+                },
+              ]}
             >
               <Input type="number" placeholder="Nhập tuổi" />
             </Form.Item>
@@ -159,7 +203,10 @@ export default function AddUser() {
             <Form.Item
               label="Địa chỉ"
               name="address"
-              rules={[{ required: true, message: "Vui lòng nhập địa chỉ!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập địa chỉ!" },
+                { whitespace: true, message: "Địa chỉ không được chỉ chứa khoảng trắng!" },
+              ]}
             >
               <Input placeholder="Nhập địa chỉ" />
             </Form.Item>
@@ -192,14 +239,25 @@ export default function AddUser() {
             <Form.Item
               label="Mật khẩu"
               name="password"
-              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập mật khẩu!" },
+                { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
+              ]}
             >
               <Input.Password placeholder="Nhập mật khẩu" />
             </Form.Item>
           </div>
 
           <div className="flex gap-4 justify-end">
-            <Button type="default" onClick={() => message.info("Đã hủy!")}>
+            <Button
+              type="default"
+              onClick={() => {
+                form.resetFields();
+                setAvatarPreview(null);
+                setFile(null);
+                message.info("Đã hủy!");
+              }}
+            >
               Hủy
             </Button>
             <Button type="primary" htmlType="submit">

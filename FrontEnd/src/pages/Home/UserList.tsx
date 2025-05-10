@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Input,  Select, Typography, Space } from "antd";
-import {  SearchOutlined } from "@ant-design/icons";
+import { Input, Select, Typography, Space } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import UserTable from "../../components/User/UserTable";
 import axios from "axios";
+import { useAuth } from "../Home/AuthContext";
 
 const { Title, Text } = Typography;
 
@@ -26,6 +27,7 @@ interface User {
 const UserListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
   // handleChangePage,
 }) => {
+  const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
@@ -34,14 +36,40 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("http://pharmadistiprobe.fun/api/User/GetUserList");
-        setUsers(response.data.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        }
+
+        const response = await axios.get("https://pharmadistiprobe.fun/api/User/GetUserList", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': '*/*',
+          },
+        });
+
+        if (response.data.success) {
+          setUsers(response.data.data || []);
+        } else {
+          throw new Error(response.data.message || "Không thể tải danh sách người dùng!");
+        }
+      } catch (error: any) {
+        console.error("Lỗi khi lấy danh sách người dùng:", error);
+        setUsers([]);
+        // const errorMessage = error.response?.data?.message || error.message || "Lỗi khi tải danh sách người dùng!";
+        // Không hiển thị thông báo lỗi nếu là lỗi 401, vì AuthContext sẽ xử lý làm mới token
+        if (error.response?.status !== 401) {
+          // Có thể thêm thông báo lỗi bằng Ant Design message nếu cần
+          // message.error(errorMessage);
+        }
       }
     };
-    fetchUsers();
-  }, []);
+
+    if (user) {
+      fetchUsers();
+    }
+  }, [user]);
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -55,8 +83,6 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
     return matchesSearch && matchesStatus;
   });
 
-  
-
   return (
     <div className="p-6 mt-[60px] overflow-auto w-full bg-[#fafbfe]">
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -66,7 +92,6 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
             <Text type="secondary">Quản lý thông tin người dùng</Text>
           </div>
           <Space>
-           
             {/* <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -83,6 +108,7 @@ const UserListPage: React.FC<{ handleChangePage: (page: string) => void }> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: 200 }}
+            allowClear
           />
           <Select
             placeholder="Lọc theo trạng thái"

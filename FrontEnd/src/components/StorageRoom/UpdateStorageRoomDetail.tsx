@@ -6,15 +6,15 @@ import axios from "axios";
 const { Option } = Select;
 
 interface StorageRoom {
-  storageRoomId: number; // Thêm ID kho
+  storageRoomId: number;
   storageRoomCode: string;
   storageRoomName: string;
-  status: boolean; // Kiểu boolean cho status
-  temperature: number;
-  humidity: number;
+  type: number;
   capacity: number;
-  createdBy:number;
-  createdDate:string;
+  remainingRoomVolume: number;
+  status: boolean;
+  createdBy: number;
+  createdDate: string;
 }
 
 export default function UpdateStorageRoomDetail({
@@ -29,65 +29,80 @@ export default function UpdateStorageRoomDetail({
   onSave: (updatedRoom: StorageRoom) => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const [, setVisible] = useState(false);
-  const [formData, setFormData] = useState<StorageRoom>(room);
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setVisible(true);
-        });
+      form.setFieldsValue({
+        ...room,
+        status: room.status ? "1" : "0", // Convert boolean to string for Select
+        type: room.type.toString(), // Convert number to string for Select
       });
     } else {
-      setVisible(false);
-      const timer = setTimeout(() => setMounted(false), 300);
-      return () => clearTimeout(timer);
+      setMounted(false);
     }
-  }, [isOpen]);
+  }, [isOpen, room, form]);
 
-  useEffect(() => {
-    setFormData(room);
-  }, [room]);
+  const handleSubmit = async (values: any) => {
+    setSubmitting(true);
+    const updatedRoom: StorageRoom = {
+      ...room,
+      storageRoomCode: values.storageRoomCode,
+      storageRoomName: values.storageRoomName,
+      type: Number(values.type),
+      capacity: Number(values.capacity),
+      remainingRoomVolume: Number(values.remainingRoomVolume),
+      status: values.status === "1",
+    };
+
+    try {
+      const response = await axios.put(
+        `https://pharmadistiprobe.fun/api/StorageRoom/UpdateStorageRoom`,
+        {
+          storageRoomId: room.storageRoomId,
+          storageRoomCode: updatedRoom.storageRoomCode,
+          storageRoomName: updatedRoom.storageRoomName,
+          type: updatedRoom.type,
+          capacity: updatedRoom.capacity,
+          remainingRoomVolume: updatedRoom.remainingRoomVolume,
+          status: updatedRoom.status,
+          createdBy: room.createdBy,
+          createdDate: room.createdDate,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "*/*",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        message.success("Cập nhật thông tin kho hàng thành công!");
+        onSave(updatedRoom);
+        onClose();
+      } else {
+        message.error(response.data.message || "Cập nhật thất bại!");
+        console.error("API Error:", response.data);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.message || "Lỗi khi cập nhật kho hàng!";
+        message.error(errorMessage);
+        console.error("Axios Error:", error.response?.data);
+      } else {
+        message.error("Lỗi không xác định!");
+        console.error("Unknown Error:", error);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (!mounted) return null;
-
-  const handleChange = (name: string, value: string | number | boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (formData) {
-      try {
-        const response = await axios.put(`http://pharmadistiprobe.fun/api/StorageRoom/UpdateStorageRoom/${formData.storageRoomId}`, {
-          StorageRoomCode: formData.storageRoomCode,
-          StorageRoomName: formData.storageRoomName,
-          Status: formData.status, // Gửi trực tiếp kiểu boolean
-          Temperature: formData.temperature,
-          Humidity: formData.humidity,
-          Quantity: formData.capacity,
-        });
-
-        if (response.data.success) {
-          message.success("Cập nhật thông tin kho hàng thành công!");
-          onSave(formData); // Gọi hàm onSave để cập nhật danh sách kho
-          onClose();
-        } else {
-          message.error(response.data.message || "Có lỗi xảy ra!");
-        }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          message.error(error.response?.data.message || "Có lỗi xảy ra!");
-        } else {
-          message.error("Lỗi không xác định!");
-        }
-      }
-    }
-  };
 
   return (
     <Modal
@@ -99,9 +114,9 @@ export default function UpdateStorageRoomDetail({
       title="Cập nhật thông tin kho hàng"
     >
       <Form
+        form={form}
         layout="vertical"
         onFinish={handleSubmit}
-        initialValues={formData}
         className="p-4"
       >
         <Form.Item
@@ -109,10 +124,7 @@ export default function UpdateStorageRoomDetail({
           name="storageRoomCode"
           rules={[{ required: true, message: "Vui lòng nhập mã kho" }]}
         >
-          <Input
-            value={formData?.storageRoomCode || ""}
-            onChange={(e) => handleChange("storageRoomCode", e.target.value)}
-          />
+          <Input />
         </Form.Item>
 
         <Form.Item
@@ -120,10 +132,51 @@ export default function UpdateStorageRoomDetail({
           name="storageRoomName"
           rules={[{ required: true, message: "Vui lòng nhập tên kho" }]}
         >
-          <Input
-            value={formData?.storageRoomName || ""}
-            onChange={(e) => handleChange("storageRoomName", e.target.value)}
-          />
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Loại kho"
+          name="type"
+          rules={[{ required: true, message: "Vui lòng chọn loại kho" }]}
+        >
+          <Select>
+            <Option value="1">Phòng thường</Option>
+            <Option value="2">Phòng lạnh</Option>
+            <Option value="3">Phòng đặc biệt</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="Sức chứa"
+          name="capacity"
+          rules={[
+            { required: true, message: "Vui lòng nhập sức chứa" },
+            {
+              type: "number",
+              min: 0,
+              message: "Sức chứa phải lớn hơn hoặc bằng 0",
+              transform: (value) => Number(value),
+            },
+          ]}
+        >
+          <Input type="number" min={0} />
+        </Form.Item>
+
+        <Form.Item
+          label="Thể tích còn lại"
+          name="remainingRoomVolume"
+          rules={[
+            { required: true, message: "Vui lòng nhập thể tích còn lại" },
+            {
+              type: "number",
+              min: 0,
+              message: "Thể tích còn lại phải lớn hơn hoặc bằng 0",
+              transform: (value) => Number(value),
+            },
+          ]}
+        >
+          <Input type="number" min={0} disabled /> {/* Disabled as it's likely backend-calculated */}
         </Form.Item>
 
         <Form.Item
@@ -131,45 +184,17 @@ export default function UpdateStorageRoomDetail({
           name="status"
           rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
         >
-          <Select
-            value={formData?.status ? "1" : "0"} // Hiển thị trạng thái
-            onChange={(value) => handleChange("status", value === "1")}
-          >
+          <Select>
             <Option value="1">Hoạt động</Option>
             <Option value="0">Không hoạt động</Option>
           </Select>
         </Form.Item>
 
-        <Form.Item label="Nhiệt độ (°C)" name="temperature">
-          <Input
-            type="number"
-            min={0}
-            value={formData?.temperature || ""}
-            onChange={(e) => handleChange("temperature", Number(e.target.value))}
-          />
-        </Form.Item>
-
-        <Form.Item label="Độ ẩm (%)" name="humidity">
-          <Input
-            type="number"
-            min={0}
-            value={formData?.humidity || ""}
-            onChange={(e) => handleChange("humidity", Number(e.target.value))}
-          />
-        </Form.Item>
-
-        <Form.Item label="Sức chứa" name="capacity">
-          <Input
-            type="number"
-            min={0}
-            value={formData?.capacity || ""}
-            onChange={(e) => handleChange("capacity", Number(e.target.value))}
-          />
-        </Form.Item>
-
         <div className="flex justify-end gap-2">
-          <Button onClick={onClose}>Hủy</Button>
-          <Button type="primary" htmlType="submit">
+          <Button onClick={onClose} disabled={submitting}>
+            Hủy
+          </Button>
+          <Button type="primary" htmlType="submit" loading={submitting}>
             Lưu
           </Button>
         </div>

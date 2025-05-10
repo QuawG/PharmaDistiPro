@@ -20,7 +20,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const apiClient = axios.create({
-  baseURL: "http://pharmadistiprobe.fun/api",
+  baseURL: "https://pharmadistiprobe.fun/api",
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

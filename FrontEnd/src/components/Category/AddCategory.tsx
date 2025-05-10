@@ -39,7 +39,7 @@ const AddCategory: React.FC<AddCategoryProps> = ({ handleChangePage }) => {
         Image: fileList.length > 0 ? fileList[0].name : 'Không có ảnh',
       }); // Debug: Xem dữ liệu gửi đi
 
-      const response = await axios.post('http://pharmadistiprobe.fun/api/Category', formData, {
+      const response = await axios.post('https://pharmadistiprobe.fun/api/Category', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ const AddCategory: React.FC<AddCategoryProps> = ({ handleChangePage }) => {
       }
     } catch (error: any) {
       console.error('Lỗi khi tạo chủng loại:', error);
-      message.error(error.message || 'Tạo chủng loại thất bại! Vui lòng thử lại.');
+      // message.error(error.message || 'Tạo chủng loại thất bại! Vui lòng thử lại.');
     }
   };
 

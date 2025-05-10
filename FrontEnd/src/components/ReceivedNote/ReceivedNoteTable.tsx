@@ -160,7 +160,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
       setSelectedNote(note);
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await axios.get(`http://pharmadistiprobe.fun/api/ReceivedNote/${receiveNoteId}`, {
+        const response = await axios.get(`https://pharmadistiprobe.fun/api/ReceivedNote/${receiveNoteId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -187,7 +187,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
       for (const note of notes) {
         try {
           const token = localStorage.getItem("accessToken");
-          const response = await axios.get(`http://pharmadistiprobe.fun/api/ReceivedNote/${note.receiveNoteId}`, {
+          const response = await axios.get(`https://pharmadistiprobe.fun/api/ReceivedNote/${note.receiveNoteId}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -244,11 +244,11 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
   const fetchStorageRoomForLots = async (details: ReceivedNoteDetail[]): Promise<string> => {
     try {
       // Fetch ProductLot data
-      const lotResponse = await axios.get("http://pharmadistiprobe.fun/api/ProductLot");
+      const lotResponse = await axios.get("https://pharmadistiprobe.fun/api/ProductLot");
       const productLots: ProductLot[] = lotResponse.data.data || [];
 
       // Fetch StorageRoom data
-      const storageRoomResponse = await axios.get("http://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList");
+      const storageRoomResponse = await axios.get("https://pharmadistiprobe.fun/api/StorageRoom/GetStorageRoomList");
       const storageRooms: StorageRoom[] = storageRoomResponse.data.data || [];
 
       // Map storageRoomId to storageRoomName
@@ -313,7 +313,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
     const token = localStorage.getItem("accessToken");
 
     try {
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/ReceivedNote/${note.receiveNoteId}`, {
+      const response = await axios.get(`https://pharmadistiprobe.fun/api/ReceivedNote/${note.receiveNoteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -362,8 +362,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
                 <p><strong>Số:</strong> ${note.receiveNotesCode}</p>
               </div>
               <div>
-                <p><strong>Nợ:</strong> </p>
-                <p><strong>Có:</strong> </p>
+               
               </div>
             </div>
           </div>
@@ -473,7 +472,7 @@ const ReceivedNoteTable: React.FC<ReceivedNoteTableProps> = ({
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://pharmadistiprobe.fun/api/ReceivedNote/${note.receiveNoteId}`, {
+      const response = await axios.get(`https://pharmadistiprobe.fun/api/ReceivedNote/${note.receiveNoteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

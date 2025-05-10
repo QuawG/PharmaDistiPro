@@ -59,7 +59,7 @@ const ReceivedNoteListPage: React.FC<ReceivedNoteListPageProps> = ({ handleChang
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await axios.get("http://pharmadistiprobe.fun/api/ReceivedNote", {
+      const response = await axios.get("https://pharmadistiprobe.fun/api/ReceivedNote", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

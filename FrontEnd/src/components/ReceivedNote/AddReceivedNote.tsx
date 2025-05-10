@@ -78,7 +78,7 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
     const fetchPurchaseOrders = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await axios.get("http://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList", {
+        const response = await axios.get("https://pharmadistiprobe.fun/api/PurchaseOrders/GetPurchaseOrdersList", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const filteredOrders = (response.data.data || []).filter((po: PurchaseOrder) => po.status !== 3);
@@ -95,7 +95,7 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
     const fetchLots = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await axios.get("http://pharmadistiprobe.fun/api/Lot", {
+        const response = await axios.get("https://pharmadistiprobe.fun/api/Lot", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setLots(response.data.data || []);
@@ -112,7 +112,7 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
       const fetchProductLots = async () => {
         try {
           const token = localStorage.getItem("accessToken");
-          const response = await axios.get("http://pharmadistiprobe.fun/api/ProductLot", {
+          const response = await axios.get("https://pharmadistiprobe.fun/api/ProductLot", {
             headers: { Authorization: `Bearer ${token}` },
           });
           const filteredProducts = response.data.data.filter((p: ProductLot) => p.lotId === selectedLot);
@@ -241,7 +241,7 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
       }
 
       const response = await axios.post(
-        "http://pharmadistiprobe.fun/api/ReceivedNote",
+        "https://pharmadistiprobe.fun/api/ReceivedNote",
         payload,
         {
           headers: {
@@ -307,13 +307,6 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
     <div style={{ padding: 24, background: "#f5f5f5", minHeight: "100vh" }}>
       <Title level={3}>Tạo phiếu nhập kho</Title>
       <Form layout="vertical" form={form}>
-        {/* <Form.Item
-          label="Mã phiếu"
-          name="receiveNotesCode"
-          rules={[{ required: true, message: "Mã phiếu không được để trống!" }]}
-        >
-          <InputNumber style={{ width: "100%" }} disabled />
-        </Form.Item> */}
         <Form.Item
           label="Đơn hàng"
           name="purchaseOrderId"
@@ -322,6 +315,16 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
           <Select
             placeholder="Chọn đơn hàng..."
             disabled={!!purchaseOrderId}
+            showSearch
+            filterOption={(input, option) => {
+              const po = purchaseOrders.find((po) => po.purchaseOrderId === option?.value);
+              if (!po) return false;
+              const searchText = input.toLowerCase();
+              return (
+                po.purchaseOrderCode.toLowerCase().includes(searchText) ||
+                po.purchaseOrderId.toString().includes(searchText)
+              );
+            }}
             options={purchaseOrders.map((po) => ({
               value: po.purchaseOrderId,
               label: `${po.purchaseOrderId} (${po.purchaseOrderCode})`,
@@ -342,6 +345,10 @@ const AddReceivedNote: React.FC<AddReceivedNoteProps> = ({
       <Select
         placeholder="Chọn lô..."
         value={selectedLot}
+        showSearch
+        filterOption={(input, option) =>
+          (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+        }
         options={lotOptions}
         onChange={handleSelectLot}
         style={{ width: "100%", marginBottom: 8 }}

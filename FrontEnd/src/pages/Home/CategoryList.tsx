@@ -25,7 +25,7 @@ const CategoryList: React.FC<CategoryListPageProps> = ({ handleChangePage }) => 
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('http://pharmadistiprobe.fun/api/Category/tree', {
+      const response = await axios.get('https://pharmadistiprobe.fun/api/Category/tree', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
